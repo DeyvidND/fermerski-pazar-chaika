@@ -1,0 +1,9 @@
+---
+import Icon from './Icon.astro';
+interface Props { text?: string }
+const { text } = Astro.props;
+const msg =
+  text ||
+  'Артикулите се управляват от админ панела — добавените продукти се появяват тук автоматично.';
+---
+<div class="admin-note"><Icon name="leaf" /><span>{msg}</span></div>

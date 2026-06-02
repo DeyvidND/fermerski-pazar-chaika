@@ -1,0 +1,76 @@
+---
+import Layout from '../components/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+const showFarmers = sf.multiFarmer;
+---
+<Layout title={`За нас · ${sf.name}`} storefront={sf}>
+  <main>
+    <section class="section">
+      <div class="wrap split">
+        <div>
+          <span class="eyebrow">За нас</span>
+          <h1 style="font-size:clamp(36px,5.5vw,60px);margin:12px 0 18px">Един пазар,<br>много местни<br>стопани</h1>
+          <p class="lead">
+            {sf.name} събира фермерите от региона на Варна на едно място — всеки петък на Чайка.
+            Тук храната не минава през вериги и складове. Купуваш я директно от човека, който я е отгледал.
+          </p>
+          <div class="cta-row">
+            <a href={showFarmers ? '/farmers' : '/shop'} class="btn btn--primary">{showFarmers ? 'Виж фермерите' : 'Към магазина'}</a>
+            <a href="/orders" class="btn btn--ghost">Как да поръчам</a>
+          </div>
+        </div>
+        <div class="ph ph--rounded" style="aspect-ratio:4/5"><span class="ph__label">Снимка · пазарът на Чайка · 4:5</span></div>
+      </div>
+    </section>
+
+    <section class="section--tight">
+      <div class="wrap prose">
+        <p>Започнахме като малка сбирка от няколко съседни стопанства, които искаха да продават директно на хората — без посредник, без етикети, които никой не разбира. Първите петъци на Чайка бяхме шепа маси и кошници. Хората се връщаха. После водеха приятели.</p>
+        <p>Днес на пазара се събират фермери с плодове и зеленчуци, мляко и сирене, мед, месо и домашни сладка. Различни стопанства, но един и същ принцип — местно, сезонно и честно. Каквото е узряло тази седмица, това носим.</p>
+        <p>Сайтът добавихме, за да е по-лесно: разглеждаш фермерите и продуктите им предварително, запазваш онлайн и идваш да вземеш — или избираш доставка до дома. Така пазарът работи и през останалите дни от седмицата.</p>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--surface-2)">
+      <div class="wrap">
+        <div class="section-head center" style="margin-bottom:36px">
+          <span class="eyebrow">Нашите ценности</span>
+          <h2 style="margin-top:8px">В какво вярваме</h2>
+        </div>
+        <div class="grid grid--4">
+          <div class="card value-card"><div class="ic"><Icon name="leaf" /></div><h3>Местно и сезонно</h3><p>Продукти от региона на Варна — толкова свежи, колкото е възможно.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="basket" /></div><h3>Директно от фермера</h3><p>Без вериги и посредници — парите отиват при стопанина.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3>Общност</h3><p>Познаваме си хората — стопани и клиенти, които се срещат всеки петък.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="check" /></div><h3>Честно и ясно</h3><p>Знаеш кой, къде и как е произвел това, което купуваш.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head" style="margin-bottom:28px">
+          <span class="eyebrow">От пазара</span>
+          <h2 style="margin-top:8px">Един петък на Чайка</h2>
+        </div>
+        <div class="gallery">
+          <div class="ph wide"><span class="ph__label">Щандовете на пазара · 2:1</span></div>
+          <div class="ph"><span class="ph__label">Кошница с плодове</span></div>
+          <div class="ph tall"><span class="ph__label">Буркани с мед · 1:2</span></div>
+          <div class="ph"><span class="ph__label">Сирене и мляко</span></div>
+          <div class="ph"><span class="ph__label">Фермер на щанда</span></div>
+          <div class="ph"><span class="ph__label">Домашни сладка</span></div>
+          <div class="ph"><span class="ph__label">Клиенти на пазара</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section--tight">
+      <div class="wrap center">
+        <p class="quote" style="margin-inline:auto">Не продаваме просто храна. Свързваме хората, които я отглеждат, с хората, които я ядат — лице в лице, всеки петък.”</p>
+        <div style="margin-top:22px;font-weight:600">— екипът на {sf.name}</div>
+      </div>
+    </section>
+  </main>
+</Layout>

@@ -1,0 +1,65 @@
+---
+import Layout from '../components/Layout.astro';
+import ProductCard from '../components/ProductCard.astro';
+import GhostProductCard from '../components/GhostProductCard.astro';
+import AdminNote from '../components/AdminNote.astro';
+import { getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
+import { categoriesFrom, catIdOf } from '../lib/catalog';
+
+const [sfRaw, products, farmers, subcats] = await Promise.all([
+  getStorefront(),
+  getProducts(),
+  getFarmers(),
+  getSubcategories(),
+]);
+const sf = sfRaw ?? FALLBACK_STOREFRONT;
+const cats = categoriesFrom(products, subcats, sf.multiSubcat);
+const active = products.filter((p) => p.isActive !== false);
+const seeded = active.length > 0;
+const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
+---
+<Layout title={`Магазин · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Магазин</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Магазин</span>
+          <h2 style="margin-top:8px">Всичко от пазара на едно място</h2>
+          <p>Избери категория. Продуктите идват от местните фермери и се запазват за петъчния пазар или за доставка до дома.</p>
+        </div>
+
+        {cats.length > 0 && (
+          <div class="chips-row" data-tabs data-tabs-target="#catalogGrid"
+               style="display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 22px" id="catChips">
+            <button class="chip is-active" data-tab="all">Всички</button>
+            {cats.map((c) => <button class="chip" data-tab={c.id}>{c.name}</button>)}
+          </div>
+        )}
+
+        {!seeded && (
+          <AdminNote text="Продуктите се управляват от админ панела. Всеки артикул се добавя към фермер и категория и се появява тук автоматично." />
+        )}
+
+        <div class="grid grid--4" id="catalogGrid" data-tab-panels>
+          {seeded
+            ? active.map((p) => (
+                <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)} />
+              ))
+            : [0, 1, 2, 3, 4, 5, 6, 7].map(() => <GhostProductCard />)}
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    // Deep link: /shop#<categoryId> activates that category chip on load.
+    const hash = decodeURIComponent(location.hash.replace('#', ''));
+    if (hash) {
+      const chip = document.querySelector<HTMLElement>(`#catChips [data-tab="${CSS.escape(hash)}"]`);
+      chip?.click();
+    }
+  </script>
+</Layout>

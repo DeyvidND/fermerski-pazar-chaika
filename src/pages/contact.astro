@@ -1,0 +1,78 @@
+---
+import Layout from '../components/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+import { ADDRESS, MARKET_HOURS, SOCIALS, DEFAULT_PHONE, DEFAULT_EMAIL, telHref } from '../lib/site';
+
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+const phone = sf.phone || DEFAULT_PHONE;
+const email = sf.email || DEFAULT_EMAIL;
+const iconBox = 'width:44px;height:44px;border-radius:var(--radius-sm);display:grid;place-items:center;background:var(--primary-050);color:var(--primary);flex:none';
+---
+<Layout title={`Контакти · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Контакти</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Контакти</span>
+          <h2 style="margin-top:8px">Ще се радваме да чуем</h2>
+          <p>Въпрос за поръчка, продукт от пазара или просто здравей — пиши ни по който начин ти е удобен. Ще се радваме да те видим и на живо в петък на Чайка.</p>
+        </div>
+
+        <div class="split" style="margin-top:30px;align-items:flex-start">
+          <div class="stack" style="gap:18px">
+            <div class="grid grid--2" style="gap:14px">
+              <a href={telHref(phone)} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+                <span style={iconBox}><Icon name="truck" /></span>
+                <span><span class="muted" style="font-size:13px">Телефон / Viber</span><br><b>{phone}</b></span>
+              </a>
+              <a href={`mailto:${email}`} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+                <span style={iconBox}><Icon name="heart" /></span>
+                <span><span class="muted" style="font-size:13px">Имейл</span><br><b>{email}</b></span>
+              </a>
+            </div>
+
+            <div class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+              <span style={iconBox}><Icon name="leaf" /></span>
+              <span><span class="muted" style="font-size:13px">Пазар на място</span><br><b>{ADDRESS}</b> · {MARKET_HOURS}</span>
+            </div>
+
+            <div class="ph ph--rounded" style="aspect-ratio:16/10">
+              <span class="ph__label">Карта · кв. Чайка, Варна · Google Maps</span>
+            </div>
+
+            <div>
+              <div class="muted" style="font-size:13.5px;margin-bottom:10px">Последвай ни</div>
+              <div class="socials" style="margin:0">
+                {SOCIALS.map((s) => (
+                  <a href={s.href} aria-label={s.label} style="background:var(--primary-050);color:var(--primary)"><Icon name={s.name} /></a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:clamp(22px,3vw,34px)">
+            <h3 style="font-size:24px;margin-bottom:6px">Изпрати съобщение</h3>
+            <p class="muted" style="margin-bottom:22px">Отговаряме в рамките на работния ден.</p>
+            <form class="stack" style="gap:14px" data-api-form="contact">
+              <div class="field-row">
+                <div class="field"><label>Име</label><input class="input" name="name" placeholder="Твоето име" required /></div>
+                <div class="field"><label>Телефон</label><input class="input" name="phone" type="tel" placeholder="+359 ..." /></div>
+              </div>
+              <div class="field"><label>Имейл</label><input class="input" name="email" type="email" placeholder="ime@example.bg" required /></div>
+              <div class="field"><label>Съобщение</label><textarea class="textarea" name="message" placeholder="Как можем да помогнем?" required></textarea></div>
+              <button class="btn btn--primary" type="submit" style="align-self:flex-start">Изпрати</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    import '../scripts/forms.ts';
+  </script>
+</Layout>

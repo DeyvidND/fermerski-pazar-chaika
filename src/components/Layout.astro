@@ -1,0 +1,62 @@
+---
+import '../styles/theme.css';
+import '../styles/main.css';
+import '../styles/home.css';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+import type { Storefront } from '../lib/types';
+
+interface Props {
+  title: string;
+  description?: string;
+  storefront?: Storefront;
+  bodyClass?: string;
+}
+
+const { title, description, bodyClass } = Astro.props;
+// Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
+const storefront: Storefront =
+  Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
+
+const desc =
+  description ??
+  'Фермерски пазар Чайка, Варна — местни стопани на едно място. Пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.';
+---
+<!DOCTYPE html>
+<html lang="bg" data-theme="ferma">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={desc} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={desc} />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#3F7D43" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  {/* Non-render-blocking font load: preload as style, then promote to stylesheet. */}
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Commissioner:wght@300;400;500;600;700&family=Onest:wght@400;500;600;700;800&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Commissioner:wght@300;400;500;600;700&family=Onest:wght@400;500;600;700;800&display=swap"
+    />
+  </noscript>
+</head>
+<body class={bodyClass}>
+  <Header storefront={storefront} />
+  <slot />
+  <Footer storefront={storefront} />
+  <script>
+    import '../scripts/ui.ts';
+  </script>
+</body>
+</html>

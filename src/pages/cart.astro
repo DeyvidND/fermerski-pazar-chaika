@@ -1,0 +1,22 @@
+---
+import Layout from '../components/Layout.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+---
+<Layout title={`Количка · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Количка</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <h1 style="font-size:clamp(30px,4.5vw,46px);margin-bottom:24px">Твоята количка</h1>
+        <div id="cartArea"></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    import '../scripts/cart-page.ts';
+  </script>
+</Layout>

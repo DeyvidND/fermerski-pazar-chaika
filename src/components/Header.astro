@@ -1,0 +1,59 @@
+---
+import Icon from './Icon.astro';
+import { navLinks, isActive } from '../lib/nav';
+import { BRAND_TAG, DEFAULT_PHONE, telHref } from '../lib/site';
+import type { Storefront } from '../lib/types';
+
+interface Props { storefront: Storefront }
+const { storefront } = Astro.props;
+const links = navLinks(storefront.multiFarmer);
+const path = Astro.url.pathname;
+const phone = storefront.phone || DEFAULT_PHONE;
+---
+<div class="promo" id="promo">
+  🧺 Пазар на място <b>всеки петък</b> на Чайка · 11:00–18:00 — или поръчай онлайн с доставка.
+  <button class="promo__close" id="promoClose" aria-label="Затвори"><Icon name="close" /></button>
+</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <nav class="nav">
+      <a href="/" class="brand">
+        <span class="brand__mark"><Icon name="berry" /></span>
+        <span>
+          <span class="brand__name">{storefront.name}</span>
+          <span class="brand__tag" style="display:block">{BRAND_TAG}</span>
+        </span>
+      </a>
+      <div class="nav__links">
+        {links.map((l) => (
+          <a href={l.href} class={isActive(path, l.href) ? 'active' : ''}>{l.label}</a>
+        ))}
+      </div>
+      <div class="nav__actions">
+        <button class="icon-btn" aria-label="Търсене"><Icon name="search" /></button>
+        <a href="/cart" class="icon-btn" aria-label="Количка">
+          <Icon name="cart" /><span class="cart-count is-zero">0</span>
+        </a>
+        <button class="icon-btn hamburger" id="hamburger" aria-label="Меню"><Icon name="menu" /></button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- mobile drawer -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer__head">
+    <span class="brand"><span class="brand__mark"><Icon name="berry" /></span>
+      <span class="brand__name">{storefront.name}</span></span>
+    <button class="icon-btn" id="drawerClose" aria-label="Затвори"><Icon name="close" /></button>
+  </div>
+  {links.map((l) => (
+    <a href={l.href} class={isActive(path, l.href) ? 'active' : ''}>{l.label}</a>
+  ))}
+  <a href="/cart" style="display:flex;align-items:center;gap:10px"><Icon name="cart" /> Количка</a>
+  <div style="margin-top:auto;padding-top:18px;color:var(--muted);font-size:14px">
+    <a href={telHref(phone)}>{phone}</a>
+  </div>
+</aside>

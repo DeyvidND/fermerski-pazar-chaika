@@ -1,0 +1,15 @@
+---
+import Icon from './Icon.astro';
+import type { Category } from '../lib/catalog';
+
+interface Props { category: Category }
+const { category: c } = Astro.props;
+---
+<a href={`/shop#${encodeURIComponent(c.id)}`} class="card category-card">
+  <span class="category-card__ic"><Icon name={c.icon} /></span>
+  <div>
+    <h3 class="category-card__name">{c.name}</h3>
+    <p class="category-card__desc">{c.desc}</p>
+  </div>
+  <span class="category-card__count">{c.count > 0 ? c.count + ' продукта' : 'скоро'}</span>
+</a>

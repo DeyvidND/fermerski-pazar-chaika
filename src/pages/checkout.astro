@@ -1,0 +1,117 @@
+---
+import Layout from '../components/Layout.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+const delivery = sf.deliveryEnabled;
+---
+<Layout title={`Каса · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/cart">Количка</a> / <span>Каса</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="steps">
+          <span class="step done"><span class="num">1</span>Количка</span><span class="sep"></span>
+          <span class="step current"><span class="num">2</span>Доставка и плащане</span><span class="sep"></span>
+          <span class="step"><span class="num">3</span>Готово</span>
+        </div>
+        <h1 style="font-size:clamp(28px,4vw,42px);margin:14px 0 24px">Финализирай поръчката</h1>
+
+        <form class="commerce-grid" id="checkoutForm" data-delivery={delivery ? '1' : '0'}>
+          <div class="stack" style="gap:26px">
+
+            <!-- contact -->
+            <div class="card" style="padding:24px;box-shadow:none">
+              <h3 style="font-size:20px;margin-bottom:16px">Контакти</h3>
+              <div class="stack" style="gap:14px">
+                <div class="field"><label>Име и фамилия</label><input class="input" name="customerName" placeholder="Иван Иванов" required /></div>
+                <div class="field-row">
+                  <div class="field"><label>Телефон</label><input class="input" name="customerPhone" type="tel" placeholder="+359 88 ..." required /></div>
+                  <div class="field"><label>Имейл</label><input class="input" name="customerEmail" type="email" placeholder="ime@example.bg" required /></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- delivery method -->
+            <div class="card" style="padding:24px;box-shadow:none">
+              <h3 style="font-size:20px;margin-bottom:16px">Начин на получаване</h3>
+              <div class="stack" style="gap:12px" id="deliveryMethod">
+                <label class="radio-card is-active" data-method="pickup">
+                  <span class="dot"></span>
+                  <span><b>Вземане от пазара · Чайка</b><br><span class="muted" style="font-size:14px">В петък 11:00–18:00 · без такса · плащаш на място</span></span>
+                </label>
+                {delivery && (
+                  <label class="radio-card" data-method="address">
+                    <span class="dot"></span>
+                    <span><b>Доставка до адрес</b><br><span class="muted" style="font-size:14px">Куриер до врата · петък 11:00–20:00 · 4,90 лв · безплатна над 40 лв</span></span>
+                  </label>
+                )}
+                {delivery && (
+                  <label class="radio-card" data-method="econt">
+                    <span class="dot"></span>
+                    <span><b>Еконт офис</b><br><span class="muted" style="font-size:14px">Вземане от офис на Еконт · 3,50 лв</span></span>
+                  </label>
+                )}
+              </div>
+              <div id="addressFields" class="field" style="margin-top:14px;display:none">
+                <label>Адрес за доставка</label>
+                <input class="input" id="addressInput" placeholder="ул., №, град, пощенски код" />
+              </div>
+            </div>
+
+            {delivery && (
+              <!-- delivery slot -->
+              <div class="card" id="slotCard" style="padding:24px;box-shadow:none;display:none">
+                <h3 style="font-size:20px;margin-bottom:6px">Часови слот за доставка</h3>
+                <p class="muted" style="font-size:14px;margin-bottom:16px">Избери удобен ден и час. Заетите слотове са недостъпни.</p>
+                <div class="date-pills" id="datePills"></div>
+                <div class="slots" id="slots" style="margin-top:16px"></div>
+                <div id="slotChosen" class="note-fresh" style="margin-top:16px;display:none"></div>
+              </div>
+            )}
+
+            <!-- payment -->
+            <div class="card" style="padding:24px;box-shadow:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <h3 style="font-size:20px">Плащане</h3>
+                <span class="muted" style="font-size:12.5px;display:flex;align-items:center;gap:6px">🔒 защитено плащане</span>
+              </div>
+              <div class="stack" style="gap:14px">
+                <div class="field">
+                  <label>Номер на карта</label>
+                  <div style="position:relative">
+                    <input class="input" placeholder="1234 1234 1234 1234" inputmode="numeric" />
+                    <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:5px">
+                      <span style="width:30px;height:20px;border-radius:3px;background:linear-gradient(90deg,#EB001B,#F79E1B)"></span>
+                      <span style="width:30px;height:20px;border-radius:3px;background:#1A1F71"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div class="field"><label>Валидност</label><input class="input" placeholder="ММ / ГГ" inputmode="numeric" /></div>
+                  <div class="field"><label>CVC</label><input class="input" placeholder="CVC" inputmode="numeric" /></div>
+                </div>
+              </div>
+              <p class="muted" style="font-size:12.5px;margin-top:12px">Ако фермата има свързан Stripe акаунт, ще те пренасочим към защитена платежна страница. Иначе плащаш на място / при доставка.</p>
+            </div>
+
+          </div>
+
+          <!-- summary -->
+          <aside class="summary">
+            <h3 style="font-size:22px;margin-bottom:14px">Твоята поръчка</h3>
+            <div id="orderLines"></div>
+            <div id="orderTotals"></div>
+            <button class="btn btn--primary btn--full btn--lg" type="submit" id="placeOrder" style="margin-top:16px">Завърши поръчката</button>
+            <p class="muted center" style="font-size:12.5px;margin-top:10px">С натискане приемаш Общите условия</p>
+          </aside>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script>
+    import '../scripts/checkout-page.ts';
+  </script>
+</Layout>

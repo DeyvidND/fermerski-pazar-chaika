@@ -1,0 +1,21 @@
+---
+import Layout from '../components/Layout.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+---
+<Layout title={`Страницата не е намерена · ${sf.name}`} storefront={sf}>
+  <main>
+    <section class="section">
+      <div class="wrap center" style="max-width:620px">
+        <div class="ph" style="width:150px;height:150px;border-radius:50%;margin:0 auto 18px"><span class="ph__label">🫐</span></div>
+        <div class="big-404">404</div>
+        <h1 style="font-size:clamp(26px,4vw,40px);margin:6px 0 12px">Тази страница я няма</h1>
+        <p class="lead">Страницата, която търсиш, е преместена или вече я няма. Но пазарът те чака на началната страница.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px">
+          <a href="/" class="btn btn--primary btn--lg">Към началото</a>
+          <a href="/shop" class="btn btn--ghost btn--lg">Към магазина</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>

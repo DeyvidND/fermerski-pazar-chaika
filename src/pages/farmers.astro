@@ -1,0 +1,63 @@
+---
+import Layout from '../components/Layout.astro';
+import Icon from '../components/Icon.astro';
+import FarmerCard from '../components/FarmerCard.astro';
+import GhostFarmerCard from '../components/GhostFarmerCard.astro';
+import AdminNote from '../components/AdminNote.astro';
+import { getStorefront, getFarmers, getProducts, FALLBACK_STOREFRONT } from '../lib/api';
+import { catIdOf } from '../lib/catalog';
+
+const [sfRaw, farmers, products] = await Promise.all([
+  getStorefront(),
+  getFarmers(),
+  getProducts(),
+]);
+const sf = sfRaw ?? FALLBACK_STOREFRONT;
+const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
+const farmerCats = (id: string) =>
+  new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
+---
+<Layout title={`Фермери · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Фермери</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Хора зад щандовете</span>
+          <h2 style="margin-top:8px">Нашите фермери</h2>
+          <p>Местни семейни стопанства от региона на Варна. Всеки фермер има своя страница с продукти, подредени по категории — избери чие стопанство да разгледаш.</p>
+        </div>
+
+        {farmers.length === 0 && (
+          <div style="margin-top:28px">
+            <AdminNote text="Фермерите се добавят от админ панела — всеки нов профил се появява автоматично тук." />
+          </div>
+        )}
+        <div class="grid grid--3" style="margin-top:8px">
+          {farmers.length
+            ? farmers.map((f) => (
+                <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
+              ))
+            : [0, 1, 2].map(() => <GhostFarmerCard />)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--surface-2)">
+      <div class="wrap">
+        <div class="section-head center" style="margin-bottom:34px">
+          <span class="eyebrow">Как е подреден магазинът</span>
+          <h2 style="margin-top:8px">Фермер → категория → продукт</h2>
+        </div>
+        <div class="grid grid--3">
+          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3>1 · Избираш фермер</h3><p>Всяко стопанство има профил със снимка, история и собствен асортимент.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3>2 · Разглеждаш категориите</h3><p>Продуктите на фермера са групирани по категории — плодове, мляко, мед, месо, сладка.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3>3 · Поръчваш продукта</h3><p>Добавяш в количката директно от категорията. Всичко идва от едно стопанство.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>

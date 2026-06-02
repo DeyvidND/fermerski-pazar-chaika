@@ -1,0 +1,53 @@
+---
+import Icon from './Icon.astro';
+import { money } from '../lib/money';
+import type { Product } from '../lib/types';
+
+interface Props {
+  product: Product;
+  stepper?: boolean;
+  farmerName?: string | null;
+  cat?: string; // grouping id, used by the catalog filter tabs
+}
+const { product: p, stepper = false, farmerName = null, cat = '' } = Astro.props;
+const href = p.slug ? `/product/${p.slug}` : '/shop';
+const priceLv = (p.priceStotinki / 100).toFixed(2);
+const tag = p.featured ? '★ Популярен' : p.compareAtPriceStotinki ? 'Промо' : null;
+const metaBits = [p.weight, farmerName].filter(Boolean).join(' · ');
+---
+<article class="card product" data-product data-cat={cat}>
+  <a href={href} class="ph">
+    {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
+    {p.imageUrl ? (
+      <img src={p.imageUrl} alt={p.name} loading="lazy"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
+    ) : (
+      <span class="ph__label">{p.name}</span>
+    )}
+  </a>
+  <div class="product__body">
+    <a href={href}><h3 class="product__name">{p.name}</h3></a>
+    {metaBits && <div class="product__meta">{metaBits}</div>}
+    <div class="product__price">
+      {money(p.priceStotinki)}
+      {p.compareAtPriceStotinki && (
+        <span class="muted" style="font-size:14px;font-weight:500;text-decoration:line-through;margin-left:8px">
+          {money(p.compareAtPriceStotinki)}
+        </span>
+      )}
+    </div>
+    <div class="product__foot">
+      {stepper && (
+        <div class="stepper" aria-label="Количество">
+          <button data-dir="down" aria-label="по-малко">−</button>
+          <input type="number" value="1" min="1" inputmode="numeric" />
+          <button data-dir="up" aria-label="повече">+</button>
+        </div>
+      )}
+      <button class="btn btn--primary btn--sm btn--full" data-add-cart
+        data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}>
+        <Icon name="cart" /> Добави
+      </button>
+    </div>
+  </div>
+</article>

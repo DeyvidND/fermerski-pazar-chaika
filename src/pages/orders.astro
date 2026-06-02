@@ -1,0 +1,94 @@
+---
+import Layout from '../components/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
+---
+<Layout title={`Поръчки · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Поръчки</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Поръчки</span>
+          <h2 style="margin-top:8px">Как стига храната до теб</h2>
+          <p>Два начина да вземеш продуктите от фермерите — ела на пазара на Чайка всеки петък, или запази онлайн и получи доставка до дома. Ти избираш.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="grid grid--2">
+          <article class="card pillar">
+            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Пазар на Чайка · щандове · 16:10</span></div>
+            <div class="pillar__body">
+              <span class="pillar__ic"><Icon name="basket" /></span>
+              <h3>Вземане от пазара</h3>
+              <p>Запази продуктите си онлайн и ги вземи лично в петък от щандовете на Чайка — без такса за доставка.</p>
+              <ul class="pillar__facts">
+                <li><span class="fic"><Icon name="pin" /></span> кв. Чайка, бул. „Ал. Стамболийски“ (пред „Фратели“)</li>
+                <li><span class="fic"><Icon name="clock" /></span> Всеки петък · 11:00–18:00</li>
+                <li><span class="fic"><Icon name="leaf" /></span> Без такса · плащаш на място</li>
+              </ul>
+              <a href="/shop" class="btn btn--soft">Запази продукти</a>
+            </div>
+          </article>
+          <article class="card pillar">
+            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Доставка до дома · кашон · 16:10</span></div>
+            <div class="pillar__body">
+              <span class="pillar__ic"><Icon name="truck" /></span>
+              <h3>Доставка до адрес</h3>
+              <p>Поръчай онлайн и получи свежите продукти удобно вкъщи в петък между 11:00 и 20:00 ч.</p>
+              <ul class="pillar__facts">
+                <li><span class="fic"><Icon name="truck" /></span> Доставка в петък · 11:00–20:00 ч.</li>
+                <li><span class="fic"><Icon name="pin" /></span> Варна и близките квартали</li>
+                <li><span class="fic"><Icon name="leaf" /></span> Безплатна доставка над 40,00 лв</li>
+              </ul>
+              <a href="/shop" class="btn btn--soft">Поръчай онлайн</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--surface-2)">
+      <div class="wrap">
+        <div class="section-head center" style="margin-bottom:34px">
+          <span class="eyebrow">Стъпка по стъпка</span>
+          <h2 style="margin-top:8px">Поръчката за 4 стъпки</h2>
+        </div>
+        <div class="grid grid--4">
+          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3>1 · Разгледай</h3><p>Избери фермер или категория и виж какво е свежо тази седмица.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3>2 · Добави</h3><p>Сложи продуктите в количката и избери количество.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="truck" /></div><h3>3 · Избери начин</h3><p>Вземане от пазара на Чайка или доставка до адрес.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="check" /></div><h3>4 · Готово</h3><p>Потвърждаваме поръчката и я приготвяме за петък.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="market-block">
+          <div>
+            <span class="eyebrow">Доставка и плащане</span>
+            <h2 style="font-size:clamp(28px,4vw,40px);margin-top:10px">Добре е да знаеш</h2>
+            <ul class="market-facts">
+              <li><span class="fic"><Icon name="clock" /></span><div><b>Краен срок за поръчки — четвъртък 20:00 ч.</b><span>за да влязат в петъчната доставка</span></div></li>
+              <li><span class="fic"><Icon name="truck" /></span><div><b>Доставка в петък · 11:00–20:00 ч.</b><span>куриерът се обажда преди да пристигне</span></div></li>
+              <li><span class="fic"><Icon name="basket" /></span><div><b>Плащане в брой или с карта</b><span>на място на пазара или при доставка</span></div></li>
+            </ul>
+            <div class="cta-row" style="margin-top:26px">
+              <a href="/shop" class="btn btn--primary">Към магазина</a>
+              <a href="/faq" class="btn btn--ghost">Чести въпроси</a>
+            </div>
+          </div>
+          <div class="ph ph--rounded" style="aspect-ratio:4/3"><span class="ph__label">Снимка · кашон с поръчка · 4:3</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
