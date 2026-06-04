@@ -7,15 +7,15 @@ import FarmerCard from '../components/FarmerCard.astro';
 import GhostFarmerCard from '../components/GhostFarmerCard.astro';
 import CategoryCard from '../components/CategoryCard.astro';
 import AdminNote from '../components/AdminNote.astro';
-import { getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
+import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 
-const [sfRaw, products, farmers, subcats] = await Promise.all([
-  getStorefront(),
-  getProducts(),
-  getFarmers(),
-  getSubcategories(),
-]);
+// One round trip when the backend exposes /bootstrap; otherwise fall back to the
+// four individual (still cached) reads in parallel.
+const boot = await getBootstrap();
+const [sfRaw, products, farmers, subcats] = boot
+  ? [boot.storefront, boot.products, boot.farmers, boot.subcategories]
+  : await Promise.all([getStorefront(), getProducts(), getFarmers(), getSubcategories()]);
 const sf = sfRaw ?? FALLBACK_STOREFRONT;
 
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);

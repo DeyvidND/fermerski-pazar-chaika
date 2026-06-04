@@ -3,6 +3,7 @@ import Layout from '../components/Layout.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
+const econt = sf.econtEnabled;
 ---
 <Layout title={`Каса · ${sf.name}`} storefront={sf}>
   <main>
@@ -45,19 +46,42 @@ const delivery = sf.deliveryEnabled;
                 {delivery && (
                   <label class="radio-card" data-method="address">
                     <span class="dot"></span>
-                    <span><b>Доставка до адрес</b><br><span class="muted" style="font-size:14px">Куриер до врата · петък 11:00–20:00 · 4,90 лв · безплатна над 40 лв</span></span>
+                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · 4,90 лв · безплатна над 40 лв</span></span>
                   </label>
                 )}
-                {delivery && (
+                {econt && (
                   <label class="radio-card" data-method="econt">
                     <span class="dot"></span>
-                    <span><b>Еконт офис</b><br><span class="muted" style="font-size:14px">Вземане от офис на Еконт · 3,50 лв</span></span>
+                    <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от 3,50 лв</span></span>
+                  </label>
+                )}
+                {econt && (
+                  <label class="radio-card" data-method="econt_address">
+                    <span class="dot"></span>
+                    <span><b>Еконт — до адрес</b><br><span class="muted" style="font-size:14px">Куриер до врата, навсякъде в България · от 5,90 лв</span></span>
                   </label>
                 )}
               </div>
-              <div id="addressFields" class="field" style="margin-top:14px;display:none">
-                <label>Адрес за доставка</label>
-                <input class="input" id="addressInput" placeholder="ул., №, град, пощенски код" />
+
+              <!-- street address (local delivery + Econt-to-address) -->
+              <div id="addressFields" style="margin-top:14px;display:none">
+                <div id="doorCityField" class="field" style="display:none">
+                  <label>Град / населено място</label>
+                  <input class="input" id="doorCity" placeholder="напр. Бургас, Пловдив, София" autocomplete="off" />
+                </div>
+                <div class="field" style="margin-top:10px">
+                  <label id="addressLabel">Адрес за доставка</label>
+                  <input class="input" id="addressInput" placeholder="ул., №, град, пощенски код" />
+                </div>
+              </div>
+
+              <!-- Econt office picker (econt-to-office) -->
+              <div id="econtOfficeFields" style="margin-top:14px;display:none">
+                <div class="field"><label>Град</label><input class="input" id="econtCity" placeholder="напр. София, Пловдив, Варна" autocomplete="off" /></div>
+                <div class="field" style="margin-top:10px">
+                  <label>Офис на Еконт</label>
+                  <select class="input" id="econtOffice"><option value="">Първо въведи град</option></select>
+                </div>
               </div>
             </div>
 

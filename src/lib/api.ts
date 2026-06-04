@@ -45,6 +45,20 @@ export const getSlots = (date?: string) =>
 export const getReviews = () =>
   get<ReviewSummary>('/reviews', { average: 0, count: 0, reviews: [] });
 
+/** Storefront profile + catalog + farmers + sections in one request. Saves three
+ *  round trips on the home page; the backend serves it from cache. Returns null
+ *  if the endpoint is unavailable (older backend) so callers can fall back to the
+ *  individual reads. */
+export interface Bootstrap {
+  storefront: Storefront;
+  products: Product[];
+  farmers: Farmer[];
+  subcategories: Subcategory[];
+}
+
+export const getBootstrap = () =>
+  get<Bootstrap | null>('/bootstrap', null);
+
 /** Sensible defaults when `GET /public/:slug` is unreachable (dev w/o backend). */
 export const FALLBACK_STOREFRONT: Storefront = {
   name: 'ФермаСвежест',
@@ -54,4 +68,5 @@ export const FALLBACK_STOREFRONT: Storefront = {
   deliveryEnabled: false,
   multiFarmer: false,
   multiSubcat: false,
+  econtEnabled: false,
 };

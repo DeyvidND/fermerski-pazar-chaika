@@ -10,6 +10,7 @@ export interface Storefront {
   deliveryEnabled: boolean;
   multiFarmer: boolean;
   multiSubcat: boolean;
+  econtEnabled: boolean;
 }
 
 export interface Product {
@@ -24,6 +25,9 @@ export interface Product {
   tint: string | null;
   isActive: boolean | null;
   imageUrl: string | null;
+  /** Ordered gallery (cover first). Optional: older backends omit it; derive a
+   *  fallback from `imageUrl`. */
+  images?: string[];
   farmerId: string | null;
   subcategoryId: string | null;
   bundleItems: string[] | null;
@@ -41,6 +45,7 @@ export interface Farmer {
   since: string | null;
   tint: string | null;
   imageUrl: string | null;
+  images?: string[];
   position: number;
   createdAt: string | null;
 }
@@ -51,6 +56,7 @@ export interface Subcategory {
   description: string | null;
   tint: string | null;
   imageUrl: string | null;
+  images?: string[];
   position: number;
   createdAt: string | null;
 }
