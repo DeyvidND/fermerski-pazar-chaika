@@ -222,7 +222,7 @@ form.addEventListener('submit', async (e) => {
   };
 
   if (method === 'pickup') {
-    payload.deliveryType = 'address';
+    payload.deliveryType = 'pickup';
     payload.deliveryAddress = MARKET;
     payload.notes = 'Вземане от пазара (Чайка)';
   } else if (method === 'address') {

@@ -95,7 +95,7 @@ export interface CreateOrderInput {
   customerPhone?: string;
   customerEmail?: string;
   slotId?: string;
-  deliveryType?: 'address' | 'econt';
+  deliveryType?: 'pickup' | 'address' | 'econt' | 'econt_address';
   deliveryAddress?: string;
   econtOffice?: string;
   notes?: string;
