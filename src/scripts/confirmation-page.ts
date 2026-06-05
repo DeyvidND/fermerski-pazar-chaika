@@ -4,6 +4,7 @@
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
+import { PUBLIC_BASE } from '../lib/config';
 
 interface Stashed {
   orderId: string;
@@ -23,8 +24,26 @@ try {
   recap = null;
 }
 
-const idForDisplay = (orderId || recap?.orderId || '').slice(0, 8).toUpperCase();
-document.getElementById('orderNo')!.textContent = idForDisplay ? `Поръчка #FS-${idForDisplay}` : 'Поръчка приета';
+const resolvedId = orderId || recap?.orderId || '';
+const orderNoEl = document.getElementById('orderNo')!;
+// Immediate fallback from the UUID; replaced by the real sequential number below.
+const idForDisplay = resolvedId.slice(0, 8).toUpperCase();
+orderNoEl.textContent = idForDisplay ? `Поръчка #FS-${idForDisplay}` : 'Поръчка приета';
+
+// Fetch the real per-farm order number (#42) — friendlier than the UUID and the
+// same number the farmer sees in the admin panel. Degrades to the fallback above.
+if (resolvedId) {
+  fetch(`${PUBLIC_BASE}/orders/${encodeURIComponent(resolvedId)}`, {
+    headers: { accept: 'application/json' },
+  })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((o: { orderNumber?: number | null } | null) => {
+      if (o && o.orderNumber != null) orderNoEl.textContent = `Поръчка #${o.orderNumber}`;
+    })
+    .catch(() => {
+      /* keep the fallback */
+    });
+}
 
 const items = recap?.items ?? [];
 const recapBox = document.getElementById('recap')!;
