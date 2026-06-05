@@ -4,6 +4,7 @@
 // steppers, add-to-cart + toast, FAQ accordion, category tabs.
 import { Cart, updateCount } from '../lib/cart';
 import { ICONS } from '../lib/icons';
+import { esc } from '../lib/escape';
 
 function promo() {
   const bar = document.getElementById('promo');
@@ -56,7 +57,7 @@ function toast(msg: string) {
       'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:14px 22px;border-radius:999px;font-weight:600;font-size:15px;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:90vw';
     document.body.appendChild(t);
   }
-  t.innerHTML = ICONS.check + '<span>' + msg + '</span>';
+  t.innerHTML = ICONS.check + '<span>' + esc(msg) + '</span>';
   requestAnimationFrame(() => {
     t!.style.opacity = '1';
     t!.style.transform = 'translateX(-50%) translateY(0)';

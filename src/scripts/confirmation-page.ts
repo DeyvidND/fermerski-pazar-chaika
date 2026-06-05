@@ -3,6 +3,7 @@
 // before the redirect).
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
+import { esc } from '../lib/escape';
 
 interface Stashed {
   orderId: string;
@@ -31,7 +32,7 @@ if (items.length) {
   recapBox.innerHTML = items
     .map(
       (it) =>
-        `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>${it.name} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`,
+        `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>${esc(it.name)} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`,
     )
     .join('');
   document.getElementById('paid')!.textContent = money(recap!.total);
@@ -44,7 +45,7 @@ const recv = document.getElementById('slotNote')!;
 if (recap?.method === 'pickup') {
   recv.innerHTML = ICONS.truck + ' Петък · 11:00–18:00 на Чайка';
 } else if (recap?.slot) {
-  recv.innerHTML = ICONS.truck + ' Доставка: ' + recap.slot;
+  recv.innerHTML = ICONS.truck + ' Доставка: ' + esc(recap.slot);
 } else {
   recv.innerHTML = ICONS.truck + ' Петък · 11:00–20:00 ч.';
 }

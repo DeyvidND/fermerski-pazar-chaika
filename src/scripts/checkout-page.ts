@@ -7,6 +7,7 @@
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { PUBLIC_BASE } from '../lib/config';
+import { esc } from '../lib/escape';
 import type { Slot } from '../lib/types';
 
 const FREE_OVER = 40;
@@ -55,7 +56,7 @@ function renderSummary() {
   document.getElementById('orderLines')!.innerHTML = items
     .map(
       (it) =>
-        `<div class="summary__row"><span>${it.name} <span class="muted">× ${it.qty}</span></span><span>${money(it.price * it.qty)}</span></div>`,
+        `<div class="summary__row"><span>${esc(it.name)} <span class="muted">× ${it.qty}</span></span><span>${money(it.price * it.qty)}</span></div>`,
     )
     .join('');
   document.getElementById('orderTotals')!.innerHTML = `
@@ -111,7 +112,7 @@ async function loadOffices(city: string) {
   econtOffice.innerHTML =
     '<option value="">Избери офис…</option>' +
     offices
-      .map((o) => `<option value="${o.code}">${o.name}${o.address ? ' — ' + o.address : ''}</option>`)
+      .map((o) => `<option value="${esc(o.code)}">${esc(o.name)}${o.address ? ' — ' + esc(o.address) : ''}</option>`)
       .join('');
 }
 if (econtCity) {
@@ -158,7 +159,7 @@ async function loadSlots() {
     datePills.innerHTML = dates
       .map((d) => {
         const dt = new Date(`${d}T00:00:00`);
-        return `<button type="button" class="date-pill${d === activeDate ? ' is-active' : ''}" data-date="${d}">
+        return `<button type="button" class="date-pill${d === activeDate ? ' is-active' : ''}" data-date="${esc(d)}">
           <span class="m">${WD[dt.getDay()]}</span><span class="d">${dt.getDate()}</span><span class="m">${MO[dt.getMonth()]}</span></button>`;
       })
       .join('');
@@ -178,7 +179,7 @@ async function loadSlots() {
     slotsBox.innerHTML = list
       .map(
         (s) =>
-          `<button type="button" class="slot" data-id="${s.id}" data-label="${s.startTime}–${s.endTime}">${s.startTime}–${s.endTime}</button>`,
+          `<button type="button" class="slot" data-id="${esc(s.id)}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`,
       )
       .join('');
     slotsBox.querySelectorAll<HTMLElement>('.slot').forEach((b) =>
@@ -190,7 +191,7 @@ async function loadSlots() {
         selectedSlotLabel = `${dt.getDate()} ${MO[dt.getMonth()]}, ${b.dataset.label}`;
         const chosen = document.getElementById('slotChosen')!;
         chosen.style.display = 'inline-flex';
-        chosen.innerHTML = ICONS.check + ` Избра: ${selectedSlotLabel}`;
+        chosen.innerHTML = ICONS.check + ` Избра: ${esc(selectedSlotLabel)}`;
       }),
     );
   };

@@ -1,6 +1,7 @@
 // Renders the cart page from localStorage. Re-renders on qty change / removal.
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
+import { esc } from '../lib/escape';
 
 const FREE_OVER = 40;
 const SHIP = 4.9;
@@ -46,11 +47,11 @@ function render() {
   lines.innerHTML = items
     .map(
       (it) => `
-      <div class="line-item" data-product data-id="${it.id}">
-        <div class="ph"><span class="ph__label" style="font-size:9px">${it.name}</span></div>
+      <div class="line-item" data-product data-id="${esc(it.id)}">
+        <div class="ph"><span class="ph__label" style="font-size:9px">${esc(it.name)}</span></div>
         <div>
-          <div style="font-family:var(--font-head);font-size:19px;font-weight:var(--h-weight)">${it.name}</div>
-          <div class="muted" style="font-size:13.5px">${it.weight || ''}${it.weight ? ' · ' : ''}${money(it.price)}</div>
+          <div style="font-family:var(--font-head);font-size:19px;font-weight:var(--h-weight)">${esc(it.name)}</div>
+          <div class="muted" style="font-size:13.5px">${esc(it.weight || '')}${it.weight ? ' · ' : ''}${money(it.price)}</div>
           <div style="display:flex;gap:14px;align-items:center;margin-top:10px">
             <div class="stepper">
               <button data-dir="down">−</button>
