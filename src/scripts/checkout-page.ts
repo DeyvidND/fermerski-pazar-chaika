@@ -10,15 +10,23 @@ import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
 import type { Slot } from '../lib/types';
 
-const FREE_OVER = 40;
-const SHIP_ADDRESS = 4.9; // local farm delivery
-const SHIP_ECONT = 3.5; // Econt → office
-const SHIP_ECONT_ADDRESS = 5.9; // Econt → door
 const MARKET = 'Вземане от пазара · Чайка, Варна';
 
 const form = document.getElementById('checkoutForm') as HTMLFormElement | null;
 if (!form) throw new Error('no checkout form');
 const deliveryEnabled = form.dataset.delivery === '1';
+
+// Delivery fees + free-over threshold come from the farm's config, server-rendered
+// onto the form as data-* (in leva). Fall back to legacy defaults. The server is
+// authoritative at checkout — these drive the displayed estimate only.
+const num = (v: string | undefined, def: number) => {
+  const n = parseFloat(v ?? '');
+  return Number.isFinite(n) ? n : def;
+};
+const FREE_OVER = num(form.dataset.freeOver, 40); // 0 = no free-over rule
+const SHIP_ADDRESS = num(form.dataset.shipAddress, 4.9); // local self-delivery
+const SHIP_ECONT = num(form.dataset.shipEcont, 3.5); // Econt → office
+const SHIP_ECONT_ADDRESS = num(form.dataset.shipEcontAddress, 5.9); // Econt → door
 
 if (!Cart.get().length) location.replace('/cart');
 
@@ -41,7 +49,7 @@ const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
 
 function shipping(sub: number): number {
   if (method === 'pickup') return 0;
-  if (sub >= FREE_OVER) return 0;
+  if (FREE_OVER > 0 && sub >= FREE_OVER) return 0;
   if (method === 'econt') return SHIP_ECONT;
   if (method === 'econt_address') return SHIP_ECONT_ADDRESS;
   return SHIP_ADDRESS;

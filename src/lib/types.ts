@@ -11,6 +11,16 @@ export interface Storefront {
   multiFarmer: boolean;
   multiSubcat: boolean;
   econtEnabled: boolean;
+  // Read-only delivery pricing from the farm's config (cents). The server is
+  // authoritative at checkout; these are for display. freeThreshold 0 = no free.
+  delivery: DeliveryPricing;
+}
+
+export interface DeliveryPricing {
+  freeThresholdStotinki: number;
+  addressFeeStotinki: number;
+  econtFeeStotinki: number;
+  econtAddressFeeStotinki: number;
 }
 
 export interface Product {

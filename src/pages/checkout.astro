@@ -4,6 +4,14 @@ import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
+
+// Delivery pricing from the farm's config (cents). The client script reads the
+// data-* on the form; these strings drive the method-card copy.
+const d = sf.delivery;
+const eur = (st: number) => (st / 100).toFixed(2).replace('.', ',');
+const lvNum = (st: number) => (st / 100).toString();
+const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €` : '';
+const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €` : 'безплатна';
 ---
 <Layout title={`Каса · ${sf.name}`} storefront={sf}>
   <main>
@@ -20,7 +28,11 @@ const econt = sf.econtEnabled;
         </div>
         <h1 style="font-size:clamp(28px,4vw,42px);margin:14px 0 24px">Финализирай поръчката</h1>
 
-        <form class="commerce-grid" id="checkoutForm" data-delivery={delivery ? '1' : '0'}>
+        <form class="commerce-grid" id="checkoutForm" data-delivery={delivery ? '1' : '0'}
+          data-free-over={lvNum(d.freeThresholdStotinki)}
+          data-ship-address={lvNum(d.addressFeeStotinki)}
+          data-ship-econt={lvNum(d.econtFeeStotinki)}
+          data-ship-econt-address={lvNum(d.econtAddressFeeStotinki)}>
           <div class="stack" style="gap:26px">
 
             <!-- contact -->
@@ -46,19 +58,19 @@ const econt = sf.econtEnabled;
                 {delivery && (
                   <label class="radio-card" data-method="address">
                     <span class="dot"></span>
-                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · 4,90 € · безплатна над 40 €</span></span>
+                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · {addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span></span>
                   </label>
                 )}
                 {econt && (
                   <label class="radio-card" data-method="econt">
                     <span class="dot"></span>
-                    <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от 3,50 €</span></span>
+                    <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €</span></span>
                   </label>
                 )}
                 {econt && (
                   <label class="radio-card" data-method="econt_address">
                     <span class="dot"></span>
-                    <span><b>Еконт — до адрес</b><br><span class="muted" style="font-size:14px">Куриер до врата, навсякъде в България · от 5,90 €</span></span>
+                    <span><b>Еконт — до адрес</b><br><span class="muted" style="font-size:14px">Куриер до врата, навсякъде в България · от {eur(d.econtAddressFeeStotinki)} €</span></span>
                   </label>
                 )}
               </div>
