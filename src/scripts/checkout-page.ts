@@ -42,7 +42,10 @@ const doorCityField = document.getElementById('doorCityField') as HTMLElement | 
 const doorCity = document.getElementById('doorCity') as HTMLInputElement | null;
 const econtFields = document.getElementById('econtOfficeFields') as HTMLElement | null;
 const econtCity = document.getElementById('econtCity') as HTMLInputElement | null;
-const econtOffice = document.getElementById('econtOffice') as HTMLSelectElement | null;
+const econtOffice = document.getElementById('econtOffice') as
+  | HTMLSelectElement
+  | HTMLInputElement
+  | null;
 const slotCard = document.getElementById('slotCard') as HTMLElement | null;
 
 const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
@@ -123,7 +126,8 @@ async function loadOffices(city: string) {
       .map((o) => `<option value="${esc(o.code)}">${esc(o.name)}${o.address ? ' — ' + esc(o.address) : ''}</option>`)
       .join('');
 }
-if (econtCity) {
+// Live office picker only in automatic mode; manual mode uses a free-text office input.
+if (econtCity && form.dataset.econtMode === 'auto') {
   econtCity.addEventListener('input', () => {
     const v = econtCity.value.trim();
     if (officeTimer) clearTimeout(officeTimer);

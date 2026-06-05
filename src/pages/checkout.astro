@@ -4,6 +4,7 @@ import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
+const econtAuto = sf.econtMode === 'auto';
 
 // Delivery pricing from the farm's config (cents). The client script reads the
 // data-* on the form; these strings drive the method-card copy.
@@ -29,6 +30,7 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
         <h1 style="font-size:clamp(28px,4vw,42px);margin:14px 0 24px">Финализирай поръчката</h1>
 
         <form class="commerce-grid" id="checkoutForm" data-delivery={delivery ? '1' : '0'}
+          data-econt-mode={sf.econtMode}
           data-free-over={lvNum(d.freeThresholdStotinki)}
           data-ship-address={lvNum(d.addressFeeStotinki)}
           data-ship-econt={lvNum(d.econtFeeStotinki)}
@@ -87,12 +89,16 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
                 </div>
               </div>
 
-              <!-- Econt office picker (econt-to-office) -->
+              <!-- Econt office (auto: live picker · manual: free-text) -->
               <div id="econtOfficeFields" style="margin-top:14px;display:none">
                 <div class="field"><label>Град</label><input class="input" id="econtCity" placeholder="напр. София, Пловдив, Варна" autocomplete="off" /></div>
                 <div class="field" style="margin-top:10px">
                   <label>Офис на Еконт</label>
-                  <select class="input" id="econtOffice"><option value="">Първо въведи град</option></select>
+                  {econtAuto ? (
+                    <select class="input" id="econtOffice"><option value="">Първо въведи град</option></select>
+                  ) : (
+                    <input class="input" id="econtOffice" placeholder="напр. Еконт офис Чайка, ул. ..." autocomplete="off" />
+                  )}
                 </div>
               </div>
             </div>

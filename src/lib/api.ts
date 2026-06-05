@@ -69,6 +69,7 @@ export const FALLBACK_STOREFRONT: Storefront = {
   multiFarmer: false,
   multiSubcat: false,
   econtEnabled: false,
+  econtMode: 'off',
   delivery: {
     freeThresholdStotinki: 4000,
     addressFeeStotinki: 490,

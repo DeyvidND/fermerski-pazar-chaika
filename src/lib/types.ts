@@ -11,6 +11,9 @@ export interface Storefront {
   multiFarmer: boolean;
   multiSubcat: boolean;
   econtEnabled: boolean;
+  // Econt mode: 'off' | 'manual' (free-text office, ship-it-yourself) | 'auto'
+  // (live API office picker). The office picker is used only in 'auto'.
+  econtMode: 'off' | 'manual' | 'auto';
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;
