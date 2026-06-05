@@ -1,0 +1,28 @@
+# Production — one VM via Dokploy.
+#
+# Deploy as a Dokploy "Docker Compose" application (Source: this Git repo).
+# Dokploy PULLS the GHCR image built by .github/workflows/deploy.yml — no `build:`
+# block, so nothing compiles on the VM. Traefik (via the labels) routes the domain
+# set in PAZAR_DOMAIN and issues TLS. Joins the shared external `dokploy-network`
+# so it coexists with the other apps on the same VM.
+#
+# Note: PUBLIC_API_BASE / PUBLIC_TENANT_SLUG / PUBLIC_ADMIN_URL are baked into the
+# image at BUILD time (Vite-inlined) via GitHub Actions build-args — they are not
+# set here.
+services:
+  storefront:
+    image: ghcr.io/deyvidnd/fermerski-pazar-chaika:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    networks: [dokploy-network]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pazar.rule=Host(`${PAZAR_DOMAIN}`)"
+      - "traefik.http.routers.pazar.entrypoints=websecure"
+      - "traefik.http.routers.pazar.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pazar.loadbalancer.server.port=3003"
+      - "traefik.docker.network=dokploy-network"
+
+networks:
+  dokploy-network:
+    external: true
