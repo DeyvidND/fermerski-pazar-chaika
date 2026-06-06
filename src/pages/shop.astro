@@ -1,8 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
 import ProductCard from '../components/ProductCard.astro';
-import GhostProductCard from '../components/GhostProductCard.astro';
-import AdminNote from '../components/AdminNote.astro';
 import { getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
 
@@ -40,16 +38,12 @@ const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name
           </div>
         )}
 
-        {!seeded && (
-          <AdminNote text="Продуктите се управляват от админ панела. Всеки артикул се добавя към фермер и категория и се появява тук автоматично." />
-        )}
-
         <div class="grid grid--4" id="catalogGrid" data-tab-panels>
           {seeded
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)} />
               ))
-            : [0, 1, 2, 3, 4, 5, 6, 7].map(() => <GhostProductCard />)}
+            : <p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0">Все още няма продукти.</p>}
         </div>
       </div>
     </section>

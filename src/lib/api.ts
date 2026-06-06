@@ -61,7 +61,7 @@ export const getBootstrap = () =>
 
 /** Sensible defaults when `GET /public/:slug` is unreachable (dev w/o backend). */
 export const FALLBACK_STOREFRONT: Storefront = {
-  name: 'ФермаСвежест',
+  name: 'Фермерски пазар „Чайка“',
   slug: 'ferma',
   phone: '+359 88 123 4567',
   email: 'info@fermasvezhest.bg',

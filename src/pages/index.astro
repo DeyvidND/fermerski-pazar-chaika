@@ -2,11 +2,8 @@
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
 import ProductCard from '../components/ProductCard.astro';
-import GhostProductCard from '../components/GhostProductCard.astro';
 import FarmerCard from '../components/FarmerCard.astro';
-import GhostFarmerCard from '../components/GhostFarmerCard.astro';
 import CategoryCard from '../components/CategoryCard.astro';
-import AdminNote from '../components/AdminNote.astro';
 import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 
@@ -96,6 +93,7 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
     </section>
 
     <!-- CATEGORIES -->
+    {cats.length > 0 && (
     <section class="section">
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap">
@@ -106,15 +104,14 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
           <a href="/shop" class="btn btn--soft">Виж целия магазин</a>
         </div>
         <div class="grid grid--2">
-          {cats.length
-            ? cats.map((c) => <CategoryCard category={c} />)
-            : <AdminNote text="Категориите се появяват тук, щом добавиш продукти от админ панела." />}
+          {cats.map((c) => <CategoryCard category={c} />)}
         </div>
       </div>
     </section>
+    )}
 
     <!-- FARMERS (multi-farmer mode only) -->
-    {showFarmers && (
+    {showFarmers && farmers.length > 0 && (
       <section class="section" style="background:var(--surface-2)">
         <div class="wrap">
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
@@ -124,21 +121,17 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
             </div>
             <a href="/farmers" class="btn btn--soft">Всички фермери</a>
           </div>
-          {farmers.length === 0 && (
-            <AdminNote text="Фермерите се добавят от админ панела — профилите им ще се появят тук." />
-          )}
           <div class="grid grid--3">
-            {farmers.length
-              ? farmers.slice(0, 3).map((f) => (
-                  <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
-                ))
-              : [0, 1, 2].map(() => <GhostFarmerCard />)}
+            {farmers.slice(0, 3).map((f) => (
+              <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
+            ))}
           </div>
         </div>
       </section>
     )}
 
     <!-- FEATURED PRODUCTS -->
+    {seeded && (
     <section class="section--tight">
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
@@ -148,16 +141,12 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
           </div>
           <a href="/shop" class="btn btn--soft">Виж всички</a>
         </div>
-        {!seeded && (
-          <AdminNote text="Продуктите се управляват от админ панела — избраните предложения ще се покажат тук." />
-        )}
         <div class="grid grid--4">
-          {seeded
-            ? feat.map((p) => <ProductCard product={p} />)
-            : [0, 1, 2, 3].map(() => <GhostProductCard />)}
+          {feat.map((p) => <ProductCard product={p} />)}
         </div>
       </div>
     </section>
+    )}
 
     <!-- HOW IT WORKS -->
     <section class="section">
