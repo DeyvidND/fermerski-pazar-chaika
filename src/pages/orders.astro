@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
+import MediaSlot from '../components/MediaSlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 ---
@@ -24,7 +25,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
       <div class="wrap">
         <div class="grid grid--2">
           <article class="card pillar">
-            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Пазар на Чайка · щандове · 16:10</span></div>
+            <MediaSlot slot="site.pillar_market" media={sf.media} ratio="16/10" label="Пазар на Чайка · щандове · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="basket" /></span>
               <h3>Вземане от пазара</h3>
@@ -38,7 +39,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
             </div>
           </article>
           <article class="card pillar">
-            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Доставка до дома · кашон · 16:10</span></div>
+            <MediaSlot slot="site.pillar_delivery" media={sf.media} ratio="16/10" label="Доставка до дома · кашон · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="truck" /></span>
               <h3>Доставка до адрес</h3>
@@ -86,7 +87,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
               <a href="/faq" class="btn btn--ghost">Чести въпроси</a>
             </div>
           </div>
-          <div class="ph ph--rounded" style="aspect-ratio:4/3"><span class="ph__label">Снимка · кашон с поръчка · 4:3</span></div>
+          <MediaSlot slot="orders.box" media={sf.media} ratio="4/3" rounded label="Снимка · кашон с поръчка · 4:3" />
         </div>
       </div>
     </section>

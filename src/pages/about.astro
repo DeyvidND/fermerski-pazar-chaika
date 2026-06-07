@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
+import MediaSlot from '../components/MediaSlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const showFarmers = sf.multiFarmer;
@@ -21,7 +22,7 @@ const showFarmers = sf.multiFarmer;
             <a href="/orders" class="btn btn--ghost">Как да поръчам</a>
           </div>
         </div>
-        <div class="ph ph--rounded" style="aspect-ratio:4/5"><span class="ph__label">Снимка · пазарът на Чайка · 4:5</span></div>
+        <MediaSlot slot="about.portrait" media={sf.media} ratio="4/5" rounded label="Снимка · пазарът на Чайка · 4:5" />
       </div>
     </section>
 
@@ -55,13 +56,13 @@ const showFarmers = sf.multiFarmer;
           <h2 style="margin-top:8px">Един петък на Чайка</h2>
         </div>
         <div class="gallery">
-          <div class="ph wide"><span class="ph__label">Щандовете на пазара · 2:1</span></div>
-          <div class="ph"><span class="ph__label">Кошница с плодове</span></div>
-          <div class="ph tall"><span class="ph__label">Буркани с мед · 1:2</span></div>
-          <div class="ph"><span class="ph__label">Сирене и мляко</span></div>
-          <div class="ph"><span class="ph__label">Фермер на щанда</span></div>
-          <div class="ph"><span class="ph__label">Домашни сладка</span></div>
-          <div class="ph"><span class="ph__label">Клиенти на пазара</span></div>
+          <MediaSlot slot="about.gallery_stalls" media={sf.media} klass="wide" label="Щандовете на пазара · 2:1" />
+          <MediaSlot slot="about.gallery_basket" media={sf.media} label="Кошница с плодове" />
+          <MediaSlot slot="about.gallery_honey" media={sf.media} klass="tall" label="Буркани с мед · 1:2" />
+          <MediaSlot slot="about.gallery_dairy" media={sf.media} label="Сирене и мляко" />
+          <MediaSlot slot="about.gallery_farmer" media={sf.media} label="Фермер на щанда" />
+          <MediaSlot slot="about.gallery_sweets" media={sf.media} label="Домашни сладка" />
+          <MediaSlot slot="about.gallery_customers" media={sf.media} label="Клиенти на пазара" />
         </div>
       </div>
     </section>

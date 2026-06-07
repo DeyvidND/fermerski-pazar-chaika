@@ -17,6 +17,10 @@ export interface Storefront {
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;
+  // Tenant-uploaded photos for the static decorative slots, keyed by catalog slot
+  // id (e.g. "home.hero"). Optional: older backends omit it. Empty/missing slot →
+  // the MediaSlot wrapper renders its `.ph` mock.
+  media?: Record<string, { url: string }>;
 }
 
 export interface DeliveryPricing {

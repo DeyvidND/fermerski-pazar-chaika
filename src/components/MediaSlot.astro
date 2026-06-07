@@ -1,0 +1,38 @@
+---
+/**
+ * Reusable decorative image slot. Renders the tenant-uploaded photo for `slot`
+ * when one exists, otherwise the original `.ph` placeholder (dot pattern + label)
+ * — so the design stays reviewable before the farm adds photos. Drop-in
+ * replacement for any static `<div class="ph">…</div>` on the storefront.
+ *
+ * `media` is the map from the storefront profile (`sf.media`), keyed by the
+ * catalog slot id (managed in the FarmFlow admin → „Снимки на сайта"). Pass
+ * `ratio` for slots whose box is sized inline (hero/pillars/box); omit it for
+ * gallery items whose aspect-ratio comes from CSS classes (.gallery .ph, .wide,
+ * .tall) and pass that class via `klass` instead.
+ */
+interface Props {
+  slot: string;
+  media?: Record<string, { url?: string }> | null;
+  label: string;
+  ratio?: string;
+  rounded?: boolean;
+  klass?: string;
+}
+const { slot, media, label, ratio, rounded = false, klass = '' } = Astro.props;
+const url = media?.[slot]?.url;
+const cls = ['ph', rounded ? 'ph--rounded' : '', klass].filter(Boolean).join(' ');
+const style = ratio ? `aspect-ratio:${ratio}` : undefined;
+---
+<div class={cls} style={style}>
+  {url ? (
+    <img
+      src={url}
+      alt={label}
+      loading="lazy"
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+    />
+  ) : (
+    <span class="ph__label">{label}</span>
+  )}
+</div>

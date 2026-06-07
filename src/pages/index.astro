@@ -4,6 +4,7 @@ import Icon from '../components/Icon.astro';
 import ProductCard from '../components/ProductCard.astro';
 import FarmerCard from '../components/FarmerCard.astro';
 import CategoryCard from '../components/CategoryCard.astro';
+import MediaSlot from '../components/MediaSlot.astro';
 import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 
@@ -47,9 +48,8 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
           </div>
         </div>
         <div>
-          <div class="ph ph--rounded" style="aspect-ratio:4/5">
-            <span class="ph__label">Hero снимка · щандове на пазара · 4:5</span>
-          </div>
+          <MediaSlot slot="home.hero" media={sf.media} ratio="4/5" rounded
+            label="Hero снимка · щандове на пазара · 4:5" />
         </div>
       </div>
     </section>
@@ -63,7 +63,7 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
         </div>
         <div class="grid grid--2">
           <article class="card pillar">
-            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Пазар на Чайка · щандове · 16:10</span></div>
+            <MediaSlot slot="site.pillar_market" media={sf.media} ratio="16/10" label="Пазар на Чайка · щандове · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="basket" /></span>
               <h3>Пазар на място</h3>
@@ -76,7 +76,7 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
             </div>
           </article>
           <article class="card pillar">
-            <div class="ph" style="aspect-ratio:16/10"><span class="ph__label">Доставка до дома · кашон · 16:10</span></div>
+            <MediaSlot slot="site.pillar_delivery" media={sf.media} ratio="16/10" label="Доставка до дома · кашон · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="truck" /></span>
               <h3>Доставка до дома</h3>
