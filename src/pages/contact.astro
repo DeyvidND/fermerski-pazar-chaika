@@ -7,7 +7,8 @@ import { ADDRESS, MARKET_HOURS, SOCIALS, DEFAULT_PHONE, DEFAULT_EMAIL, telHref }
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const phone = sf.phone || DEFAULT_PHONE;
 const email = sf.email || DEFAULT_EMAIL;
-const iconBox = 'width:44px;height:44px;border-radius:var(--radius-sm);display:grid;place-items:center;background:var(--primary-050);color:var(--primary);flex:none';
+// Keyless Google Maps embed (output=embed needs no API key) for the market spot.
+const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent('кв. Чайка, бул. Александър Стамболийски, Варна')}&z=15&hl=bg&output=embed`;
 ---
 <Layout title={`Контакти · ${sf.name}`} storefront={sf}>
   <main>
@@ -27,23 +28,28 @@ const iconBox = 'width:44px;height:44px;border-radius:var(--radius-sm);display:g
           <div class="stack" style="gap:18px">
             <div class="grid grid--2" style="gap:14px">
               <a href={telHref(phone)} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
-                <span style={iconBox}><Icon name="truck" /></span>
+                <span class="contact-ic"><Icon name="phone" /></span>
                 <span><span class="muted" style="font-size:13px">Телефон / Viber</span><br><b>{phone}</b></span>
               </a>
               <a href={`mailto:${email}`} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
-                <span style={iconBox}><Icon name="heart" /></span>
+                <span class="contact-ic"><Icon name="mail" /></span>
                 <span><span class="muted" style="font-size:13px">Имейл</span><br><b>{email}</b></span>
               </a>
             </div>
 
             <div class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
-              <span style={iconBox}><Icon name="leaf" /></span>
+              <span class="contact-ic"><Icon name="pin" /></span>
               <span><span class="muted" style="font-size:13px">Пазар на място</span><br><b>{ADDRESS}</b> · {MARKET_HOURS}</span>
             </div>
 
-            <div class="ph ph--rounded" style="aspect-ratio:16/10">
-              <span class="ph__label">Карта · кв. Чайка, Варна · Google Maps</span>
-            </div>
+            <iframe
+              class="contact-map"
+              src={mapSrc}
+              title="Карта · кв. Чайка, Варна"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
 
             <div>
               <div class="muted" style="font-size:13.5px;margin-bottom:10px">Последвай ни</div>
