@@ -188,12 +188,19 @@ async function loadSlots() {
 
   const renderSlots = () => {
     const list = byDate.get(activeDate) || [];
-    slotsBox.innerHTML = list
+    const buttons = list
       .map(
         (s) =>
-          `<button type="button" class="slot" data-id="${esc(s.id)}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`,
+          `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`,
       )
       .join('');
+    // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
+    // day's slots when it comes from the recurring rule, so show it once.
+    const dayNote = list.find((s) => s.customerNote)?.customerNote;
+    const noteLine = dayNote
+      ? `<p class="muted" style="font-size:13px;margin-top:10px">${esc(dayNote)}</p>`
+      : '';
+    slotsBox.innerHTML = buttons + noteLine;
     slotsBox.querySelectorAll<HTMLElement>('.slot').forEach((b) =>
       b.addEventListener('click', () => {
         slotsBox.querySelectorAll('.slot').forEach((x) => x.classList.remove('is-active'));
@@ -203,7 +210,8 @@ async function loadSlots() {
         selectedSlotLabel = `${dt.getDate()} ${MO[dt.getMonth()]}, ${b.dataset.label}`;
         const chosen = document.getElementById('slotChosen')!;
         chosen.style.display = 'inline-flex';
-        chosen.innerHTML = ICONS.check + ` Избра: ${esc(selectedSlotLabel)}`;
+        const note = b.dataset.note ? ` · <span class="muted">${esc(b.dataset.note)}</span>` : '';
+        chosen.innerHTML = ICONS.check + ` Избра: ${esc(selectedSlotLabel)}${note}`;
       }),
     );
   };

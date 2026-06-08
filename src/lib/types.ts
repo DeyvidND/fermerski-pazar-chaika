@@ -84,6 +84,8 @@ export interface Slot {
   startTime: string; // HH:MM
   endTime: string; // HH:MM
   remaining: number;
+  // Optional farmer note shown to the customer (e.g. "ще се обадя преди доставка").
+  customerNote?: string | null;
 }
 
 export interface Review {
