@@ -110,5 +110,6 @@ export const FALLBACK_STOREFRONT: Storefront = {
     econtFeeStotinki: 350,
     econtAddressFeeStotinki: 590,
   },
+  methods: { ownSlots: false, pickup: true, econtOffice: false, econtAddress: false },
   media: {},
 };

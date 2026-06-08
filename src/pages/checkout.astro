@@ -13,6 +13,9 @@ const codEnabled = sf.codEnabled ?? true;
 const stripeEnabled = sf.stripeEnabled ?? false;
 const showPaymentChoice = stripeEnabled && codEnabled;
 
+// Per-method on/off flags — show only the methods the farm switched on.
+const methods = sf.methods ?? { ownSlots: true, pickup: true, econtOffice: false, econtAddress: false };
+
 // Delivery pricing from the farm's config (cents). The client script reads the
 // data-* on the form; these strings drive the method-card copy.
 const d = sf.delivery;
@@ -62,23 +65,25 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
             <div class="card" style="padding:24px;box-shadow:none">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на получаване</h3>
               <div class="stack" style="gap:12px" id="deliveryMethod">
-                <label class="radio-card is-active" data-method="pickup">
-                  <span class="dot"></span>
-                  <span><b>Вземане от пазара · Чайка</b><br><span class="muted" style="font-size:14px">В петък 11:00–18:00 · без такса · плащаш на място</span></span>
-                </label>
-                {delivery && (
+                {methods.pickup && (
+                  <label class="radio-card" data-method="pickup">
+                    <span class="dot"></span>
+                    <span><b>Вземане от пазара · Чайка</b><br><span class="muted" style="font-size:14px">В петък 11:00–18:00 · без такса · плащаш на място</span></span>
+                  </label>
+                )}
+                {delivery && methods.ownSlots && (
                   <label class="radio-card" data-method="address">
                     <span class="dot"></span>
                     <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · {addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span></span>
                   </label>
                 )}
-                {econt && econtAuto && (
+                {econt && econtAuto && methods.econtOffice && (
                   <label class="radio-card" data-method="econt">
                     <span class="dot"></span>
                     <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €</span></span>
                   </label>
                 )}
-                {econt && (
+                {econt && methods.econtAddress && (
                   <label class="radio-card" data-method="econt_address">
                     <span class="dot"></span>
                     <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €</span></span>

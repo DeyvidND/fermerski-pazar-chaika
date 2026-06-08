@@ -339,5 +339,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-setMethod('pickup');
+// Default to the first method the farm actually offers (pickup may be hidden).
+const firstMethodEl = document.querySelector('[data-method]') as HTMLElement | null;
+setMethod((firstMethodEl?.dataset.method as Method) ?? 'pickup');
 loadSlots();
