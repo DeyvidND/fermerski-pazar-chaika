@@ -6,6 +6,13 @@ const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
 const econtAuto = sf.econtMode === 'auto';
 
+// Payment options, mirroring the admin panel. Card (online) shows only when the
+// farm has Stripe; наложен платеж (COD) only when enabled. Show the radio choice
+// when both are available; otherwise the single available option is implied.
+const codEnabled = sf.codEnabled ?? true;
+const stripeEnabled = sf.stripeEnabled ?? false;
+const showPaymentChoice = stripeEnabled && codEnabled;
+
 // Delivery pricing from the farm's config (cents). The client script reads the
 // data-* on the form; these strings drive the method-card copy.
 const d = sf.delivery;
@@ -31,6 +38,8 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
 
         <form class="commerce-grid" id="checkoutForm" data-delivery={delivery ? '1' : '0'}
           data-econt-mode={sf.econtMode}
+          data-stripe={stripeEnabled ? '1' : '0'}
+          data-cod={codEnabled ? '1' : '0'}
           data-free-over={lvNum(d.freeThresholdStotinki)}
           data-ship-address={lvNum(d.addressFeeStotinki)}
           data-ship-econt={lvNum(d.econtFeeStotinki)}
@@ -114,29 +123,27 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
               </div>
             )}
 
-            <!-- payment -->
+            <!-- payment method (mirrors the admin panel: card when Stripe, наложен платеж when enabled) -->
             <div class="card" style="padding:24px;box-shadow:none">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-                <h3 style="font-size:20px">Плащане</h3>
-                <span class="muted" style="font-size:12.5px;display:flex;align-items:center;gap:6px">🔒 защитено плащане</span>
-              </div>
-              <div class="stack" style="gap:14px">
-                <div class="field">
-                  <label>Номер на карта</label>
-                  <div style="position:relative">
-                    <input class="input" placeholder="1234 1234 1234 1234" inputmode="numeric" />
-                    <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:5px">
-                      <span style="width:30px;height:20px;border-radius:3px;background:linear-gradient(90deg,#EB001B,#F79E1B)"></span>
-                      <span style="width:30px;height:20px;border-radius:3px;background:#1A1F71"></span>
-                    </div>
-                  </div>
+              <h3 style="font-size:20px;margin-bottom:16px">Начин на плащане</h3>
+              {showPaymentChoice ? (
+                <div class="stack" style="gap:12px" id="paymentMethod">
+                  <label class="radio-card is-active" data-pay="online">
+                    <span class="dot"></span>
+                    <span><b>Карта (онлайн)</b><br><span class="muted" style="font-size:14px">Плащаш сигурно с карта сега</span></span>
+                  </label>
+                  <label class="radio-card" data-pay="cod">
+                    <span class="dot"></span>
+                    <span><b>Наложен платеж</b><br><span class="muted" style="font-size:14px">Плащаш при получаване (напр. в офис на Еконт)</span></span>
+                  </label>
                 </div>
-                <div class="field-row">
-                  <div class="field"><label>Валидност</label><input class="input" placeholder="ММ / ГГ" inputmode="numeric" /></div>
-                  <div class="field"><label>CVC</label><input class="input" placeholder="CVC" inputmode="numeric" /></div>
-                </div>
-              </div>
-              <p class="muted" style="font-size:12.5px;margin-top:12px">Ако фермата има свързан Stripe акаунт, ще те пренасочим към защитена платежна страница. Иначе плащаш на място / при доставка.</p>
+              ) : (
+                <p class="muted" style="font-size:14px">
+                  {stripeEnabled
+                    ? 'Плащане с карта (онлайн) при завършване на поръчката.'
+                    : 'Плащане при получаване (наложен платеж).'}
+                </p>
+              )}
             </div>
 
           </div>

@@ -14,6 +14,11 @@ export interface Storefront {
   // Econt mode: 'off' | 'manual' (free-text office, ship-it-yourself) | 'auto'
   // (live API office picker). The office picker is used only in 'auto'.
   econtMode: 'off' | 'manual' | 'auto';
+  // Customer payment options, mirroring the admin panel. `codEnabled`: наложен
+  // платеж (pay on delivery) is offered. `stripeEnabled`: the farm can take card
+  // payments now. Absent (older backend) → COD on, card off (cash-first).
+  codEnabled?: boolean;
+  stripeEnabled?: boolean;
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;
@@ -116,7 +121,10 @@ export interface CreateOrderInput {
   slotId?: string;
   deliveryType?: 'pickup' | 'address' | 'econt' | 'econt_address';
   deliveryAddress?: string;
+  deliveryCity?: string;
   econtOffice?: string;
+  // How the customer pays: 'online' (Stripe card) or 'cod' (наложен платеж).
+  paymentMethod?: 'online' | 'cod';
   notes?: string;
 }
 

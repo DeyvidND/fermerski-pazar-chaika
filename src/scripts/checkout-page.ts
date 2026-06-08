@@ -35,6 +35,20 @@ let method: Method = 'pickup';
 let selectedSlotId: string | null = null;
 let selectedSlotLabel = '';
 
+// Payment method, mirroring the admin panel. Default to card when the farm can
+// take it, else наложен платеж (COD). The radios render only when both options
+// are offered; otherwise this default is what gets sent.
+const stripeEnabled = form.dataset.stripe === '1';
+let pay: 'online' | 'cod' = stripeEnabled ? 'online' : 'cod';
+document.querySelectorAll<HTMLElement>('[data-pay]').forEach((el) =>
+  el.addEventListener('click', () => {
+    pay = el.dataset.pay as 'online' | 'cod';
+    document
+      .querySelectorAll<HTMLElement>('[data-pay]')
+      .forEach((x) => x.classList.toggle('is-active', x === el));
+  }),
+);
+
 const addr = document.getElementById('addressFields') as HTMLElement;
 const addrInput = document.getElementById('addressInput') as HTMLInputElement | null;
 const addrLabel = document.getElementById('addressLabel') as HTMLElement | null;
@@ -239,6 +253,7 @@ form.addEventListener('submit', async (e) => {
     customerName,
     customerPhone,
     customerEmail,
+    paymentMethod: pay,
   };
 
   if (method === 'pickup') {
