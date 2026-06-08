@@ -15,3 +15,18 @@ export const DEFAULT_PHONE = '+359 88 123 4567';
 export const DEFAULT_EMAIL = 'info@fermasvezhest.bg';
 
 export const telHref = (phone: string) => 'tel:' + phone.replace(/\s/g, '');
+
+/** Origin of the first usable absolute image URL (the tenant's R2/CDN host), for
+ *  a `<link rel="preconnect">` so the browser opens that connection before it
+ *  meets the first <img>. Returns null when no absolute URL is present. */
+export const imageOrigin = (...urls: (string | null | undefined)[]): string | null => {
+  for (const u of urls) {
+    if (!u) continue;
+    try {
+      return new URL(u).origin;
+    } catch {
+      // relative or malformed — skip
+    }
+  }
+  return null;
+};

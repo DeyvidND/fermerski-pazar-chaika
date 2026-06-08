@@ -12,9 +12,12 @@ interface Props {
   description?: string;
   storefront?: Storefront;
   bodyClass?: string;
+  /** Origin of the image host (R2/CDN). Emitted as preconnect so the first
+   *  photo's connection is warm before the browser reaches the <img>. */
+  imageOrigin?: string | null;
 }
 
-const { title, description, bodyClass } = Astro.props;
+const { title, description, bodyClass, imageOrigin } = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
@@ -35,6 +38,12 @@ const desc =
   <meta property="og:type" content="website" />
   <meta name="theme-color" content="#3F7D43" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  {imageOrigin && (
+    <>
+      <link rel="preconnect" href={imageOrigin} crossorigin />
+      <link rel="dns-prefetch" href={imageOrigin} />
+    </>
+  )}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   {/* Non-render-blocking font load: preload as style, then promote to stylesheet. */}

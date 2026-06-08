@@ -4,6 +4,7 @@ import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
 import { getStorefront, getFarmers, getProducts, getSubcategories, FALLBACK_STOREFRONT } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
+import { imageOrigin } from '../../lib/site';
 
 const { id } = Astro.params;
 const [sfRaw, farmers, products, subcats] = await Promise.all([
@@ -29,8 +30,9 @@ const farmerImages = farmer.images?.length
     : [];
 const eyebrow = [farmer.role, farmer.since ? 'от ' + farmer.since : null].filter(Boolean).join(' · ');
 const yearsWithUs = farmer.since && /^\d{4}$/.test(farmer.since) ? 2026 - Number(farmer.since) : null;
+const imgOrigin = imageOrigin(farmerImages[0]);
 ---
-<Layout title={`${farmer.name} · ${sf.name}`} storefront={sf}>
+<Layout title={`${farmer.name} · ${sf.name}`} storefront={sf} imageOrigin={imgOrigin}>
   <main>
     <div class="wrap">
       <nav class="breadcrumb">

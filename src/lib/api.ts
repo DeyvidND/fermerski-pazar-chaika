@@ -12,15 +12,46 @@ import type {
   ReviewSummary,
 } from './types';
 
-async function get<T>(path: string, fallback: T): Promise<T> {
+// Short-lived in-process cache for SSR reads. The node-standalone server is one
+// long-lived process, so a tiny TTL memo lets repeat renders skip the backend
+// round trip, and an in-flight map coalesces concurrent identical reads into a
+// single fetch under load (e.g. a burst of visitors all hitting the home page).
+// Only successful responses are cached — failures fall through so a recovered
+// backend is picked up immediately instead of serving an empty list for the TTL.
+const READ_TTL_MS = 30_000;
+const FETCH_TIMEOUT_MS = 8_000;
+const memo = new Map<string, { exp: number; val: unknown }>();
+const inflight = new Map<string, Promise<unknown>>();
+
+async function get<T>(path: string, fallback: T, ttlMs = READ_TTL_MS): Promise<T> {
+  if (ttlMs > 0) {
+    const hit = memo.get(path);
+    if (hit && hit.exp > Date.now()) return hit.val as T;
+    const flying = inflight.get(path);
+    if (flying) return (await flying) as T;
+  }
+
+  const run = (async (): Promise<T> => {
+    try {
+      const res = await fetch(`${PUBLIC_BASE}${path}`, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!res.ok) return fallback;
+      const data = (await res.json()) as T;
+      if (ttlMs > 0) memo.set(path, { exp: Date.now() + ttlMs, val: data });
+      return data;
+    } catch {
+      return fallback;
+    }
+  })();
+
+  if (ttlMs <= 0) return run;
+  inflight.set(path, run);
   try {
-    const res = await fetch(`${PUBLIC_BASE}${path}`, {
-      headers: { accept: 'application/json' },
-    });
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
-  } catch {
-    return fallback;
+    return await run;
+  } finally {
+    inflight.delete(path);
   }
 }
 
@@ -39,8 +70,9 @@ export const getFarmers = () =>
 export const getSubcategories = () =>
   get<Subcategory[]>('/subcategories', []);
 
+// Delivery slots carry live remaining-capacity — never memoize them.
 export const getSlots = (date?: string) =>
-  get<Slot[]>(`/slots${date ? `?date=${date}` : ''}`, []);
+  get<Slot[]>(`/slots${date ? `?date=${date}` : ''}`, [], 0);
 
 export const getReviews = () =>
   get<ReviewSummary>('/reviews', { average: 0, count: 0, reviews: [] });

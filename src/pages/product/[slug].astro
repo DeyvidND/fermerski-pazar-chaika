@@ -6,6 +6,7 @@ import Gallery from '../../components/Gallery.astro';
 import { getStorefront, getProduct, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../../lib/api';
 import { money } from '../../lib/money';
 import { featured } from '../../lib/catalog';
+import { imageOrigin } from '../../lib/site';
 
 const { slug } = Astro.params;
 const [sfRaw, product, products, farmers, subcats] = await Promise.all([
@@ -36,8 +37,9 @@ const productImages = product.images?.length
 const priceLv = (product.priceStotinki / 100).toFixed(2);
 const metaBits = [product.weight, farmer?.name].filter(Boolean).join(' · ');
 const tag = product.featured ? '★ Популярен' : product.compareAtPriceStotinki ? 'Промо' : null;
+const imgOrigin = imageOrigin(productImages[0]);
 ---
-<Layout title={`${product.name} · ${sf.name}`} storefront={sf}>
+<Layout title={`${product.name} · ${sf.name}`} storefront={sf} imageOrigin={imgOrigin}>
   <main data-product>
     <div class="wrap">
       <nav class="breadcrumb">

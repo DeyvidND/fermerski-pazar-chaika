@@ -18,8 +18,11 @@ interface Props {
   ratio?: string;
   rounded?: boolean;
   klass?: string;
+  /** Set on an above-the-fold LCP slot (e.g. the home hero) so the browser
+   *  fetches it ahead of other eager images. */
+  priority?: boolean;
 }
-const { slot, media, label, ratio, rounded = false, klass = '' } = Astro.props;
+const { slot, media, label, ratio, rounded = false, klass = '', priority = false } = Astro.props;
 const url = media?.[slot]?.url;
 const cls = ['ph', rounded ? 'ph--rounded' : '', klass].filter(Boolean).join(' ');
 const style = ratio ? `aspect-ratio:${ratio}` : undefined;
@@ -30,6 +33,7 @@ const style = ratio ? `aspect-ratio:${ratio}` : undefined;
       src={url}
       alt={label}
       loading="eager"
+      fetchpriority={priority ? 'high' : undefined}
       style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
     />
   ) : (

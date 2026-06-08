@@ -7,6 +7,7 @@ import CategoryCard from '../components/CategoryCard.astro';
 import MediaSlot from '../components/MediaSlot.astro';
 import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
+import { imageOrigin } from '../lib/site';
 
 // One round trip when the backend exposes /bootstrap; otherwise fall back to the
 // four individual (still cached) reads in parallel.
@@ -24,8 +25,10 @@ const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).le
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
 const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермерите' } : { href: '/shop', label: 'Разгледай магазина' };
+// Warm a connection to the image host before the browser meets the first <img>.
+const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUrl, farmers[0]?.imageUrl);
 ---
-<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf}>
+<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf} imageOrigin={imgOrigin}>
   <main>
     <!-- HERO -->
     <section class="hero section">
@@ -48,7 +51,7 @@ const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермери�
           </div>
         </div>
         <div>
-          <MediaSlot slot="home.hero" media={sf.media} ratio="4/5" rounded
+          <MediaSlot slot="home.hero" media={sf.media} ratio="4/5" rounded priority
             label="Hero снимка · щандове на пазара · 4:5" />
         </div>
       </div>
