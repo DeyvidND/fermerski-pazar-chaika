@@ -22,6 +22,9 @@ export interface Storefront {
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;
+  // Per-method on/off flags — the storefront shows only the methods the farm
+  // switched on. Optional (older backend) → callers fall back to sensible defaults.
+  methods?: DeliveryMethods;
   // Tenant-uploaded photos for the static decorative slots, keyed by catalog slot
   // id (e.g. "home.hero"). Optional: older backends omit it. Empty/missing slot →
   // the MediaSlot wrapper renders its `.ph` mock.
@@ -33,6 +36,14 @@ export interface DeliveryPricing {
   addressFeeStotinki: number;
   econtFeeStotinki: number;
   econtAddressFeeStotinki: number;
+}
+
+/** Per-method on/off flags from the farm's config. */
+export interface DeliveryMethods {
+  ownSlots: boolean;
+  pickup: boolean;
+  econtOffice: boolean;
+  econtAddress: boolean;
 }
 
 export interface Product {
@@ -58,6 +69,14 @@ export interface Product {
   createdAt: string | null;
 }
 
+/** How a cover image is framed: focal point (x/y, 0..1) + zoom (1..3). Returned
+ *  by the FarmFlow public API; null/absent = centered, no zoom. */
+export interface CoverCrop {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface Farmer {
   id: string;
   name: string;
@@ -67,6 +86,7 @@ export interface Farmer {
   since: string | null;
   tint: string | null;
   imageUrl: string | null;
+  coverCrop?: CoverCrop | null;
   images?: string[];
   position: number;
   createdAt: string | null;
@@ -78,6 +98,7 @@ export interface Subcategory {
   description: string | null;
   tint: string | null;
   imageUrl: string | null;
+  coverCrop?: CoverCrop | null;
   images?: string[];
   position: number;
   createdAt: string | null;
