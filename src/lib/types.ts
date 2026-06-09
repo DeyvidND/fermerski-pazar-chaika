@@ -69,6 +69,14 @@ export interface Product {
   createdAt: string | null;
 }
 
+/** How a cover image is framed: focal point (x/y, 0..1) + zoom (1..3). Returned
+ *  by the FarmFlow public API; null/absent = centered, no zoom. */
+export interface CoverCrop {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface Farmer {
   id: string;
   name: string;
@@ -78,6 +86,7 @@ export interface Farmer {
   since: string | null;
   tint: string | null;
   imageUrl: string | null;
+  coverCrop?: CoverCrop | null;
   images?: string[];
   position: number;
   createdAt: string | null;
@@ -89,6 +98,7 @@ export interface Subcategory {
   description: string | null;
   tint: string | null;
   imageUrl: string | null;
+  coverCrop?: CoverCrop | null;
   images?: string[];
   position: number;
   createdAt: string | null;
