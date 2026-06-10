@@ -4,15 +4,11 @@ import Icon from '../components/Icon.astro';
 import FarmerCard from '../components/FarmerCard.astro';
 import GhostFarmerCard from '../components/GhostFarmerCard.astro';
 import AdminNote from '../components/AdminNote.astro';
-import { getStorefront, getFarmers, getProducts, FALLBACK_STOREFRONT } from '../lib/api';
+import { getCatalog } from '../lib/api';
 import { catIdOf } from '../lib/catalog';
 
-const [sfRaw, farmers, products] = await Promise.all([
-  getStorefront(),
-  getFarmers(),
-  getProducts(),
-]);
-const sf = sfRaw ?? FALLBACK_STOREFRONT;
+// One /bootstrap round trip (shared memo) instead of three separate reads.
+const { storefront: sf, farmers, products } = await getCatalog();
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;

@@ -2,18 +2,13 @@
 import Layout from '../../components/Layout.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
-import { getStorefront, getFarmers, getProducts, getSubcategories, FALLBACK_STOREFRONT } from '../../lib/api';
+import { getCatalog } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
 
 const { id } = Astro.params;
-const [sfRaw, farmers, products, subcats] = await Promise.all([
-  getStorefront(),
-  getFarmers(),
-  getProducts(),
-  getSubcategories(),
-]);
-const sf = sfRaw ?? FALLBACK_STOREFRONT;
+// One /bootstrap round trip (shared memo) instead of four separate reads.
+const { storefront: sf, farmers, products, subcategories: subcats } = await getCatalog();
 const farmer = farmers.find((f) => f.id === id) ?? null;
 
 if (!farmer) {

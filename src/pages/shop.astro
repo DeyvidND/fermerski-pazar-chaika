@@ -1,15 +1,12 @@
 ---
 import Layout from '../components/Layout.astro';
 import ProductCard from '../components/ProductCard.astro';
-import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
+import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
 import { money } from '../lib/money';
 
-const boot = await getBootstrap();
-const [sfRaw, products, farmers, subcats] = boot
-  ? [boot.storefront, boot.products, boot.farmers, boot.subcategories]
-  : await Promise.all([getStorefront(), getProducts(), getFarmers(), getSubcategories()]);
-const sf = sfRaw ?? FALLBACK_STOREFRONT;
+const boot = await getCatalog();
+const { storefront: sf, products, farmers, subcategories: subcats } = boot;
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
 const active = products.filter((p) => p.isActive !== false);
 const seeded = active.length > 0;

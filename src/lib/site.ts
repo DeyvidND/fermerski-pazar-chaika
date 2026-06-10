@@ -46,14 +46,27 @@ export function socialIconName(url: string): string {
   return 'globe';
 }
 
+/** Allow only safe link schemes for any href built from API/tenant data.
+ *  Neutralizes `javascript:`/`data:`/`vbscript:` etc. to '#' — defense-in-depth
+ *  on top of the backend's @IsUrl validation, so a future write-path regression
+ *  can't turn a tenant social link into stored XSS on the storefront. */
+export function safeHref(url: string): string {
+  try {
+    const proto = new URL(url, 'https://invalid.example').protocol;
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(proto) ? url : '#';
+  } catch {
+    return '#';
+  }
+}
+
 /** Resolved social links for rendering: live admin list if present, else the
  *  static SOCIALS fallback. Each row carries an href, label, and icon name. */
 export function resolveSocials(sf: Storefront): { href: string; label: string; icon: string }[] {
   const live = (sf.contact?.social ?? []).filter((s) => s.url);
   if (live.length) {
-    return live.map((s) => ({ href: s.url, label: s.label || 'Социална мрежа', icon: socialIconName(s.url) }));
+    return live.map((s) => ({ href: safeHref(s.url), label: s.label || 'Социална мрежа', icon: socialIconName(s.url) }));
   }
-  return SOCIALS.map((s) => ({ href: s.href, label: s.label, icon: s.name }));
+  return SOCIALS.map((s) => ({ href: safeHref(s.href), label: s.label, icon: s.name }));
 }
 
 /** Contact fields with static fallbacks. */

@@ -107,8 +107,11 @@ function setMethod(m: Method) {
   }
   // Econt office picker: office method only.
   if (econtFields) econtFields.style.display = m === 'econt' ? '' : 'none';
-  // Slot: local farm delivery only (Econt is courier-shipped).
+  // Slot: local farm delivery only (Econt is courier-shipped). Fetch the slots
+  // lazily the first time address delivery is actually chosen — a pickup/Econt
+  // customer never triggers the (uncacheable, live-capacity) /slots call.
   if (slotCard) slotCard.style.display = m === 'address' ? '' : 'none';
+  if (m === 'address') void loadSlots();
   renderSummary();
 }
 
@@ -154,14 +157,16 @@ if (econtCity && form.dataset.econtMode === 'auto') {
 const WD = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MO = ['яну', 'фев', 'мар', 'апр', 'май', 'юни', 'юли', 'авг', 'сеп', 'окт', 'ное', 'дек'];
 
+let slotsLoaded = false;
 async function loadSlots() {
-  if (!deliveryEnabled || !slotCard) return;
+  if (!deliveryEnabled || !slotCard || slotsLoaded) return;
+  slotsLoaded = true; // memoize: one fetch per checkout view, on first address pick
   let slots: Slot[] = [];
   try {
     const res = await fetch(`${PUBLIC_BASE}/slots`, { headers: { accept: 'application/json' } });
     if (res.ok) slots = (await res.json()) as Slot[];
   } catch {
-    /* offline — leave empty */
+    slotsLoaded = false; // transient failure — allow a retry on the next selection
   }
 
   const datePills = document.getElementById('datePills')!;
@@ -340,6 +345,6 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Default to the first method the farm actually offers (pickup may be hidden).
+// setMethod lazily fires loadSlots() itself when that default is address delivery.
 const firstMethodEl = document.querySelector('[data-method]') as HTMLElement | null;
 setMethod((firstMethodEl?.dataset.method as Method) ?? 'pickup');
-loadSlots();

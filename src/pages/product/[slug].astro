@@ -3,20 +3,17 @@ import Layout from '../../components/Layout.astro';
 import Icon from '../../components/Icon.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
-import { getStorefront, getProduct, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../../lib/api';
+import { getCatalog } from '../../lib/api';
 import { money } from '../../lib/money';
 import { featured } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
 
 const { slug } = Astro.params;
-const [sfRaw, product, products, farmers, subcats] = await Promise.all([
-  getStorefront(),
-  getProduct(slug!),
-  getProducts(),
-  getFarmers(),
-  getSubcategories(),
-]);
-const sf = sfRaw ?? FALLBACK_STOREFRONT;
+// One /bootstrap round trip (shared memo). The backend's single-product endpoint
+// is just a find over this same cached catalog, so look the product up locally
+// instead of a redundant 5th call.
+const { storefront: sf, products, farmers, subcategories: subcats } = await getCatalog();
+const product = products.find((p) => p.slug === slug) ?? null;
 
 if (!product) {
   return Astro.redirect('/404');
