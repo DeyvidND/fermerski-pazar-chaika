@@ -1,0 +1,73 @@
+---
+import Layout from '../components/Layout.astro';
+import AdminNote from '../components/AdminNote.astro';
+import { getStorefront, getArticles, FALLBACK_STOREFRONT } from '../lib/api';
+import { formatDateBg } from '../lib/dates';
+
+const [sfRaw, articles] = await Promise.all([getStorefront(), getArticles()]);
+const sf = sfRaw ?? FALLBACK_STOREFRONT;
+const featured = articles[0] ?? null;
+const rest = articles.slice(1);
+---
+<Layout title={`Статии · ${sf.name}`} storefront={sf}>
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Статии</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Статии</span>
+          <h2 style="margin-top:8px">Новини и истории от фермата</h2>
+          <p>Рецепти, съвети и истории зад продуктите.</p>
+        </div>
+
+        {articles.length === 0 && (
+          <AdminNote text="Все още няма публикувани статии." />
+        )}
+
+        {featured && (
+          <a
+            href={`/articles/${featured.slug}`}
+            class="card"
+            style="display:grid;grid-template-columns:1.1fr 1fr;overflow:hidden;margin-bottom:26px;text-decoration:none"
+          >
+            {featured.coverImageUrl
+              ? <img src={featured.coverImageUrl} alt={featured.title} style="width:100%;height:100%;min-height:280px;object-fit:cover" />
+              : <div class="ph" style="min-height:280px;border-radius:0"></div>
+            }
+            <div style="padding:clamp(22px,3vw,40px);display:flex;flex-direction:column;justify-content:center">
+              <span class="tag" style="align-self:flex-start">Препоръчано</span>
+              <h3 style="font-size:clamp(24px,3vw,34px);margin:14px 0 12px">{featured.title}</h3>
+              {featured.excerpt && <p class="muted">{featured.excerpt}</p>}
+              {featured.publishedAt && (
+                <div class="muted" style="font-size:13.5px;margin-top:16px">{formatDateBg(featured.publishedAt)}</div>
+              )}
+            </div>
+          </a>
+        )}
+
+        {rest.length > 0 && (
+          <div class="grid grid--3">
+            {rest.map((a) => (
+              <a href={`/articles/${a.slug}`} class="card" style="text-decoration:none">
+                {a.coverImageUrl
+                  ? <img src={a.coverImageUrl} alt={a.title} style="width:100%;aspect-ratio:16/10;object-fit:cover" />
+                  : <div class="ph" style="aspect-ratio:16/10"></div>
+                }
+                <div style="padding:20px 20px 24px;display:flex;flex-direction:column;flex:1">
+                  <h3 style="font-size:20px;margin:0 0 10px">{a.title}</h3>
+                  {a.excerpt && <p class="muted" style="font-size:14.5px">{a.excerpt}</p>}
+                  {a.publishedAt && (
+                    <div class="muted" style="font-size:13px;margin-top:14px">{formatDateBg(a.publishedAt)}</div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+</Layout>

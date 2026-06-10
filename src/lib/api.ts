@@ -8,8 +8,8 @@ import type {
   Product,
   Farmer,
   Subcategory,
-  Slot,
   ReviewSummary,
+  Article,
 } from './types';
 
 // Short-lived in-process cache for SSR reads. The node-standalone server is one
@@ -70,12 +70,14 @@ export const getFarmers = () =>
 export const getSubcategories = () =>
   get<Subcategory[]>('/subcategories', []);
 
-// Delivery slots carry live remaining-capacity — never memoize them.
-export const getSlots = (date?: string) =>
-  get<Slot[]>(`/slots${date ? `?date=${date}` : ''}`, [], 0);
-
 export const getReviews = () =>
   get<ReviewSummary>('/reviews', { average: 0, count: 0, reviews: [] });
+
+export const getArticles = () =>
+  get<Article[]>('/articles', []);
+
+export const getArticle = (slug: string) =>
+  get<Article | null>(`/articles/${encodeURIComponent(slug)}`, null, 0);
 
 /** Storefront profile + catalog + farmers + sections in one request. Saves three
  *  round trips on the home page; the backend serves it from cache. Returns null
@@ -93,6 +95,43 @@ export interface Bootstrap {
 
 export const getBootstrap = () =>
   get<Bootstrap | null>('/bootstrap', null);
+
+/** Prime the per-resource memo from a bootstrap payload so a later
+ *  getStorefront()/getProducts()/… on the same (or a subsequent within-TTL) render
+ *  reuses it instead of issuing its own backend round trip. */
+function seedMemo(path: string, val: unknown): void {
+  memo.set(path, { exp: Date.now() + READ_TTL_MS, val });
+}
+
+/** The catalog bundle every content page needs: profile + products + farmers +
+ *  subcategories (+ resolved product-of-week). One backend round trip via
+ *  `/bootstrap`; on an older backend without it, falls back to the four individual
+ *  (still cached) reads in parallel. Seeds the per-resource memo so single-resource
+ *  callers (Layout, cart, checkout) on the same render reuse the same fetch. Use
+ *  this on shop/farmers/product pages instead of fanning out 3-5 calls each. */
+export async function getCatalog(): Promise<Bootstrap> {
+  const boot = await getBootstrap();
+  if (boot) {
+    seedMemo('', boot.storefront);
+    seedMemo('/products', boot.products);
+    seedMemo('/farmers', boot.farmers);
+    seedMemo('/subcategories', boot.subcategories);
+    return boot;
+  }
+  const [storefront, products, farmers, subcategories] = await Promise.all([
+    getStorefront(),
+    getProducts(),
+    getFarmers(),
+    getSubcategories(),
+  ]);
+  return {
+    storefront: storefront ?? FALLBACK_STOREFRONT,
+    products,
+    farmers,
+    subcategories,
+    productOfWeek: null,
+  };
+}
 
 /** Sensible defaults when `GET /public/:slug` is unreachable (dev w/o backend). */
 export const FALLBACK_STOREFRONT: Storefront = {

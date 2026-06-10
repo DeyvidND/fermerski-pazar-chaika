@@ -12,6 +12,7 @@ export function navLinks(multiFarmer: boolean): NavLink[] {
     { label: 'Магазин', href: '/shop' },
     { label: 'Поръчки', href: '/orders' },
     { label: 'За нас', href: '/about' },
+    { label: 'Статии', href: '/articles' },
     { label: 'Отзиви', href: '/reviews' },
     { label: 'Контакти', href: '/contact' },
   ];

@@ -5,18 +5,21 @@ import ProductCard from '../components/ProductCard.astro';
 import FarmerCard from '../components/FarmerCard.astro';
 import CategoryCard from '../components/CategoryCard.astro';
 import MediaSlot from '../components/MediaSlot.astro';
-import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
+import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin } from '../lib/site';
 import { money } from '../lib/money';
 
-// One round trip when the backend exposes /bootstrap; otherwise fall back to the
-// four individual (still cached) reads in parallel.
-const boot = await getBootstrap();
-const [sfRaw, products, farmers, subcats] = boot
-  ? [boot.storefront, boot.products, boot.farmers, boot.subcategories]
-  : await Promise.all([getStorefront(), getProducts(), getFarmers(), getSubcategories()]);
-const sf = sfRaw ?? FALLBACK_STOREFRONT;
+// One round trip via /bootstrap (falls back to the four parallel reads on an older
+// backend). Seeds the per-resource memo so the rest of this render + a within-TTL
+// navigation to /shop etc. reuse the same fetch.
+const boot = await getCatalog();
+const { storefront: sf, products, farmers, subcats } = {
+  storefront: boot.storefront,
+  products: boot.products,
+  farmers: boot.farmers,
+  subcats: boot.subcategories,
+};
 
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
 const feat = featured(products, 4);

@@ -166,3 +166,27 @@ export interface CheckoutResult {
   orderId: string;
   checkoutUrl: string | null;
 }
+
+export interface ArticleMedia {
+  id: string;
+  type: 'image' | 'video' | 'youtube' | 'instagram';
+  url: string;
+  embedId: string | null;
+  caption: string | null;
+  position: number;
+}
+
+export interface Article {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  body: string | null;
+  coverImageUrl: string | null;
+  category: string | null;
+  status: 'published' | 'draft';
+  publishedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  media: ArticleMedia[];
+}
