@@ -75,3 +75,12 @@ export const contactHours = (sf: Storefront) => sf.contact?.hours || MARKET_HOUR
 export const contactTagline = (sf: Storefront) =>
   sf.contact?.tagline ||
   'Фермерски пазар на Чайка, Варна. Местни стопани на едно място — пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.';
+
+/** Keyless Google Maps embed: prefer the admin map pin (lat,lng), else the address text. */
+export const mapEmbedSrc = (sf: Storefront) => {
+  const q =
+    sf.contact?.mapLat && sf.contact?.mapLng
+      ? `${sf.contact.mapLat},${sf.contact.mapLng}`
+      : contactAddress(sf);
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=15&hl=bg&output=embed`;
+};

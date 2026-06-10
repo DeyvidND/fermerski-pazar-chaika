@@ -71,6 +71,8 @@ export interface Product {
   tint: string | null;
   isActive: boolean | null;
   imageUrl: string | null;
+  /** Cover framing for the card; null/absent = centered, no zoom. */
+  coverCrop?: CoverCrop | null;
   /** Ordered gallery (cover first). Optional: older backends omit it; derive a
    *  fallback from `imageUrl`. */
   images?: string[];

@@ -2,7 +2,7 @@
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
-import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours } from '../lib/site';
+import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours, mapEmbedSrc } from '../lib/site';
 
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const phone = sf.phone || DEFAULT_PHONE;
@@ -10,12 +10,7 @@ const email = sf.email || DEFAULT_EMAIL;
 const socials = resolveSocials(sf);
 const address = contactAddress(sf);
 const hours = contactHours(sf);
-// Map: prefer the admin pin (lat,lng); else the address text. Keyless embed.
-const mapQuery =
-  sf.contact?.mapLat && sf.contact?.mapLng
-    ? `${sf.contact.mapLat},${sf.contact.mapLng}`
-    : address;
-const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&hl=bg&output=embed`;
+const mapSrc = mapEmbedSrc(sf);
 ---
 <Layout title={`Контакти · ${sf.name}`} storefront={sf}>
   <main>
