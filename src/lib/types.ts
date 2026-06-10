@@ -29,6 +29,19 @@ export interface Storefront {
   // id (e.g. "home.hero"). Optional: older backends omit it. Empty/missing slot →
   // the MediaSlot wrapper renders its `.ph` mock.
   media?: Record<string, { url: string }>;
+  // Editable contact block from the farm's admin. Optional (older backend) →
+  // the storefront falls back to its static copy in site.ts.
+  contact?: {
+    address: string | null;
+    hours: string | null;
+    tagline: string | null;
+    social: { label: string; url: string }[];
+    mapLat: string | null;
+    mapLng: string | null;
+  };
+  // Tenant website icon + browser theme color. Null/absent → static defaults.
+  faviconUrl?: string | null;
+  themeColor?: string | null;
 }
 
 export interface DeliveryPricing {

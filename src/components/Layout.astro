@@ -25,6 +25,17 @@ const storefront: Storefront =
 const desc =
   description ??
   'Фермерски пазар Чайка, Варна — местни стопани на едно място. Пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.';
+
+const favicon = storefront.faviconUrl || '/favicon.svg';
+const faviconPath = favicon.split(/[?#]/)[0].toLowerCase();
+const faviconType = faviconPath.endsWith('.svg')
+  ? 'image/svg+xml'
+  : faviconPath.endsWith('.png')
+    ? 'image/png'
+    : faviconPath.endsWith('.ico')
+      ? 'image/x-icon'
+      : undefined;
+const themeColor = storefront.themeColor || '#3F7D43';
 ---
 <!DOCTYPE html>
 <html lang="bg" data-theme="ferma">
@@ -36,8 +47,8 @@ const desc =
   <meta property="og:title" content={title} />
   <meta property="og:description" content={desc} />
   <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#3F7D43" />
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content={themeColor} />
+  <link rel="icon" href={favicon} type={faviconType} />
   {imageOrigin && (
     <>
       <link rel="preconnect" href={imageOrigin} crossorigin />

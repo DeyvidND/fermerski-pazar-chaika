@@ -2,13 +2,20 @@
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
-import { ADDRESS, MARKET_HOURS, SOCIALS, DEFAULT_PHONE, DEFAULT_EMAIL, telHref } from '../lib/site';
+import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours } from '../lib/site';
 
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const phone = sf.phone || DEFAULT_PHONE;
 const email = sf.email || DEFAULT_EMAIL;
-// Keyless Google Maps embed (output=embed needs no API key) for the market spot.
-const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent('кв. Чайка, бул. Александър Стамболийски, Варна')}&z=15&hl=bg&output=embed`;
+const socials = resolveSocials(sf);
+const address = contactAddress(sf);
+const hours = contactHours(sf);
+// Map: prefer the admin pin (lat,lng); else the address text. Keyless embed.
+const mapQuery =
+  sf.contact?.mapLat && sf.contact?.mapLng
+    ? `${sf.contact.mapLat},${sf.contact.mapLng}`
+    : address;
+const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&hl=bg&output=embed`;
 ---
 <Layout title={`Контакти · ${sf.name}`} storefront={sf}>
   <main>
@@ -39,7 +46,7 @@ const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent('кв. Чай
 
             <div class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
               <span class="contact-ic"><Icon name="pin" /></span>
-              <span><span class="muted" style="font-size:13px">Пазар на място</span><br><b>{ADDRESS}</b> · {MARKET_HOURS}</span>
+              <span><span class="muted" style="font-size:13px">Пазар на място</span><br><b>{address}</b> · {hours}</span>
             </div>
 
             <iframe
@@ -54,8 +61,8 @@ const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent('кв. Чай
             <div>
               <div class="muted" style="font-size:13.5px;margin-bottom:10px">Последвай ни</div>
               <div class="socials" style="margin:0">
-                {SOCIALS.map((s) => (
-                  <a href={s.href} aria-label={s.label} style="background:var(--primary-050);color:var(--primary)"><Icon name={s.name} /></a>
+                {socials.map((s) => (
+                  <a href={s.href} aria-label={s.label} target="_blank" rel="noopener" style="background:var(--primary-050);color:var(--primary)"><Icon name={s.icon} /></a>
                 ))}
               </div>
             </div>

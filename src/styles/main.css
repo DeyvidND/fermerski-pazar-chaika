@@ -262,7 +262,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .promo {
   background: var(--primary); color: #fff;
   font-size: 14px; font-weight: 600; text-align: center;
-  padding: 10px 44px 10px 20px; position: relative;
+  padding: 8px 44px 8px 20px; position: relative;
 }
 [data-theme="svezho"] .promo { background: linear-gradient(90deg, var(--primary), var(--accent)); }
 [data-theme="klasik"] .promo { background: var(--ink); letter-spacing: .04em; font-weight: 500; }
@@ -275,6 +275,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 .promo__close:hover { background: rgba(255,255,255,.18); opacity: 1; }
 .promo.hide { display: none; }
+@media (min-width: 700px) { .promo { white-space: nowrap; } }
 
 .site-header {
   position: sticky; top: var(--themebar-h, 0px); z-index: 40;

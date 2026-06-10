@@ -1,6 +1,8 @@
 // Static storefront chrome copy shared by header/footer/pages. Phone + email
 // come live from the tenant profile; the market location/hours are presentation
 // copy for this farm (Фермерски пазар Чайка, Варна).
+import type { Storefront } from './types';
+
 export const ADDRESS = 'кв. Чайка, бул. „Ал. Стамболийски“ (пред „Фратели“), Варна';
 export const MARKET_HOURS = 'Всеки петък · 11:00–18:00';
 export const BRAND_TAG = 'Фермерски пазар · Чайка, Варна';
@@ -30,3 +32,33 @@ export const imageOrigin = (...urls: (string | null | undefined)[]): string | nu
   }
   return null;
 };
+
+/** Pick an icon name (from icons.ts) for a social link by matching a known
+ *  network as a substring anywhere in the URL (lenient, so short domains like
+ *  fb.me / instagr.am are caught too), falling back to 'globe'. */
+export function socialIconName(url: string): string {
+  const u = url.toLowerCase();
+  if (u.includes('facebook') || u.includes('fb.com') || u.includes('fb.me')) return 'fb';
+  if (u.includes('instagram') || u.includes('instagr.am')) return 'ig';
+  if (u.includes('tiktok')) return 'tt';
+  if (u.includes('youtube') || u.includes('youtu.be')) return 'yt';
+  if (u.includes('viber')) return 'phone';
+  return 'globe';
+}
+
+/** Resolved social links for rendering: live admin list if present, else the
+ *  static SOCIALS fallback. Each row carries an href, label, and icon name. */
+export function resolveSocials(sf: Storefront): { href: string; label: string; icon: string }[] {
+  const live = (sf.contact?.social ?? []).filter((s) => s.url);
+  if (live.length) {
+    return live.map((s) => ({ href: s.url, label: s.label || 'Социална мрежа', icon: socialIconName(s.url) }));
+  }
+  return SOCIALS.map((s) => ({ href: s.href, label: s.label, icon: s.name }));
+}
+
+/** Contact fields with static fallbacks. */
+export const contactAddress = (sf: Storefront) => sf.contact?.address || ADDRESS;
+export const contactHours = (sf: Storefront) => sf.contact?.hours || MARKET_HOURS;
+export const contactTagline = (sf: Storefront) =>
+  sf.contact?.tagline ||
+  'Фермерски пазар на Чайка, Варна. Местни стопани на едно място — пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.';

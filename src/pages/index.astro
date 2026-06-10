@@ -8,6 +8,7 @@ import MediaSlot from '../components/MediaSlot.astro';
 import { getBootstrap, getStorefront, getProducts, getFarmers, getSubcategories, FALLBACK_STOREFRONT } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin } from '../lib/site';
+import { money } from '../lib/money';
 
 // One round trip when the backend exposes /bootstrap; otherwise fall back to the
 // four individual (still cached) reads in parallel.
@@ -20,6 +21,10 @@ const sf = sfRaw ?? FALLBACK_STOREFRONT;
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
 const feat = featured(products, 4);
 const seeded = products.length > 0;
+// «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
+const potwInfo = boot?.productOfWeek ?? null;
+const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
+const potwHref = potw ? (potw.slug ? `/product/${potw.slug}` : '/shop') : '#';
 const showFarmers = sf.multiFarmer;
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
@@ -35,10 +40,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       <div class="wrap hero-grid">
         <div>
           <span class="eyebrow">Фермерски пазар · кв. Чайка, Варна</span>
-          <h1 style="margin-top:14px">Свежа храна,<br>директно от<br>фермерите.</h1>
+          <h1 style="margin-top:14px">Местните стопани на едно място</h1>
           <p class="lead" style="margin-top:20px;max-width:46ch">
-            Местните стопани на едно място. Ела на живо всеки петък на Чайка
-            или поръчай онлайн — плодове, мляко, мед, месо и домашни сладка с доставка до дома.
+            Ела на живо всеки петък на Чайка или поръчай онлайн — плодове, мляко, мед, месо и домашни сладка с доставка до дома.
           </p>
           <div class="cta-row">
             <a href={shopCta.href} class="btn btn--primary btn--lg">{shopCta.label}</a>
@@ -47,7 +51,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
           <div class="hero-stats">
             <div><div class="n">Петък</div><div class="l">пазар на живо · Чайка</div></div>
             <div><div class="n">{cats.length || 5}</div><div class="l">категории продукти</div></div>
-            <div><div class="n">Местно</div><div class="l">100% от региона</div></div>
+            <div><div class="n">100% българско</div><div class="l">местно от региона</div></div>
           </div>
         </div>
         <div>
@@ -56,6 +60,33 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
         </div>
       </div>
     </section>
+
+    <!-- PRODUCT OF THE WEEK · optional highlight -->
+    {potw && (
+    <section class="section" style="background:var(--surface-2)">
+      <div class="wrap">
+        <div class="hero-grid" style="align-items:center">
+          <a href={potwHref} class="ph ph--rounded" style="display:block;aspect-ratio:4/3">
+            {potw.imageUrl ? (
+              <img src={potw.imageUrl} alt={potw.name} loading="lazy"
+                   style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
+            ) : (
+              <span class="ph__label">{potw.name}</span>
+            )}
+          </a>
+          <div>
+            <span class="eyebrow">★ Продукт на седмицата</span>
+            <h2 style="margin-top:10px">{potw.name}</h2>
+            {potwInfo?.note && <p class="lead" style="margin-top:14px;max-width:44ch">{potwInfo.note}</p>}
+            <div class="product__price" style="font-size:30px;margin-top:16px">{money(potw.priceStotinki)}</div>
+            <div class="cta-row" style="margin-top:20px">
+              <a href={potwHref} class="btn btn--primary btn--lg">Виж продукта</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    )}
 
     <!-- TWO WAYS TO SHOP -->
     <section class="section--tight">
