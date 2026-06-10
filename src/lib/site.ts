@@ -33,7 +33,9 @@ export const imageOrigin = (...urls: (string | null | undefined)[]): string | nu
   return null;
 };
 
-/** Pick an icon name (from icons.ts) for a social link by its URL hostname. */
+/** Pick an icon name (from icons.ts) for a social link by matching a known
+ *  network as a substring anywhere in the URL (lenient, so short domains like
+ *  fb.me / instagr.am are caught too), falling back to 'globe'. */
 export function socialIconName(url: string): string {
   const u = url.toLowerCase();
   if (u.includes('facebook') || u.includes('fb.com') || u.includes('fb.me')) return 'fb';
