@@ -10,6 +10,7 @@ import type {
   Subcategory,
   Slot,
   ReviewSummary,
+  Article,
 } from './types';
 
 // Short-lived in-process cache for SSR reads. The node-standalone server is one
@@ -70,12 +71,14 @@ export const getFarmers = () =>
 export const getSubcategories = () =>
   get<Subcategory[]>('/subcategories', []);
 
-// Delivery slots carry live remaining-capacity — never memoize them.
-export const getSlots = (date?: string) =>
-  get<Slot[]>(`/slots${date ? `?date=${date}` : ''}`, [], 0);
-
 export const getReviews = () =>
   get<ReviewSummary>('/reviews', { average: 0, count: 0, reviews: [] });
+
+export const getArticles = () =>
+  get<Article[]>('/articles', []);
+
+export const getArticle = (slug: string) =>
+  get<Article | null>(`/articles/${encodeURIComponent(slug)}`, null, 0);
 
 /** Storefront profile + catalog + farmers + sections in one request. Saves three
  *  round trips on the home page; the backend serves it from cache. Returns null
