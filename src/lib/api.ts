@@ -86,6 +86,9 @@ export interface Bootstrap {
   products: Product[];
   farmers: Farmer[];
   subcategories: Subcategory[];
+  /** Resolved «Продукт на седмицата» (manual pick or weekly auto-rotation), or
+   *  null when the highlight is off. Look the product up in `products` by id. */
+  productOfWeek?: { id: string; note: string | null } | null;
 }
 
 export const getBootstrap = () =>
