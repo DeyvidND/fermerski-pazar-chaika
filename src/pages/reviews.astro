@@ -10,28 +10,28 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
 ---
 <Layout title={`Отзиви · ${sf.name}`} storefront={sf}>
   <main>
-    <div class=”wrap”>
-      <nav class=”breadcrumb”><a href=”/”>Начало</a> / <span>Отзиви</span></nav>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Отзиви</span></nav>
     </div>
 
     <!-- Header -->
-    <section class=”section--tight”>
-      <div class=”wrap”>
-        <div class=”split” style=”align-items:center”>
-          <div class=”section-head” style=”margin:0”>
-            <span class=”eyebrow”>Отзиви</span>
-            <h2 style=”margin-top:8px”>Какво казват клиентите</h2>
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="split" style="align-items:center">
+          <div class="section-head" style="margin:0">
+            <span class="eyebrow">Отзиви</span>
+            <h2 style="margin-top:8px">Какво казват клиентите</h2>
             <p>Истински думи от хората, които пазаруват при нас на Чайка. Поръчвал/а си? Сподели и ти впечатленията си по-долу.</p>
           </div>
           {hasReviews && (
-            <div style=”display:flex;gap:28px;align-items:center;justify-content:flex-end;flex-wrap:wrap”>
-              <div class=”center”>
-                <div class=”big-404” style=”font-size:64px;line-height:1”>{avg}</div>
-                <div class=”stars”>{[0, 1, 2, 3, 4].map((i) => (
-                  <span style={`opacity:${i < Math.round(summary.average) ? 1 : 0.25}`}><Icon name=”star” /></span>
+            <div style="display:flex;gap:28px;align-items:center;justify-content:flex-end;flex-wrap:wrap">
+              <div class="center">
+                <div class="big-404" style="font-size:64px;line-height:1">{avg}</div>
+                <div class="stars">{[0, 1, 2, 3, 4].map((i) => (
+                  <span style={`opacity:${i < Math.round(summary.average) ? 1 : 0.25}`}><Icon name="star" /></span>
                 ))}</div>
               </div>
-              <div style=”font-size:14.5px;color:var(--muted);max-width:18ch”>от {summary.count} {summary.count === 1 ? 'оценка' : 'оценки'}<br>на клиенти на пазара</div>
+              <div style="font-size:14.5px;color:var(--muted);max-width:18ch">от {summary.count} {summary.count === 1 ? 'оценка' : 'оценки'}<br>на клиенти на пазара</div>
             </div>
           )}
         </div>
@@ -39,27 +39,27 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
     </section>
 
     <!-- Submit form -->
-    <section class=”section--tight”>
-      <div class=”wrap”>
-        <div class=”card” style=”padding:clamp(24px,4vw,40px);max-width:720px;margin-inline:auto”>
-          <h3 style=”font-size:26px;margin-bottom:6px”>Остави ревю</h3>
-          <p class=”muted” style=”margin-bottom:22px”>Поръчвал/а си от нас? Сподели впечатленията си — помага на други да изберат.</p>
-          <form class=”stack” data-api-form=”reviews” id=”reviewForm”>
-            <div class=”field-row”>
-              <div class=”field”><label>Име</label><input class=”input” name=”authorName” placeholder=”Твоето име” required /></div>
-              <div class=”field”><label>Град</label><input class=”input” name=”authorLocation” placeholder=”напр. Варна” /></div>
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="card" style="padding:clamp(24px,4vw,40px);max-width:720px;margin-inline:auto">
+          <h3 style="font-size:26px;margin-bottom:6px">Остави ревю</h3>
+          <p class="muted" style="margin-bottom:22px">Поръчвал/а си от нас? Сподели впечатленията си — помага на други да изберат.</p>
+          <form class="stack" data-api-form="reviews" id="reviewForm">
+            <div class="field-row">
+              <div class="field"><label>Име</label><input class="input" name="authorName" placeholder="Твоето име" required /></div>
+              <div class="field"><label>Град</label><input class="input" name="authorLocation" placeholder="напр. Варна" /></div>
             </div>
-            <div class=”field”>
+            <div class="field">
               <label>Оценка</label>
-              <div id=”rateInput” style=”display:flex;gap:6px;color:var(--accent)”>
+              <div id="rateInput" style="display:flex;gap:6px;color:var(--accent)">
                 {[1, 2, 3, 4, 5].map((v) => (
-                  <button type=”button” class=”star” data-v={v} style=”width:30px;height:30px;opacity:.3”><Icon name=”star” /></button>
+                  <button type="button" class="star" data-v={v} style="width:30px;height:30px;opacity:.3"><Icon name="star" /></button>
                 ))}
               </div>
-              <input type=”hidden” name=”rating” value=”5” />
+              <input type="hidden" name="rating" value="5" />
             </div>
-            <div class=”field”><label>Твоето ревю</label><textarea class=”textarea” name=”body” placeholder=”Разкажи ни...” required></textarea></div>
-            <button class=”btn btn--primary” type=”submit” style=”align-self:flex-start”>Изпрати ревю</button>
+            <div class="field"><label>Твоето ревю</label><textarea class="textarea" name="body" placeholder="Разкажи ни..." required></textarea></div>
+            <button class="btn btn--primary" type="submit" style="align-self:flex-start">Изпрати ревю</button>
           </form>
         </div>
       </div>
@@ -67,20 +67,20 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
 
     <!-- Reviews grid (below form) -->
     {hasReviews && (
-      <section class=”section--tight”>
-        <div class=”wrap”>
-          <div class=”section-head” style=”margin-bottom:24px”>
-            <span class=”eyebrow”>Всички отзиви</span>
+      <section class="section--tight">
+        <div class="wrap">
+          <div class="section-head" style="margin-bottom:24px">
+            <span class="eyebrow">Всички отзиви</span>
           </div>
-          <div class=”grid grid--3”>
+          <div class="grid grid--3">
             {summary.reviews.map((r) => (
-              <article class=”card review-card”>
-                <div class=”stars”>{[0, 1, 2, 3, 4].map((i) => (
-                  <span style={`opacity:${i < r.rating ? 1 : 0.25}`}><Icon name=”star” /></span>
+              <article class="card review-card">
+                <div class="stars">{[0, 1, 2, 3, 4].map((i) => (
+                  <span style={`opacity:${i < r.rating ? 1 : 0.25}`}><Icon name="star" /></span>
                 ))}</div>
                 <p>„{r.body}”</p>
-                <div class=”who”>
-                  <div class=”ph avatar”></div>
+                <div class="who">
+                  <div class="ph avatar"></div>
                   <div><b>{r.authorName}</b><span>{r.authorLocation || 'клиент'}</span></div>
                 </div>
               </article>

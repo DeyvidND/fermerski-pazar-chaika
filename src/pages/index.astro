@@ -7,7 +7,7 @@ import CategoryCard from '../components/CategoryCard.astro';
 import MediaSlot from '../components/MediaSlot.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
-import { imageOrigin } from '../lib/site';
+import { imageOrigin, mapEmbedSrc } from '../lib/site';
 import { money } from '../lib/money';
 
 // One round trip via /bootstrap (falls back to the four parallel reads on an older
@@ -221,7 +221,15 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
               <a href="/contact" class="btn btn--ghost">Свържи се с нас</a>
             </div>
           </div>
-          <div class="ph ph--rounded" style="aspect-ratio:4/3"><span class="ph__label">Карта · кв. Чайка, Варна · Google Maps</span></div>
+          <iframe
+            class="contact-map"
+            style="aspect-ratio:4/3;height:100%"
+            src={mapEmbedSrc(sf)}
+            title="Карта · кв. Чайка, Варна"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
         </div>
       </div>
     </section>
