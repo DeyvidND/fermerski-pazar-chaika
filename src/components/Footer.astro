@@ -1,6 +1,6 @@
 ---
 import Icon from './Icon.astro';
-import { ADDRESS, MARKET_HOURS, SOCIALS, DEFAULT_PHONE, DEFAULT_EMAIL, telHref } from '../lib/site';
+import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours, contactTagline } from '../lib/site';
 import { ADMIN_LOGIN_URL } from '../lib/config';
 import type { Storefront } from '../lib/types';
 
@@ -8,6 +8,7 @@ interface Props { storefront: Storefront }
 const { storefront } = Astro.props;
 const phone = storefront.phone || DEFAULT_PHONE;
 const email = storefront.email || DEFAULT_EMAIL;
+const socials = resolveSocials(storefront);
 const year = 2026;
 ---
 <footer class="site-footer">
@@ -18,11 +19,11 @@ const year = 2026;
         <span class="brand__name">{storefront.name}</span>
       </span>
       <p style="margin-top:14px;opacity:.85;max-width:32ch;font-size:15px">
-        Фермерски пазар на Чайка, Варна. Местни стопани на едно място — пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.
+        {contactTagline(storefront)}
       </p>
       <div class="socials">
-        {SOCIALS.map((s) => (
-          <a href={s.href} aria-label={s.label}><Icon name={s.name} /></a>
+        {socials.map((s) => (
+          <a href={s.href} aria-label={s.label} target="_blank" rel="noopener"><Icon name={s.icon} /></a>
         ))}
       </div>
     </div>
@@ -47,8 +48,8 @@ const year = 2026;
     <div>
       <h4>Пазар &amp; контакти</h4>
       <div class="footer-contact">
-        {ADDRESS}<br>
-        <b style="color:#fff">{MARKET_HOURS}</b><br>
+        {contactAddress(storefront)}<br>
+        <b style="color:#fff">{contactHours(storefront)}</b><br>
         <a href={telHref(phone)}>{phone}</a><br>
         <a href={`mailto:${email}`}>{email}</a>
       </div>
