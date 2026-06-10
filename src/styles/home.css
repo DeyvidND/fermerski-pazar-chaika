@@ -84,14 +84,14 @@
    ========================================================= */
 [data-theme="ferma"] .hero {
   position: relative; overflow: hidden;
-  min-height: min(86vh, 760px);
+  min-height: min(70vh, 620px);
   display: grid; align-items: center;
   padding-block: 0;
 }
 [data-theme="ferma"] .hero-grid {
   grid-template-columns: 1fr; text-align: center; justify-items: center;
   position: relative; z-index: 2; gap: 24px;
-  padding-block: clamp(72px, 13vh, 150px);
+  padding-block: clamp(48px, 8vh, 96px) clamp(40px, 7vh, 80px);
 }
 [data-theme="ferma"] .hero-grid > div:first-child { max-width: 780px; position: relative; z-index: 3; }
 /* the image div → full-bleed background layer (breaks out of the centered wrap) */
@@ -125,6 +125,14 @@
 [data-theme="ferma"] .hero .btn--primary:hover { background: var(--primary-050); box-shadow: var(--shadow); }
 [data-theme="ferma"] .hero .btn--ghost { border-color: rgba(255,255,255,.65); color: #fff; }
 [data-theme="ferma"] .hero .btn--ghost:hover { background: rgba(255,255,255,.16); border-color: #fff; color: #fff; }
+[data-theme="ferma"] .hero-grid > div:last-child .ph img {
+  object-position: center 38%;
+}
+[data-theme="ferma"] .hero-stats > div:last-child .n {
+  font-size: clamp(18px, 2.4vw, 26px);
+  white-space: nowrap;
+}
+[data-theme="ferma"] .hero-stats { margin-top: 24px; }
 
 /* ---------- mobile: collapse all heroes to a single clean column ---------- */
 @media (max-width: 860px) {
