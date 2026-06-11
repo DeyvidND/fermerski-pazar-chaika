@@ -8,7 +8,7 @@ import MediaSlot from '../components/MediaSlot.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin, mapEmbedSrc } from '../lib/site';
-import { money } from '../lib/money';
+import ProductOfWeek from '../components/ProductOfWeek.astro';
 
 // One round trip via /bootstrap (falls back to the four parallel reads on an older
 // backend). Seeds the per-resource memo so the rest of this render + a within-TTL
@@ -39,7 +39,6 @@ const homeReviews = boot.homeReviews ?? [];
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
-const potwHref = potw ? (potw.slug ? `/product/${potw.slug}` : '/shop') : '#';
 const showFarmers = sf.multiFarmer;
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
@@ -78,29 +77,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
 
     <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
     {potw && sf.productOfWeekPlacement !== 'bar' && (
-    <section class="section" style="background:var(--surface-2)">
-      <div class="wrap">
-        <div class="hero-grid" style="align-items:center">
-          <a href={potwHref} class="ph ph--rounded" style="display:block;aspect-ratio:4/3">
-            {potw.imageUrl ? (
-              <img src={potw.imageUrl} alt={potw.name} loading="lazy"
-                   style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
-            ) : (
-              <span class="ph__label">{potw.name}</span>
-            )}
-          </a>
-          <div>
-            <span class="eyebrow">★ Продукт на седмицата</span>
-            <h2 style="margin-top:10px">{potw.name}</h2>
-            {potwInfo?.note && <p class="lead" style="margin-top:14px;max-width:44ch">{potwInfo.note}</p>}
-            <div class="product__price" style="font-size:30px;margin-top:16px">{money(potw.priceStotinki)}</div>
-            <div class="cta-row" style="margin-top:20px">
-              <a href={potwHref} class="btn btn--primary btn--lg">Виж продукта</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+      <ProductOfWeek potw={potw} note={potwInfo?.note ?? null} />
     )}
 
     <!-- TWO WAYS TO SHOP -->

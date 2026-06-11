@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
-import { money } from '../lib/money';
+import ProductOfWeek from '../components/ProductOfWeek.astro';
 
 const boot = await getCatalog();
 const { storefront: sf, products, farmers, subcategories: subcats } = boot;
@@ -14,7 +14,6 @@ const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
-const potwHref = potw ? (potw.slug ? `/product/${potw.slug}` : '/shop') : '#';
 ---
 <Layout title={`Магазин · ${sf.name}`} storefront={sf}>
   <main>
@@ -24,29 +23,7 @@ const potwHref = potw ? (potw.slug ? `/product/${potw.slug}` : '/shop') : '#';
 
     <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
     {potw && sf.productOfWeekPlacement !== 'bar' && (
-    <section class="section" style="background:var(--surface-2)">
-      <div class="wrap">
-        <div class="hero-grid" style="align-items:center">
-          <a href={potwHref} class="ph ph--rounded" style="display:block;aspect-ratio:4/3">
-            {potw.imageUrl ? (
-              <img src={potw.imageUrl} alt={potw.name} loading="lazy"
-                   style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
-            ) : (
-              <span class="ph__label">{potw.name}</span>
-            )}
-          </a>
-          <div>
-            <span class="eyebrow">★ Продукт на седмицата</span>
-            <h2 style="margin-top:10px">{potw.name}</h2>
-            {potwInfo?.note && <p class="lead" style="margin-top:14px;max-width:44ch">{potwInfo.note}</p>}
-            <div class="product__price" style="font-size:30px;margin-top:16px">{money(potw.priceStotinki)}</div>
-            <div class="cta-row" style="margin-top:20px">
-              <a href={potwHref} class="btn btn--primary btn--lg">Виж продукта</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+      <ProductOfWeek potw={potw} note={potwInfo?.note ?? null} />
     )}
 
     <section class="section--tight">
