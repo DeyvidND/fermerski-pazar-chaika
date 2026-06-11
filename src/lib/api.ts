@@ -157,4 +157,9 @@ export const FALLBACK_STOREFRONT: Storefront = {
   contact: { address: null, hours: null, tagline: null, social: [], mapLat: null, mapLng: null },
   faviconUrl: null,
   themeColor: null,
+  landing: {
+    categories: { show: true, count: 0 },
+    farmers: { show: true, count: 3 },
+    latest: { show: true, count: 4 },
+  },
 };
