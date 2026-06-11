@@ -176,12 +176,15 @@ async function loadSlots() {
 
   const datePills = document.getElementById('datePills')!;
   const slotsBox = document.getElementById('slots')!;
+  const step2 = document.getElementById('slotStep2');
   if (!slots.length) {
     datePills.innerHTML = '';
+    if (step2) step2.style.display = 'none';
     slotsBox.innerHTML =
       '<p class="muted" style="font-size:14px">Няма свободни часове в момента — ще се свържем с теб за уговорка след поръчката.</p>';
     return;
   }
+  if (step2) step2.style.display = '';
 
   const byDate = new Map<string, Slot[]>();
   for (const s of slots) {
@@ -213,10 +216,11 @@ async function loadSlots() {
   const renderSlots = () => {
     const list = byDate.get(activeDate) || [];
     const buttons = list
-      .map(
-        (s) =>
-          `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`,
-      )
+      .map((s) => {
+        const left =
+          s.remaining === 1 ? 'последно място' : `свободни: ${s.remaining}`;
+        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}<span class="slot__left">${left}</span></button>`;
+      })
       .join('');
     // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
     // day's slots when it comes from the recurring rule, so show it once.

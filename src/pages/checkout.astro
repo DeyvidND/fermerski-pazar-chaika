@@ -124,10 +124,12 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
             {delivery && (
               <!-- delivery slot -->
               <div class="card" id="slotCard" style="padding:24px;box-shadow:none;display:none">
-                <h3 style="font-size:20px;margin-bottom:6px">Часови слот за доставка</h3>
-                <p class="muted" style="font-size:14px;margin-bottom:16px">Избери удобен ден и час. Заетите слотове са недостъпни.</p>
+                <h3 style="font-size:20px;margin-bottom:6px">Кога да доставим?</h3>
+                <p class="muted" style="font-size:14px;margin-bottom:4px">Първо избери ден, после свободен час. Показваме само часовете със свободни места.</p>
+                <div class="slot-step"><span class="n">1</span>Избери ден</div>
                 <div class="date-pills" id="datePills"></div>
-                <div class="slots" id="slots" style="margin-top:16px"></div>
+                <div class="slot-step" id="slotStep2" style="display:none"><span class="n">2</span>Избери час</div>
+                <div class="slots" id="slots"></div>
                 <div id="slotChosen" class="note-fresh" style="margin-top:16px;display:none"></div>
               </div>
             )}
