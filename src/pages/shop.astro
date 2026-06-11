@@ -22,8 +22,8 @@ const potwHref = potw ? (potw.slug ? `/product/${potw.slug}` : '/shop') : '#';
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Магазин</span></nav>
     </div>
 
-    <!-- PRODUCT OF THE WEEK · optional highlight -->
-    {potw && (
+    <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
+    {potw && sf.productOfWeekPlacement !== 'bar' && (
     <section class="section" style="background:var(--surface-2)">
       <div class="wrap">
         <div class="hero-grid" style="align-items:center">

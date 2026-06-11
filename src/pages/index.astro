@@ -76,8 +76,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       </div>
     </section>
 
-    <!-- PRODUCT OF THE WEEK · optional highlight -->
-    {potw && (
+    <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
+    {potw && sf.productOfWeekPlacement !== 'bar' && (
     <section class="section" style="background:var(--surface-2)">
       <div class="wrap">
         <div class="hero-grid" style="align-items:center">
