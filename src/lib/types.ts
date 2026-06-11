@@ -42,6 +42,14 @@ export interface Storefront {
   // Tenant website icon + browser theme color. Null/absent → static defaults.
   faviconUrl?: string | null;
   themeColor?: string | null;
+  // Configurable landing blocks (settings.landing). Optional (older backend) →
+  // index.astro falls back to DEFAULT_LANDING (all cats, 3 farmers, 4 latest).
+  landing?: {
+    categories: { show: boolean; count: number };
+    farmers: { show: boolean; count: number };
+    latest: { show: boolean; count: number };
+    reviews: { show: boolean; ids: string[] };
+  };
 }
 
 export interface DeliveryPricing {

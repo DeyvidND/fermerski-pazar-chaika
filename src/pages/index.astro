@@ -22,8 +22,20 @@ const { storefront: sf, products, farmers, subcats } = {
 };
 
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
-const feat = featured(products, 4);
 const seeded = products.length > 0;
+// Configurable landing blocks (settings.landing). Falls back to the storefront's
+// original hardcoded behavior on an older backend: all cats, 3 farmers, 4 latest.
+const DEFAULT_LANDING = {
+  categories: { show: true, count: 0 },
+  farmers: { show: true, count: 3 },
+  latest: { show: true, count: 4 },
+  reviews: { show: false, ids: [] },
+};
+const L = sf.landing ?? DEFAULT_LANDING;
+const catList = L.categories.count > 0 ? cats.slice(0, L.categories.count) : cats;
+const farmerList = farmers.slice(0, L.farmers.count);
+const feat = featured(products, L.latest.count);
+const homeReviews = boot.homeReviews ?? [];
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
@@ -130,7 +142,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     </section>
 
     <!-- CATEGORIES -->
-    {cats.length > 0 && (
+    {L.categories.show && catList.length > 0 && (
     <section class="section">
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap">
@@ -141,14 +153,14 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
           <a href="/shop" class="btn btn--soft">Виж целия магазин</a>
         </div>
         <div class="grid cat-grid">
-          {cats.map((c) => <CategoryCard category={c} />)}
+          {catList.map((c) => <CategoryCard category={c} />)}
         </div>
       </div>
     </section>
     )}
 
     <!-- FARMERS (multi-farmer mode only) -->
-    {showFarmers && farmers.length > 0 && (
+    {L.farmers.show && showFarmers && farmerList.length > 0 && (
       <section class="section" style="background:var(--surface-2)">
         <div class="wrap">
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
@@ -159,7 +171,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             <a href="/farmers" class="btn btn--soft">Всички фермери</a>
           </div>
           <div class="grid grid--3">
-            {farmers.slice(0, 3).map((f) => (
+            {farmerList.map((f) => (
               <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
             ))}
           </div>
@@ -168,7 +180,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     )}
 
     <!-- FEATURED PRODUCTS -->
-    {seeded && (
+    {L.latest.show && seeded && (
     <section class="section--tight">
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
@@ -180,6 +192,32 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
         </div>
         <div class="grid grid--4">
           {feat.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+    )}
+
+    <!-- CUSTOMER REVIEWS · farmer-picked -->
+    {L.reviews.show && homeReviews.length > 0 && (
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head center" style="margin-bottom:32px">
+          <span class="eyebrow">Отзиви</span>
+          <h2 style="margin-top:8px">Какво казват клиентите</h2>
+        </div>
+        <div class="grid grid--3">
+          {homeReviews.map((r) => (
+            <article class="card review-card">
+              <div class="stars">{[0, 1, 2, 3, 4].map((i) => (
+                <span style={`opacity:${i < r.rating ? 1 : 0.25}`}><Icon name="star" /></span>
+              ))}</div>
+              <p>„{r.body}”</p>
+              <div class="who">
+                <div class="ph avatar"></div>
+                <div><b>{r.authorName}</b><span>{r.authorLocation || 'клиент'}</span></div>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

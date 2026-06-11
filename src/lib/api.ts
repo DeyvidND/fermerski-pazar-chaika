@@ -8,6 +8,7 @@ import type {
   Product,
   Farmer,
   Subcategory,
+  Review,
   ReviewSummary,
   Article,
 } from './types';
@@ -91,6 +92,9 @@ export interface Bootstrap {
   /** Resolved «Продукт на седмицата» (manual pick or weekly auto-rotation), or
    *  null when the highlight is off. Look the product up in `products` by id. */
   productOfWeek?: { id: string; note: string | null } | null;
+  /** Farmer-picked reviews for the home block, in pick order. Empty/absent when
+   *  the block is off or nothing is picked. */
+  homeReviews?: Review[];
 }
 
 export const getBootstrap = () =>
@@ -130,6 +134,7 @@ export async function getCatalog(): Promise<Bootstrap> {
     farmers,
     subcategories,
     productOfWeek: null,
+    homeReviews: [],
   };
 }
 
@@ -157,4 +162,10 @@ export const FALLBACK_STOREFRONT: Storefront = {
   contact: { address: null, hours: null, tagline: null, social: [], mapLat: null, mapLng: null },
   faviconUrl: null,
   themeColor: null,
+  landing: {
+    categories: { show: true, count: 0 },
+    farmers: { show: true, count: 3 },
+    latest: { show: true, count: 4 },
+    reviews: { show: false, ids: [] },
+  },
 };
