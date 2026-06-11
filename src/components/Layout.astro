@@ -4,7 +4,7 @@ import '../styles/main.css';
 import '../styles/home.css';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
-import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import type { Storefront } from '../lib/types';
 
 interface Props {
@@ -21,6 +21,18 @@ const { title, description, bodyClass, imageOrigin } = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
+
+// «Продукт на седмицата» as a thin top bar (admin placement = 'bar'). It's
+// site-wide, so it lives in the Layout rather than per page. Only fetch the
+// catalog when the bar is actually on; getCatalog is memoised, so pages that
+// already loaded it pay nothing. `productOfWeek` is null when the highlight is off.
+let potwBar: { name: string; href: string } | null = null;
+if (storefront.productOfWeekPlacement === 'bar') {
+  const boot = await getCatalog();
+  const info = boot?.productOfWeek ?? null;
+  const p = info ? boot.products.find((x) => x.id === info.id) ?? null : null;
+  if (p) potwBar = { name: p.name, href: p.slug ? `/product/${p.slug}` : '/shop' };
+}
 
 const desc =
   description ??
@@ -72,6 +84,16 @@ const themeColor = storefront.themeColor || '#3F7D43';
   </noscript>
 </head>
 <body class={bodyClass}>
+  {potwBar && (
+    <a class="potw-bar" href={potwBar.href}>
+      <span class="potw-bar__inner">
+        <span class="potw-bar__star" aria-hidden="true">★</span>
+        <span class="potw-bar__label">Продукт на седмицата:</span>
+        <span class="potw-bar__name">{potwBar.name}</span>
+        <span class="potw-bar__arrow" aria-hidden="true">→</span>
+      </span>
+    </a>
+  )}
   <Header storefront={storefront} />
   <slot />
   <Footer storefront={storefront} />
@@ -80,3 +102,32 @@ const themeColor = storefront.themeColor || '#3F7D43';
   </script>
 </body>
 </html>
+
+<style>
+  .potw-bar {
+    display: block;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+  }
+  .potw-bar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 9px 16px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .potw-bar__star { color: var(--accent); }
+  .potw-bar__label { font-weight: 700; }
+  .potw-bar__name { font-weight: 600; }
+  .potw-bar__arrow { transition: transform 0.15s ease; }
+  .potw-bar:hover { background: var(--primary-600); }
+  .potw-bar:hover .potw-bar__arrow { transform: translateX(3px); }
+  @media (max-width: 480px) {
+    .potw-bar__label { display: none; }
+  }
+</style>

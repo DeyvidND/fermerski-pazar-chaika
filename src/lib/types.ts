@@ -42,6 +42,10 @@ export interface Storefront {
   // Tenant website icon + browser theme color. Null/absent → static defaults.
   faviconUrl?: string | null;
   themeColor?: string | null;
+  // «Продукт на седмицата» placement: 'section' (full banner under the hero, the
+  // default) or 'bar' (a thin announcement strip above the header, site-wide).
+  // Absent (older backend) → 'section'. The product itself comes from `productOfWeek`.
+  productOfWeekPlacement?: 'section' | 'bar';
   // Configurable landing blocks (settings.landing). Optional (older backend) →
   // index.astro falls back to DEFAULT_LANDING (all cats, 3 farmers, 4 latest).
   landing?: {
