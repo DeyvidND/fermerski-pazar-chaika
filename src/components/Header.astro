@@ -9,6 +9,9 @@ const { storefront } = Astro.props;
 const links = navLinks(storefront.multiFarmer);
 const path = Astro.url.pathname;
 const phone = storefront.phone || DEFAULT_PHONE;
+// The tenant's configured website icon (settings.brand.favicon). When set, it
+// replaces the static berry mark in the header/drawer brand; else fall back.
+const brandIcon = storefront.faviconUrl;
 ---
 <div class="promo" id="promo">
   🧺 Пазар на Чайка · <b>всеки петък</b> 11:00–18:00 — или поръчай онлайн.
@@ -19,7 +22,9 @@ const phone = storefront.phone || DEFAULT_PHONE;
   <div class="wrap">
     <nav class="nav">
       <a href="/" class="brand">
-        <span class="brand__mark"><Icon name="berry" /></span>
+        <span class:list={["brand__mark", brandIcon && "brand__mark--img"]}>
+          {brandIcon ? <img src={brandIcon} alt={storefront.name} /> : <Icon name="berry" />}
+        </span>
         <span>
           <span class="brand__name">{storefront.name}</span>
           <span class="brand__tag" style="display:block">{BRAND_TAG}</span>
@@ -45,7 +50,9 @@ const phone = storefront.phone || DEFAULT_PHONE;
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <aside class="drawer" id="drawer" aria-hidden="true">
   <div class="drawer__head">
-    <span class="brand"><span class="brand__mark"><Icon name="berry" /></span>
+    <span class="brand"><span class:list={["brand__mark", brandIcon && "brand__mark--img"]}>
+        {brandIcon ? <img src={brandIcon} alt={storefront.name} /> : <Icon name="berry" />}
+      </span>
       <span class="brand__name">{storefront.name}</span></span>
     <button class="icon-btn" id="drawerClose" aria-label="Затвори"><Icon name="close" /></button>
   </div>

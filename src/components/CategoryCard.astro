@@ -6,7 +6,9 @@ interface Props { category: Category }
 const { category: c } = Astro.props;
 ---
 <a href={`/shop#${encodeURIComponent(c.id)}`} class="card category-card">
-  <span class="category-card__ic"><Icon name={c.icon} /></span>
+  <span class:list={["category-card__ic", c.imageUrl && "category-card__ic--img"]}>
+    {c.imageUrl ? <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" /> : <Icon name={c.icon} />}
+  </span>
   <div>
     <h3 class="category-card__name">{c.name}</h3>
     <p class="category-card__desc">{c.desc}</p>
