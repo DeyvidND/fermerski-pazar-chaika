@@ -58,6 +58,14 @@ function toast(msg: string) {
     document.body.appendChild(t);
   }
   t.innerHTML = ICONS.check + '<span>' + esc(msg) + '</span>';
+  // The raw ICONS svg has a viewBox but no width/height, so in the flex toast it
+  // balloons to fill the row. Pin it small.
+  const ic = t.querySelector('svg');
+  if (ic) {
+    ic.setAttribute('width', '20');
+    ic.setAttribute('height', '20');
+    ic.style.flexShrink = '0';
+  }
   requestAnimationFrame(() => {
     t!.style.opacity = '1';
     t!.style.transform = 'translateX(-50%) translateY(0)';
