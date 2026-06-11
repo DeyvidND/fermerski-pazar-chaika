@@ -1,5 +1,6 @@
 ---
 import { money } from '../lib/money';
+import { coverCropStyle } from '../lib/cover-crop';
 import type { Product } from '../lib/types';
 
 interface Props {
@@ -8,7 +9,10 @@ interface Props {
 }
 const { potw, note } = Astro.props;
 const href = potw.slug ? `/product/${potw.slug}` : '/shop';
-const hasImg = !!potw.imageUrl;
+// Cover photo straight off the product — legacy `imageUrl` or the gallery's
+// first image. The farmer never re-uploads it for the highlight.
+const cover = potw.imageUrl ?? potw.images?.[0] ?? null;
+const hasImg = !!cover;
 ---
 <!--
   «Продукт на седмицата» full section. Its own layout — deliberately NOT the
@@ -21,7 +25,7 @@ const hasImg = !!potw.imageUrl;
   <div class="wrap potw__inner">
     {hasImg && (
       <a href={href} class="potw__media" aria-label={potw.name}>
-        <img src={potw.imageUrl} alt={potw.name} loading="lazy" />
+        <img src={cover} alt={potw.name} loading="lazy" style={coverCropStyle(potw.coverCrop)} />
       </a>
     )}
     <div class="potw__body">
