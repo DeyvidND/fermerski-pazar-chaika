@@ -91,15 +91,19 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
                 )}
               </div>
 
-              <!-- street address (local delivery + Econt-to-address) -->
+              <!-- structured delivery address (local delivery + Econt-to-address).
+                   Composed into one geocode-friendly string on submit so Google
+                   Maps resolves a precise pin for the farm's route. -->
               <div id="addressFields" style="margin-top:14px;display:none">
-                <div id="doorCityField" class="field" style="display:none">
-                  <label>Град / населено място</label>
-                  <input class="input" id="doorCity" placeholder="напр. Бургас, Пловдив, София" autocomplete="off" />
+                <div class="field-row">
+                  <div class="field"><label>Град / населено място *</label><input class="input" id="addrCity" placeholder="напр. Варна" autocomplete="address-level2" /></div>
+                  <div class="field"><label>Пощенски код</label><input class="input" id="addrPostal" placeholder="напр. 9000" inputmode="numeric" autocomplete="postal-code" /></div>
                 </div>
-                <div class="field" style="margin-top:10px">
-                  <label id="addressLabel">Адрес за доставка</label>
-                  <input class="input" id="addressInput" placeholder="ул., №, град, пощенски код" />
+                <div class="field" style="margin-top:10px"><label>Район / квартал</label><input class="input" id="addrDistrict" placeholder="напр. кв. Чайка" autocomplete="address-level3" /></div>
+                <div class="field" style="margin-top:10px"><label>Улица и номер *</label><input class="input" id="addressInput" placeholder="напр. ул. Иван Вазов 5" autocomplete="address-line1" /></div>
+                <div class="field-row" style="margin-top:10px">
+                  <div class="field"><label>Блок</label><input class="input" id="addrBlock" placeholder="напр. бл. 12" /></div>
+                  <div class="field"><label>Вход / етаж / апартамент</label><input class="input" id="addrEntrance" placeholder="напр. вх. А, ет. 3, ап. 9" /></div>
                 </div>
               </div>
 
@@ -120,10 +124,12 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
             {delivery && (
               <!-- delivery slot -->
               <div class="card" id="slotCard" style="padding:24px;box-shadow:none;display:none">
-                <h3 style="font-size:20px;margin-bottom:6px">Часови слот за доставка</h3>
-                <p class="muted" style="font-size:14px;margin-bottom:16px">Избери удобен ден и час. Заетите слотове са недостъпни.</p>
+                <h3 style="font-size:20px;margin-bottom:6px">Кога да доставим?</h3>
+                <p class="muted" style="font-size:14px;margin-bottom:4px">Първо избери ден, после свободен час. Показваме само часовете със свободни места.</p>
+                <div class="slot-step"><span class="n">1</span>Избери ден</div>
                 <div class="date-pills" id="datePills"></div>
-                <div class="slots" id="slots" style="margin-top:16px"></div>
+                <div class="slot-step" id="slotStep2" style="display:none"><span class="n">2</span>Избери час</div>
+                <div class="slots" id="slots"></div>
                 <div id="slotChosen" class="note-fresh" style="margin-top:16px;display:none"></div>
               </div>
             )}

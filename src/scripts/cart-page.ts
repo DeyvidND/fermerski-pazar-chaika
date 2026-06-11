@@ -2,10 +2,44 @@
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
+import { coverCropStyle } from '../lib/cover-crop';
+import { PUBLIC_BASE } from '../lib/config';
+import type { CoverCrop } from '../lib/types';
 
-const FREE_OVER = 40;
-const SHIP = 4.9;
 const area = document.getElementById('cartArea');
+
+// Product cover photos, fetched once and keyed by id, so the cart thumbnails show
+// the real image instead of a placeholder box. Shipping is intentionally NOT shown
+// here: the method (pickup / local delivery / Econt) and the farm's fee + free-over
+// thresholds are resolved authoritatively at checkout, not guessed in the cart.
+const imgMap = new Map<string, { src: string; crop: CoverCrop | null }>();
+
+async function loadImages() {
+  try {
+    const res = await fetch(`${PUBLIC_BASE}/products`, { headers: { accept: 'application/json' } });
+    if (!res.ok) return;
+    const products = (await res.json()) as Array<{
+      id: string;
+      imageUrl?: string | null;
+      images?: string[];
+      coverCrop?: CoverCrop | null;
+    }>;
+    for (const p of products) {
+      const src = p.imageUrl ?? p.images?.[0] ?? null;
+      if (src) imgMap.set(p.id, { src, crop: p.coverCrop ?? null });
+    }
+  } catch {
+    // offline → fall back to placeholders
+  }
+}
+
+function thumb(it: { id: string; name: string }): string {
+  const hit = imgMap.get(it.id);
+  if (hit) {
+    return `<div class="ph ph--rounded"><img src="${esc(hit.src)}" alt="${esc(it.name)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(hit.crop)}"></div>`;
+  }
+  return `<div class="ph"><span class="ph__label" style="font-size:9px">${esc(it.name)}</span></div>`;
+}
 
 function render() {
   if (!area) return;
@@ -25,7 +59,6 @@ function render() {
   }
 
   const sub = Cart.subtotal();
-  const ship = sub >= FREE_OVER ? 0 : SHIP;
   area.innerHTML = `
     <div class="commerce-grid">
       <div>
@@ -35,9 +68,8 @@ function render() {
       <aside class="summary">
         <h3 style="font-size:22px;margin-bottom:14px">Резюме</h3>
         <div class="summary__row"><span>Междинна сума</span><span>${money(sub)}</span></div>
-        <div class="summary__row"><span>Доставка</span><span>${ship === 0 ? 'безплатна' : money(ship)}</span></div>
-        ${ship > 0 ? `<div class="muted" style="font-size:13px">Добави за ${money(FREE_OVER - sub)} за безплатна доставка</div>` : ''}
-        <div class="summary__row total"><span>Общо</span><span>${money(sub + ship)}</span></div>
+        <div class="summary__row"><span>Доставка</span><span class="muted">изчислява се при поръчка</span></div>
+        <div class="summary__row total"><span>Общо</span><span>${money(sub)}</span></div>
         <a href="/checkout" class="btn btn--primary btn--full btn--lg" style="margin-top:16px">Към касата</a>
         <div class="note-fresh" style="margin-top:16px;width:100%;justify-content:center">${ICONS.leaf} Свежо за петъчната доставка</div>
       </aside>
@@ -48,7 +80,7 @@ function render() {
     .map(
       (it) => `
       <div class="line-item" data-product data-id="${esc(it.id)}">
-        <div class="ph"><span class="ph__label" style="font-size:9px">${esc(it.name)}</span></div>
+        ${thumb(it)}
         <div>
           <div style="font-family:var(--font-head);font-size:19px;font-weight:var(--h-weight)">${esc(it.name)}</div>
           <div class="muted" style="font-size:13.5px">${esc(it.weight || '')}${it.weight ? ' · ' : ''}${money(it.price)}</div>
@@ -80,3 +112,4 @@ function render() {
 }
 
 render();
+void loadImages().then(render);

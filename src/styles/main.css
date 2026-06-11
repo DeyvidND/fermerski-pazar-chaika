@@ -570,10 +570,16 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .slot:hover:not(:disabled) { border-color: var(--primary); }
 .slot.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .slot:disabled { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
+.slot .slot__left { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 3px; }
+.slot.is-active .slot__left { color: rgba(255,255,255,.85); }
+.slot-step { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin: 14px 0 8px; display: flex; align-items: center; gap: 8px; }
+.slot-step .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-050); color: var(--primary); font-size: 12px; flex: none; }
 .date-pills { display: flex; gap: 10px; flex-wrap: wrap; }
-.date-pill { padding: 12px 16px; border: 1.5px solid var(--line-strong); border-radius: var(--btn-radius); background: var(--surface); text-align: center; min-width: 78px; transition: all .15s; }
-.date-pill .d { font-size: 20px; font-weight: 700; font-family: var(--font-head); }
-.date-pill .m { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+/* Stack weekday / day / month vertically — inline they read as one cramped word. */
+.date-pill { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--btn-radius); background: var(--surface); text-align: center; min-width: 74px; transition: all .15s; }
+.date-pill .d { font-size: 20px; font-weight: 700; font-family: var(--font-head); line-height: 1.1; }
+.date-pill .m { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.date-pill:hover { border-color: var(--primary); }
 .date-pill.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .date-pill.is-active .m { color: rgba(255,255,255,.8); }
 

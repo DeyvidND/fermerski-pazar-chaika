@@ -50,10 +50,12 @@ document.querySelectorAll<HTMLElement>('[data-pay]').forEach((el) =>
 );
 
 const addr = document.getElementById('addressFields') as HTMLElement;
-const addrInput = document.getElementById('addressInput') as HTMLInputElement | null;
-const addrLabel = document.getElementById('addressLabel') as HTMLElement | null;
-const doorCityField = document.getElementById('doorCityField') as HTMLElement | null;
-const doorCity = document.getElementById('doorCity') as HTMLInputElement | null;
+const addrInput = document.getElementById('addressInput') as HTMLInputElement | null; // street + no
+const addrCity = document.getElementById('addrCity') as HTMLInputElement | null;
+const addrPostal = document.getElementById('addrPostal') as HTMLInputElement | null;
+const addrDistrict = document.getElementById('addrDistrict') as HTMLInputElement | null;
+const addrBlock = document.getElementById('addrBlock') as HTMLInputElement | null;
+const addrEntrance = document.getElementById('addrEntrance') as HTMLInputElement | null;
 const econtFields = document.getElementById('econtOfficeFields') as HTMLElement | null;
 const econtCity = document.getElementById('econtCity') as HTMLInputElement | null;
 const econtOffice = document.getElementById('econtOffice') as
@@ -63,6 +65,18 @@ const econtOffice = document.getElementById('econtOffice') as
 const slotCard = document.getElementById('slotCard') as HTMLElement | null;
 
 const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
+
+// Fold the structured fields into one geocode-friendly line:
+//   "<street+no>, <block>, <entrance>, <district>, <postal> <city>"
+// Empty parts are dropped. The backend geocodes this whole string (country:BG),
+// so the more it contains, the more precise the farm's route pin.
+function composeAddress(): string {
+  const v = (el: HTMLInputElement | null) => (el?.value || '').trim();
+  const cityLine = [v(addrPostal), v(addrCity)].filter(Boolean).join(' ');
+  return [v(addrInput), v(addrBlock), v(addrEntrance), v(addrDistrict), cityLine]
+    .filter(Boolean)
+    .join(', ');
+}
 
 function shipping(sub: number): number {
   if (method === 'pickup') return 0;
@@ -94,17 +108,8 @@ function setMethod(m: Method) {
   document.querySelectorAll<HTMLElement>('[data-method]').forEach((el) =>
     el.classList.toggle('is-active', el.dataset.method === m),
   );
-  // Address input: local delivery + Econt-to-door.
+  // Structured address fields: local delivery + Econt-to-door.
   addr.style.display = usesAddress(m) ? '' : 'none';
-  // Econt door delivery also needs the settlement as a separate field.
-  if (doorCityField) doorCityField.style.display = m === 'econt_address' ? '' : 'none';
-  if (addrLabel) {
-    addrLabel.textContent = m === 'econt_address' ? 'Улица и номер' : 'Адрес за доставка';
-  }
-  if (addrInput) {
-    addrInput.placeholder =
-      m === 'econt_address' ? 'ул. Иван Вазов 5' : 'ул., №, град, пощенски код';
-  }
   // Econt office picker: office method only.
   if (econtFields) econtFields.style.display = m === 'econt' ? '' : 'none';
   // Slot: local farm delivery only (Econt is courier-shipped). Fetch the slots
@@ -171,12 +176,15 @@ async function loadSlots() {
 
   const datePills = document.getElementById('datePills')!;
   const slotsBox = document.getElementById('slots')!;
+  const step2 = document.getElementById('slotStep2');
   if (!slots.length) {
     datePills.innerHTML = '';
+    if (step2) step2.style.display = 'none';
     slotsBox.innerHTML =
       '<p class="muted" style="font-size:14px">Няма свободни часове в момента — ще се свържем с теб за уговорка след поръчката.</p>';
     return;
   }
+  if (step2) step2.style.display = '';
 
   const byDate = new Map<string, Slot[]>();
   for (const s of slots) {
@@ -208,10 +216,11 @@ async function loadSlots() {
   const renderSlots = () => {
     const list = byDate.get(activeDate) || [];
     const buttons = list
-      .map(
-        (s) =>
-          `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`,
-      )
+      .map((s) => {
+        const left =
+          s.remaining === 1 ? 'последно място' : `свободни: ${s.remaining}`;
+        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}<span class="slot__left">${left}</span></button>`;
+      })
       .join('');
     // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
     // day's slots when it comes from the recurring rule, so show it once.
@@ -265,32 +274,23 @@ form.addEventListener('submit', async (e) => {
     payload.deliveryType = 'pickup';
     payload.deliveryAddress = MARKET;
     payload.notes = 'Вземане от пазара (Чайка)';
-  } else if (method === 'address') {
-    const a = (addrInput?.value || '').trim();
-    if (!a) {
-      toast?.('Въведи адрес за доставка.');
-      addrInput?.focus();
-      return;
-    }
-    payload.deliveryType = 'address';
-    payload.deliveryAddress = a;
-    if (selectedSlotId) payload.slotId = selectedSlotId;
-  } else if (method === 'econt_address') {
-    const city = (doorCity?.value || '').trim();
-    const a = (addrInput?.value || '').trim();
+  } else if (method === 'address' || method === 'econt_address') {
+    const city = (addrCity?.value || '').trim();
+    const street = (addrInput?.value || '').trim();
     if (!city) {
       toast?.('Въведи град за доставка.');
-      doorCity?.focus();
+      addrCity?.focus();
       return;
     }
-    if (!a) {
-      toast?.('Въведи адрес (улица, №).');
+    if (!street) {
+      toast?.('Въведи улица и номер.');
       addrInput?.focus();
       return;
     }
-    payload.deliveryType = 'econt_address';
+    payload.deliveryType = method;
     payload.deliveryCity = city;
-    payload.deliveryAddress = a;
+    payload.deliveryAddress = composeAddress();
+    if (method === 'address' && selectedSlotId) payload.slotId = selectedSlotId;
   } else {
     const code = (econtOffice?.value || '').trim();
     if (!code) {
