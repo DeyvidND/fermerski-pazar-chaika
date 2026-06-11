@@ -29,11 +29,13 @@ const DEFAULT_LANDING = {
   categories: { show: true, count: 0 },
   farmers: { show: true, count: 3 },
   latest: { show: true, count: 4 },
+  reviews: { show: false, ids: [] },
 };
 const L = sf.landing ?? DEFAULT_LANDING;
 const catList = L.categories.count > 0 ? cats.slice(0, L.categories.count) : cats;
 const farmerList = farmers.slice(0, L.farmers.count);
 const feat = featured(products, L.latest.count);
+const homeReviews = boot.homeReviews ?? [];
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
@@ -190,6 +192,32 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
         </div>
         <div class="grid grid--4">
           {feat.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+    )}
+
+    <!-- CUSTOMER REVIEWS · farmer-picked -->
+    {L.reviews.show && homeReviews.length > 0 && (
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head center" style="margin-bottom:32px">
+          <span class="eyebrow">Отзиви</span>
+          <h2 style="margin-top:8px">Какво казват клиентите</h2>
+        </div>
+        <div class="grid grid--3">
+          {homeReviews.map((r) => (
+            <article class="card review-card">
+              <div class="stars">{[0, 1, 2, 3, 4].map((i) => (
+                <span style={`opacity:${i < r.rating ? 1 : 0.25}`}><Icon name="star" /></span>
+              ))}</div>
+              <p>„{r.body}”</p>
+              <div class="who">
+                <div class="ph avatar"></div>
+                <div><b>{r.authorName}</b><span>{r.authorLocation || 'клиент'}</span></div>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

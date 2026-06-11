@@ -48,6 +48,7 @@ export interface Storefront {
     categories: { show: boolean; count: number };
     farmers: { show: boolean; count: number };
     latest: { show: boolean; count: number };
+    reviews: { show: boolean; ids: string[] };
   };
 }
 
