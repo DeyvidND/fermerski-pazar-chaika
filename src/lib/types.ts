@@ -108,6 +108,7 @@ export interface CoverCrop {
   x: number;
   y: number;
   zoom: number;
+  shape?: 'wide' | 'square' | 'tall';
 }
 
 export interface Farmer {
