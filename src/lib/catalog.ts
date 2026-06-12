@@ -2,7 +2,7 @@
 // farmer -> category -> product structure. Categories come from the tenant's
 // subcategories when multiSubcat is on; otherwise they fall back to the
 // free-text product.category field so a single-section farm still groups well.
-import type { Product, Subcategory } from './types';
+import type { Product, Subcategory, CoverCrop } from './types';
 import { iconForCategory } from './icons';
 
 export interface Category {
@@ -11,6 +11,8 @@ export interface Category {
   desc: string;
   icon: string;
   imageUrl: string | null;
+  /** Cover framing for the category photo (from the subcategory); null = centred. */
+  coverCrop: CoverCrop | null;
   count: number;
 }
 
@@ -35,6 +37,7 @@ export function categoriesFrom(
       desc: s.description || 'Продукти от тази категория, директно от фермера.',
       icon: iconForCategory(s.name),
       imageUrl: s.imageUrl,
+      coverCrop: s.coverCrop ?? null,
       count: products.filter((p) => p.subcategoryId === s.id).length,
     }));
   }
@@ -54,6 +57,7 @@ export function categoriesFrom(
         : 'Свежи продукти от местните фермери.',
     icon: iconForCategory(catLabel(id)),
     imageUrl: null,
+    coverCrop: null,
     count,
   }));
 }
@@ -84,7 +88,7 @@ export function farmerSubsections(
   const leftover = mine.filter((p) => !grouped.has(p.id));
   if (leftover.length) {
     out.push({
-      cat: { id: 'other', name: 'Други продукти', desc: '', icon: 'berry', imageUrl: null, count: leftover.length },
+      cat: { id: 'other', name: 'Други продукти', desc: '', icon: 'berry', imageUrl: null, coverCrop: null, count: leftover.length },
       products: leftover,
     });
   }

@@ -1,17 +1,22 @@
 ---
-import Icon from './Icon.astro';
+import { coverCropStyle } from '../lib/cover-crop';
 import type { Category } from '../lib/catalog';
 
 interface Props { category: Category }
 const { category: c } = Astro.props;
 ---
 <a href={`/shop#${encodeURIComponent(c.id)}`} class="card category-card">
-  <span class:list={["category-card__ic", c.imageUrl && "category-card__ic--img"]}>
-    {c.imageUrl ? <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" /> : <Icon name={c.icon} />}
+  <span class="ph category-card__photo">
+    {c.imageUrl ? (
+      <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async"
+           style={`position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(c.coverCrop)}`} />
+    ) : (
+      <span class="ph__label">{c.name}</span>
+    )}
   </span>
-  <div>
+  <div class="category-card__body">
     <h3 class="category-card__name">{c.name}</h3>
     <p class="category-card__desc">{c.desc}</p>
+    <span class="category-card__count">{c.count > 0 ? c.count + ' продукта' : 'скоро'}</span>
   </div>
-  <span class="category-card__count">{c.count > 0 ? c.count + ' продукта' : 'скоро'}</span>
 </a>
