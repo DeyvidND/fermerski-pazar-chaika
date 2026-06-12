@@ -33,16 +33,35 @@ export const imageOrigin = (...urls: (string | null | undefined)[]): string | nu
   return null;
 };
 
+/** Display metadata per known social-network key (icon name from icons.ts +
+ *  human label). 'other' = a free link → globe icon, label from the row. */
+export const NETWORKS: { key: string; name: string; icon: string }[] = [
+  { key: 'fb', name: 'Facebook', icon: 'fb' },
+  { key: 'ig', name: 'Instagram', icon: 'ig' },
+  { key: 'yt', name: 'YouTube', icon: 'yt' },
+  { key: 'tt', name: 'TikTok', icon: 'tt' },
+  { key: 'viber', name: 'Viber', icon: 'viber' },
+  { key: 'telegram', name: 'Telegram', icon: 'telegram' },
+  { key: 'whatsapp', name: 'WhatsApp', icon: 'whatsapp' },
+  { key: 'x', name: 'X', icon: 'x' },
+  { key: 'other', name: 'Връзка', icon: 'globe' },
+];
+const NETWORK_MAP = new Map(NETWORKS.map((n) => [n.key, n]));
+
 /** Pick an icon name (from icons.ts) for a social link by matching a known
  *  network as a substring anywhere in the URL (lenient, so short domains like
- *  fb.me / instagr.am are caught too), falling back to 'globe'. */
+ *  fb.me / instagr.am are caught too), falling back to 'globe'. Used only when a
+ *  row has no explicit `network` (older data). */
 export function socialIconName(url: string): string {
   const u = url.toLowerCase();
   if (u.includes('facebook') || u.includes('fb.com') || u.includes('fb.me')) return 'fb';
   if (u.includes('instagram') || u.includes('instagr.am')) return 'ig';
   if (u.includes('tiktok')) return 'tt';
   if (u.includes('youtube') || u.includes('youtu.be')) return 'yt';
-  if (u.includes('viber')) return 'phone';
+  if (u.includes('t.me') || u.includes('telegram')) return 'telegram';
+  if (u.includes('wa.me') || u.includes('whatsapp')) return 'whatsapp';
+  if (u.includes('twitter.com') || u.includes('x.com')) return 'x';
+  if (u.includes('viber')) return 'viber';
   return 'globe';
 }
 
@@ -64,9 +83,37 @@ export function safeHref(url: string): string {
 export function resolveSocials(sf: Storefront): { href: string; label: string; icon: string }[] {
   const live = (sf.contact?.social ?? []).filter((s) => s.url);
   if (live.length) {
-    return live.map((s) => ({ href: safeHref(s.url), label: s.label || 'Социална мрежа', icon: socialIconName(s.url) }));
+    return live.map((s) => {
+      const meta = s.network ? NETWORK_MAP.get(s.network) : undefined;
+      const icon = meta ? meta.icon : socialIconName(s.url);
+      // Known network → its name; 'other'/unknown → the row's own label, else a generic.
+      const label =
+        meta && meta.key !== 'other' ? meta.name : s.label || meta?.name || 'Социална мрежа';
+      return { href: safeHref(s.url), label, icon };
+    });
   }
   return SOCIALS.map((s) => ({ href: safeHref(s.href), label: s.label, icon: s.name }));
+}
+
+/** Phone: the admin „Контакти“ phone wins, then the tenant's top-level phone.
+ *  null → the storefront hides the field (no demo fallback for a real tenant). */
+export const contactPhone = (sf: Storefront) => sf.contact?.phone || sf.phone || null;
+/** Email: the admin „Контакти“ email wins, then the tenant's top-level email.
+ *  null → the storefront hides the field. */
+export const contactEmail = (sf: Storefront) => sf.contact?.email || sf.email || null;
+
+/** Extra contact rows the farm added ("каквото иска клиента"); drops empties. */
+export const customFields = (sf: Storefront): { label: string; value: string }[] =>
+  (sf.contact?.custom ?? []).filter((c) => c.value && c.value.trim());
+
+/** Smart href for a custom-field value: email → mailto, http(s) → safe link,
+ *  phone-ish → tel, anything else → null (rendered as plain text). */
+export function contactValueHref(value: string): string | null {
+  const v = value.trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'mailto:' + v;
+  if (/^https?:\/\//i.test(v)) return safeHref(v);
+  if (/^\+?[\d][\d\s()\-./]{4,}$/.test(v)) return 'tel:' + v.replace(/\s+/g, '');
+  return null;
 }
 
 /** Contact fields with static fallbacks. */

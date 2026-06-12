@@ -159,7 +159,7 @@ export const FALLBACK_STOREFRONT: Storefront = {
   },
   methods: { ownSlots: false, pickup: true, econtOffice: false, econtAddress: false },
   media: {},
-  contact: { address: null, hours: null, tagline: null, social: [], mapLat: null, mapLng: null },
+  contact: { address: null, hours: null, tagline: null, phone: null, email: null, social: [], custom: [], mapLat: null, mapLng: null },
   faviconUrl: null,
   themeColor: null,
   landing: {

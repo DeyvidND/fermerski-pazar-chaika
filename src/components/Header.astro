@@ -1,14 +1,14 @@
 ---
 import Icon from './Icon.astro';
 import { navLinks, isActive } from '../lib/nav';
-import { BRAND_TAG, DEFAULT_PHONE, telHref } from '../lib/site';
+import { BRAND_TAG, telHref, contactPhone } from '../lib/site';
 import type { Storefront } from '../lib/types';
 
 interface Props { storefront: Storefront }
 const { storefront } = Astro.props;
 const links = navLinks(storefront.multiFarmer);
 const path = Astro.url.pathname;
-const phone = storefront.phone || DEFAULT_PHONE;
+const phone = contactPhone(storefront);
 // The tenant's configured website icon (settings.brand.favicon). When set, it
 // replaces the static berry mark in the header/drawer brand; else fall back.
 const brandIcon = storefront.faviconUrl;
@@ -60,7 +60,9 @@ const brandIcon = storefront.faviconUrl;
     <a href={l.href} class={isActive(path, l.href) ? 'active' : ''}>{l.label}</a>
   ))}
   <a href="/cart" style="display:flex;align-items:center;gap:10px"><Icon name="cart" /> Количка</a>
-  <div style="margin-top:auto;padding-top:18px;color:var(--muted);font-size:14px">
-    <a href={telHref(phone)}>{phone}</a>
-  </div>
+  {phone && (
+    <div style="margin-top:auto;padding-top:18px;color:var(--muted);font-size:14px">
+      <a href={telHref(phone)}>{phone}</a>
+    </div>
+  )}
 </aside>

@@ -1,13 +1,14 @@
 ---
 import Icon from './Icon.astro';
-import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours, contactTagline } from '../lib/site';
+import { telHref, resolveSocials, contactPhone, contactEmail, customFields, contactValueHref, contactAddress, contactHours, contactTagline } from '../lib/site';
 import { ADMIN_LOGIN_URL } from '../lib/config';
 import type { Storefront } from '../lib/types';
 
 interface Props { storefront: Storefront }
 const { storefront } = Astro.props;
-const phone = storefront.phone || DEFAULT_PHONE;
-const email = storefront.email || DEFAULT_EMAIL;
+const phone = contactPhone(storefront);
+const email = contactEmail(storefront);
+const extra = customFields(storefront);
 const socials = resolveSocials(storefront);
 const year = 2026;
 ---
@@ -50,8 +51,17 @@ const year = 2026;
       <div class="footer-contact">
         {contactAddress(storefront)}<br>
         <b style="color:#fff">{contactHours(storefront)}</b><br>
-        <a href={telHref(phone)}>{phone}</a><br>
-        <a href={`mailto:${email}`}>{email}</a>
+        {phone && <Fragment><a href={telHref(phone)}>{phone}</a><br></Fragment>}
+        {email && <Fragment><a href={`mailto:${email}`}>{email}</a><br></Fragment>}
+        {extra.map((f) => {
+          const href = contactValueHref(f.value);
+          return (
+            <Fragment>
+              {f.label && <span style="opacity:.75">{f.label}: </span>}
+              {href ? <a href={href}>{f.value}</a> : <span>{f.value}</span>}<br>
+            </Fragment>
+          );
+        })}
       </div>
     </div>
   </div>

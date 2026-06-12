@@ -2,11 +2,12 @@
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
-import { DEFAULT_PHONE, DEFAULT_EMAIL, telHref, resolveSocials, contactAddress, contactHours, mapEmbedSrc } from '../lib/site';
+import { telHref, resolveSocials, contactPhone, contactEmail, customFields, contactValueHref, contactAddress, contactHours, mapEmbedSrc } from '../lib/site';
 
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
-const phone = sf.phone || DEFAULT_PHONE;
-const email = sf.email || DEFAULT_EMAIL;
+const phone = contactPhone(sf);
+const email = contactEmail(sf);
+const extra = customFields(sf);
 const socials = resolveSocials(sf);
 const address = contactAddress(sf);
 const hours = contactHours(sf);
@@ -29,20 +30,38 @@ const mapSrc = mapEmbedSrc(sf);
         <div class="split" style="margin-top:30px;align-items:flex-start">
           <div class="stack" style="gap:18px">
             <div class="grid grid--2" style="gap:14px">
-              <a href={telHref(phone)} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
-                <span class="contact-ic"><Icon name="phone" /></span>
-                <span><span class="muted" style="font-size:13px">Телефон / Viber</span><br><b>{phone}</b></span>
-              </a>
-              <a href={`mailto:${email}`} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
-                <span class="contact-ic"><Icon name="mail" /></span>
-                <span><span class="muted" style="font-size:13px">Имейл</span><br><b>{email}</b></span>
-              </a>
+              {phone && (
+                <a href={telHref(phone)} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+                  <span class="contact-ic"><Icon name="phone" /></span>
+                  <span><span class="muted" style="font-size:13px">Телефон / Viber</span><br><b>{phone}</b></span>
+                </a>
+              )}
+              {email && (
+                <a href={`mailto:${email}`} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+                  <span class="contact-ic"><Icon name="mail" /></span>
+                  <span><span class="muted" style="font-size:13px">Имейл</span><br><b>{email}</b></span>
+                </a>
+              )}
             </div>
 
             <div class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
               <span class="contact-ic"><Icon name="pin" /></span>
               <span><span class="muted" style="font-size:13px">Пазар на място</span><br><b>{address}</b> · {hours}</span>
             </div>
+
+            {extra.map((f) => {
+              const href = contactValueHref(f.value);
+              const ic = href?.startsWith('mailto:') ? 'mail' : href?.startsWith('tel:') ? 'phone' : href ? 'globe' : 'leaf';
+              return (
+                <div class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
+                  <span class="contact-ic"><Icon name={ic} /></span>
+                  <span>
+                    {f.label && <Fragment><span class="muted" style="font-size:13px">{f.label}</span><br></Fragment>}
+                    {href ? <a href={href}><b>{f.value}</b></a> : <b>{f.value}</b>}
+                  </span>
+                </div>
+              );
+            })}
 
             <iframe
               class="contact-map"

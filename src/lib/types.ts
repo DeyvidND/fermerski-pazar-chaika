@@ -35,7 +35,13 @@ export interface Storefront {
     address: string | null;
     hours: string | null;
     tagline: string | null;
-    social: { label: string; url: string }[];
+    phone: string | null;
+    email: string | null;
+    // `network`: known key ('fb'|'ig'|'yt'|'tt'|'viber'|'telegram'|'whatsapp'|'x'|
+    // 'other') driving the icon; absent on older rows → guessed from the url.
+    social: { network?: string; label: string; url: string }[];
+    // Arbitrary extra contact rows the farm added; empty ones are dropped server-side.
+    custom: { label: string; value: string }[];
     mapLat: string | null;
     mapLng: string | null;
   };
