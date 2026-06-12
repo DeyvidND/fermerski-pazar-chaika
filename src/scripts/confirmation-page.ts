@@ -4,7 +4,6 @@
 import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
-import { PUBLIC_BASE } from '../lib/config';
 
 interface Stashed {
   orderId: string;
@@ -14,9 +13,6 @@ interface Stashed {
   slot: string;
 }
 
-const params = new URLSearchParams(location.search);
-const orderId = params.get('order');
-
 let recap: Stashed | null = null;
 try {
   recap = JSON.parse(sessionStorage.getItem('ff_last_order') || 'null');
@@ -24,26 +20,8 @@ try {
   recap = null;
 }
 
-const resolvedId = orderId || recap?.orderId || '';
-const orderNoEl = document.getElementById('orderNo')!;
-// Immediate fallback from the UUID; replaced by the real sequential number below.
-const idForDisplay = resolvedId.slice(0, 8).toUpperCase();
-orderNoEl.textContent = idForDisplay ? `Поръчка #FS-${idForDisplay}` : 'Поръчка приета';
-
-// Fetch the real per-farm order number (#42) — friendlier than the UUID and the
-// same number the farmer sees in the admin panel. Degrades to the fallback above.
-if (resolvedId) {
-  fetch(`${PUBLIC_BASE}/orders/${encodeURIComponent(resolvedId)}`, {
-    headers: { accept: 'application/json' },
-  })
-    .then((res) => (res.ok ? res.json() : null))
-    .then((o: { orderNumber?: number | null } | null) => {
-      if (o && o.orderNumber != null) orderNoEl.textContent = `Поръчка #${o.orderNumber}`;
-    })
-    .catch(() => {
-      /* keep the fallback */
-    });
-}
+// The header keeps the static „Поръчка приета" from confirmation.astro — we no
+// longer print an order number (a sequential №N would expose the shop's order count).
 
 const items = recap?.items ?? [];
 const recapBox = document.getElementById('recap')!;

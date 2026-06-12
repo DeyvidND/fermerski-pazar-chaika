@@ -30,9 +30,15 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
     res.headers.get('content-type')?.includes('text/html') &&
     !res.headers.has('cache-control')
   ) {
+    // /checkout bakes the farm's live payment + delivery config (card on/off, COD,
+    // methods, prices) into its HTML — edge-caching it would keep showing a toggled-
+    // off card (or stale prices) for the whole s-maxage+SWR window. Render it fresh.
+    const dynamic = ctx.url.pathname === '/checkout' || ctx.url.pathname.startsWith('/checkout/');
     res.headers.set(
       'Cache-Control',
-      'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+      dynamic
+        ? 'private, no-store'
+        : 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
     );
   }
   return res;
