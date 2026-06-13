@@ -3,6 +3,7 @@ import Layout from '../../components/Layout.astro';
 import { getStorefront, getArticles, getArticle, FALLBACK_STOREFRONT } from '../../lib/api';
 import { formatDateBg } from '../../lib/dates';
 import { imageOrigin, safeHref } from '../../lib/site';
+import { bodyToHtml } from '../../lib/article-html';
 
 const { slug } = Astro.params;
 
@@ -45,9 +46,7 @@ const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) :
 
     {article.body && (
       <div class="wrap">
-        <div class="prose">
-          {article.body.split(/\n\n+/).map((para) => <p>{para}</p>)}
-        </div>
+        <div class="prose" set:html={bodyToHtml(article.body)} />
       </div>
     )}
 

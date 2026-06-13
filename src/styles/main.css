@@ -507,6 +507,14 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .prose { max-width: 720px; margin-inline: auto; }
 .prose p { font-size: 18px; line-height: 1.75; color: var(--ink-soft); margin-bottom: 22px; }
 .prose h2 { font-size: 30px; margin: 36px 0 16px; }
+.prose h3 { font-size: 22px; margin: 28px 0 12px; }
+.prose ul, .prose ol { margin: 0 0 22px; padding-left: 26px; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li { font-size: 18px; line-height: 1.7; color: var(--ink-soft); margin: 6px 0; }
+.prose a { color: var(--primary); text-decoration: underline; }
+.prose img { max-width: 100%; height: auto; border-radius: var(--radius); margin: 18px 0; }
+.prose blockquote { margin: 22px 0; padding-left: 16px; border-left: 3px solid var(--line); color: var(--muted); }
 .prose .embed { aspect-ratio: 16/9; border-radius: var(--radius); margin: 30px 0; }
 .embed-yt, .embed-ig {
   position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
