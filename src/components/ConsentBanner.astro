@@ -1,0 +1,98 @@
+---
+// GDPR cookie-consent bar. Only rendered when the farm has at least one tracking
+// vendor configured (no tracking → no cookies → no banner). Starts hidden to
+// avoid a flash for returning visitors; the inline script reveals it only when no
+// choice is stored, and flips Google/Meta/TikTok consent via the ffGrantConsent /
+// ffDenyConsent hooks defined in TrackingScripts.astro.
+import type { Storefront } from '../lib/types';
+import { resolveTrackingIds, hasAnyTracking } from '../lib/marketing';
+
+interface Props {
+  storefront?: Storefront | null;
+}
+
+const show = hasAnyTracking(resolveTrackingIds(Astro.props.storefront));
+
+// Inline banner logic. Emitted via set:html — a `{...}` expression child inside a
+// <script> is raw text in Astro (not evaluated), so it would be output verbatim
+// and never run. read stored choice → reveal only if undecided → flip consent.
+const bannerScript = `(function(){var KEY='ff_consent';var bar=document.getElementById('ff-consent');if(!bar)return;function apply(v){try{if(v==='granted'&&window.ffGrantConsent)window.ffGrantConsent();else if(v==='denied'&&window.ffDenyConsent)window.ffDenyConsent();}catch(e){}}var stored=null;try{stored=localStorage.getItem(KEY);}catch(e){}if(stored==='granted'||stored==='denied'){apply(stored);return;}bar.hidden=false;function choose(v){try{localStorage.setItem(KEY,v);}catch(e){}apply(v);bar.hidden=true;}var a=document.getElementById('ff-consent-accept');var d=document.getElementById('ff-consent-decline');if(a)a.addEventListener('click',function(){choose('granted');});if(d)d.addEventListener('click',function(){choose('denied');});})();`;
+---
+{show && (
+  <div id="ff-consent" class="ff-consent" role="dialog" aria-live="polite"
+    aria-label="Съгласие за бисквитки" hidden>
+    <p class="ff-consent__text">
+      Използваме бисквитки за статистика и реклами, за да подобряваме магазина.
+      Можеш да приемеш или откажеш.
+    </p>
+    <div class="ff-consent__actions">
+      <button type="button" id="ff-consent-decline" class="ff-consent__btn ff-consent__btn--ghost">
+        Откажи
+      </button>
+      <button type="button" id="ff-consent-accept" class="ff-consent__btn ff-consent__btn--primary">
+        Приемам
+      </button>
+    </div>
+  </div>
+)}
+
+{show && <script is:inline set:html={bannerScript}></script>}
+
+<style>
+  .ff-consent {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 200;
+    width: min(720px, calc(100% - 24px));
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    background: var(--surface, #fff);
+    color: var(--ink, #1c2421);
+    border: 1px solid var(--border, #e3e6e1);
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+    padding: 14px 18px;
+  }
+  .ff-consent[hidden] { display: none; }
+  .ff-consent__text {
+    margin: 0;
+    flex: 1 1 280px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--muted, #5c655f);
+  }
+  .ff-consent__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .ff-consent__btn {
+    cursor: pointer;
+    border-radius: 9px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    transition: filter 0.15s ease, background 0.15s ease;
+  }
+  .ff-consent__btn--primary {
+    background: var(--primary, #3f7d43);
+    color: #fff;
+  }
+  .ff-consent__btn--primary:hover { filter: brightness(1.06); }
+  .ff-consent__btn--ghost {
+    background: transparent;
+    color: var(--muted, #5c655f);
+    border-color: var(--border, #e3e6e1);
+  }
+  .ff-consent__btn--ghost:hover { background: var(--surface-2, #f4f6f2); }
+  @media (max-width: 520px) {
+    .ff-consent { flex-direction: column; align-items: stretch; text-align: center; }
+    .ff-consent__actions { justify-content: center; }
+  }
+</style>

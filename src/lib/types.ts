@@ -60,6 +60,17 @@ export interface Storefront {
     latest: { show: boolean; count: number };
     reviews: { show: boolean; ids: string[] };
   };
+  // Per-vendor ad/analytics tracking IDs (settings.marketing). Optional (older
+  // backend) → no scripts injected. A null field = that vendor is off. IDs are
+  // server-validated (alphanumeric + -/_ only), safe to interpolate into <script>.
+  marketing?: {
+    ga4: string | null;
+    googleAds: string | null;
+    googleAdsLabel: string | null;
+    metaPixel: string | null;
+    gtm: string | null;
+    tiktok: string | null;
+  };
 }
 
 export interface DeliveryPricing {

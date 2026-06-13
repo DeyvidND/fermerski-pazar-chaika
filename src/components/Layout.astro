@@ -4,6 +4,8 @@ import '../styles/main.css';
 import '../styles/home.css';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
+import TrackingScripts from './TrackingScripts.astro';
+import ConsentBanner from './ConsentBanner.astro';
 import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import { safeHref } from '../lib/site';
 import type { Storefront } from '../lib/types';
@@ -83,6 +85,7 @@ const themeColor = storefront.themeColor || '#3F7D43';
       href="https://fonts.googleapis.com/css2?family=Commissioner:wght@300;400;500;600;700&family=Onest:wght@400;500;600;700;800&display=swap"
     />
   </noscript>
+  <TrackingScripts storefront={storefront} />
 </head>
 <body class={bodyClass}>
   {potwBar && (
@@ -98,6 +101,7 @@ const themeColor = storefront.themeColor || '#3F7D43';
   <Header storefront={storefront} />
   <slot />
   <Footer storefront={storefront} />
+  <ConsentBanner storefront={storefront} />
   <script>
     import '../scripts/ui.ts';
   </script>

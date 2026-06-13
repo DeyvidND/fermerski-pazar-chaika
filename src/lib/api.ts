@@ -168,4 +168,5 @@ export const FALLBACK_STOREFRONT: Storefront = {
     latest: { show: true, count: 4 },
     reviews: { show: false, ids: [] },
   },
+  marketing: { ga4: null, googleAds: null, googleAdsLabel: null, metaPixel: null, gtm: null, tiktok: null },
 };

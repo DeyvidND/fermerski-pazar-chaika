@@ -1,0 +1,61 @@
+---
+// Per-tenant ad/analytics loaders, injected into <head> from settings.marketing.
+// GDPR: Google uses Consent Mode v2 (loaded but defaulted to *denied*); Meta is
+// init'd with consent revoked; TikTok is deferred until consent. ConsentBanner
+// flips them to granted via the window.ffGrantConsent() hook defined below.
+import type { Storefront } from '../lib/types';
+import { resolveTrackingIds, hasAnyTracking } from '../lib/marketing';
+
+interface Props {
+  storefront?: Storefront | null;
+}
+
+const ids = resolveTrackingIds(Astro.props.storefront);
+const { ga4, googleAds, googleAdsLabel, metaPixel, gtm, tiktok } = ids;
+const anyGoogle = !!(ga4 || googleAds || gtm);
+const show = hasAnyTracking(ids);
+const gtagLoaderId = ga4 || googleAds;
+
+// Shared dataLayer + gtag stub + Consent Mode v2 default (everything denied until
+// the visitor accepts). wait_for_update gives the banner a moment to update
+// consent before tags fire, so the first page view is captured under modeling.
+const consentDefault = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});`;
+
+const gtagConfig = `gtag('js',new Date());${ga4 ? `gtag('config','${ga4}');` : ''}${googleAds ? `gtag('config','${googleAds}');` : ''}`;
+
+const gtmSnippet = gtm
+  ? `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtm}');`
+  : '';
+
+// Meta: load fbq, REVOKE consent, then init + PageView. Revoke makes fbq queue
+// events without sending until ffGrantConsent() grants.
+const metaSnippet = metaPixel
+  ? `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('consent','revoke');fbq('init','${metaPixel}');fbq('track','PageView');`
+  : '';
+
+// TikTok: set up the ttq queue + loader but DON'T call ttq.load()/page() yet —
+// ffGrantConsent() does that after the visitor accepts (no cookies before then).
+const tiktokSnippet = tiktok
+  ? `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=r+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};window.__ffTikTokId='${tiktok}';}(window,document,'ttq');`
+  : '';
+
+// Purchase-conversion targets read by confirmation-page.ts to fire the order event.
+const purchaseTargets = JSON.stringify({ ga4, googleAds, googleAdsLabel, metaPixel });
+
+// Consent flip hooks. ConsentBanner calls these; both are idempotent + guarded so
+// they're safe to call before a vendor library has finished loading.
+const consentHooks = `window.__ffPurchase=${purchaseTargets};window.ffGrantConsent=function(){try{if(window.gtag){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}try{if(window.fbq){fbq('consent','grant');}}catch(e){}try{if(window.ttq&&window.__ffTikTokId){window.ttq.load(window.__ffTikTokId);window.ttq.page();}}catch(e){}};window.ffDenyConsent=function(){};`;
+---
+{show && (
+  <>
+    {anyGoogle && <script is:inline set:html={consentDefault}></script>}
+    {gtagLoaderId && (
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gtagLoaderId}`}></script>
+    )}
+    {gtagLoaderId && <script is:inline set:html={gtagConfig}></script>}
+    {gtm && <script is:inline set:html={gtmSnippet}></script>}
+    {metaPixel && <script is:inline set:html={metaSnippet}></script>}
+    {tiktok && <script is:inline set:html={tiktokSnippet}></script>}
+    <script is:inline set:html={consentHooks}></script>
+  </>
+)}
