@@ -1,6 +1,7 @@
 ---
 import { money } from '../lib/money';
 import { coverCropStyle } from '../lib/cover-crop';
+import { cfImage, cfSrcset } from '../lib/img';
 import type { Product } from '../lib/types';
 
 interface Props {
@@ -25,7 +26,9 @@ const hasImg = !!cover;
   <div class="wrap potw__inner">
     {hasImg && (
       <a href={href} class="potw__media" aria-label={potw.name}>
-        <img src={cover} alt={potw.name} loading="lazy" style={coverCropStyle(potw.coverCrop)} />
+        <img src={cfImage(cover, 1120)} srcset={cfSrcset(cover, [560, 1120])}
+             sizes="(max-width:760px) 100vw, 460px" alt={potw.name} loading="lazy"
+             style={coverCropStyle(potw.coverCrop)} />
       </a>
     )}
     <div class="potw__body">

@@ -8,6 +8,7 @@ import TrackingScripts from './TrackingScripts.astro';
 import ConsentBanner from './ConsentBanner.astro';
 import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import { safeHref } from '../lib/site';
+import { IMG_ORIGIN } from '../lib/img';
 import type { Storefront } from '../lib/types';
 
 interface Props {
@@ -64,10 +65,10 @@ const themeColor = storefront.themeColor || '#3F7D43';
   <meta property="og:type" content="website" />
   <meta name="theme-color" content={themeColor} />
   <link rel="icon" href={safeHref(favicon)} type={faviconType} />
-  {imageOrigin && (
+  {(IMG_ORIGIN ?? imageOrigin) && (
     <>
-      <link rel="preconnect" href={imageOrigin} crossorigin />
-      <link rel="dns-prefetch" href={imageOrigin} />
+      <link rel="preconnect" href={IMG_ORIGIN ?? imageOrigin} crossorigin />
+      <link rel="dns-prefetch" href={IMG_ORIGIN ?? imageOrigin} />
     </>
   )}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
