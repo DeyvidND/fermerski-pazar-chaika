@@ -2,7 +2,7 @@
 import Layout from '../../components/Layout.astro';
 import { getStorefront, getArticles, getArticle, FALLBACK_STOREFRONT } from '../../lib/api';
 import { formatDateBg } from '../../lib/dates';
-import { imageOrigin } from '../../lib/site';
+import { imageOrigin, safeHref } from '../../lib/site';
 
 const { slug } = Astro.params;
 
@@ -86,7 +86,7 @@ const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) :
               </figure>
             ) : m.type === 'instagram' ? (
               <a
-                href={m.url}
+                href={safeHref(m.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="btn btn--ghost btn--sm"

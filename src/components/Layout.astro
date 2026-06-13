@@ -5,6 +5,7 @@ import '../styles/home.css';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
+import { safeHref } from '../lib/site';
 import type { Storefront } from '../lib/types';
 
 interface Props {
@@ -60,7 +61,7 @@ const themeColor = storefront.themeColor || '#3F7D43';
   <meta property="og:description" content={desc} />
   <meta property="og:type" content="website" />
   <meta name="theme-color" content={themeColor} />
-  <link rel="icon" href={favicon} type={faviconType} />
+  <link rel="icon" href={safeHref(favicon)} type={faviconType} />
   {imageOrigin && (
     <>
       <link rel="preconnect" href={imageOrigin} crossorigin />

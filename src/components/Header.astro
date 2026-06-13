@@ -1,7 +1,7 @@
 ---
 import Icon from './Icon.astro';
 import { navLinks, isActive } from '../lib/nav';
-import { BRAND_TAG, telHref, contactPhone } from '../lib/site';
+import { BRAND_TAG, telHref, contactPhone, safeHref } from '../lib/site';
 import type { Storefront } from '../lib/types';
 
 interface Props { storefront: Storefront }
@@ -11,7 +11,7 @@ const path = Astro.url.pathname;
 const phone = contactPhone(storefront);
 // The tenant's configured website icon (settings.brand.favicon). When set, it
 // replaces the static berry mark in the header/drawer brand; else fall back.
-const brandIcon = storefront.faviconUrl;
+const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : storefront.faviconUrl;
 ---
 <div class="promo" id="promo">
   🧺 Пазар на Чайка · <b>всеки петък</b> 11:00–18:00 — или поръчай онлайн.
