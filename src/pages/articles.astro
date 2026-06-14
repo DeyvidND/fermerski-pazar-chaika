@@ -31,8 +31,7 @@ const rest = articles.slice(1);
         {featured && (
           <a
             href={`/articles/${featured.slug}`}
-            class="card"
-            style="display:grid;grid-template-columns:1.1fr 1fr;overflow:hidden;margin-bottom:26px;text-decoration:none"
+            class="card art-featured"
           >
             {featured.coverImageUrl
               ? <img src={cfImage(featured.coverImageUrl, 1000)} srcset={cfSrcset(featured.coverImageUrl, [560, 1000])}
@@ -76,3 +75,19 @@ const rest = articles.slice(1);
     </section>
   </main>
 </Layout>
+
+<style>
+  /* Featured article: side-by-side on desktop, stacked on phones (inline grid
+     styles can't carry a media query, so the two-column layout used to crush the
+     image + text below ~700px). */
+  .art-featured {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    overflow: hidden;
+    margin-bottom: 26px;
+    text-decoration: none;
+  }
+  @media (max-width: 760px) {
+    .art-featured { grid-template-columns: 1fr; }
+  }
+</style>
