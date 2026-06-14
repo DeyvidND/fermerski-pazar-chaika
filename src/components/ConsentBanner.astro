@@ -13,9 +13,9 @@ interface Props {
 
 const show = hasAnyTracking(resolveTrackingIds(Astro.props.storefront));
 
-// Inline banner logic. Emitted via set:html — a `{...}` expression child inside a
-// <script> is raw text in Astro (not evaluated), so it would be output verbatim
-// and never run. read stored choice → reveal only if undecided → flip consent.
+// Inline banner logic. Emitted via set:html — a brace-expression child inside a
+// script tag is raw text in Astro (not evaluated), so it would be output verbatim
+// and never run. Read stored choice → reveal only if undecided → flip consent.
 const bannerScript = `(function(){var KEY='ff_consent';var bar=document.getElementById('ff-consent');if(!bar)return;function apply(v){try{if(v==='granted'&&window.ffGrantConsent)window.ffGrantConsent();else if(v==='denied'&&window.ffDenyConsent)window.ffDenyConsent();}catch(e){}}var stored=null;try{stored=localStorage.getItem(KEY);}catch(e){}if(stored==='granted'||stored==='denied'){apply(stored);return;}bar.hidden=false;function choose(v){try{localStorage.setItem(KEY,v);}catch(e){}apply(v);bar.hidden=true;}var a=document.getElementById('ff-consent-accept');var d=document.getElementById('ff-consent-decline');if(a)a.addEventListener('click',function(){choose('granted');});if(d)d.addEventListener('click',function(){choose('denied');});})();`;
 ---
 {show && (
