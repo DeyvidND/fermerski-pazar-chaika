@@ -3,6 +3,7 @@ import Layout from '../components/Layout.astro';
 import AdminNote from '../components/AdminNote.astro';
 import { getStorefront, getArticles, FALLBACK_STOREFRONT } from '../lib/api';
 import { formatDateBg } from '../lib/dates';
+import { cfImage, cfSrcset } from '../lib/img';
 
 const [sfRaw, articles] = await Promise.all([getStorefront(), getArticles()]);
 const sf = sfRaw ?? FALLBACK_STOREFRONT;
@@ -30,11 +31,12 @@ const rest = articles.slice(1);
         {featured && (
           <a
             href={`/articles/${featured.slug}`}
-            class="card"
-            style="display:grid;grid-template-columns:1.1fr 1fr;overflow:hidden;margin-bottom:26px;text-decoration:none"
+            class="card art-featured"
           >
             {featured.coverImageUrl
-              ? <img src={featured.coverImageUrl} alt={featured.title} style="width:100%;height:100%;min-height:280px;object-fit:contain;background:var(--surface-2)" />
+              ? <img src={cfImage(featured.coverImageUrl, 1000)} srcset={cfSrcset(featured.coverImageUrl, [560, 1000])}
+                     sizes="(max-width:760px) 100vw, 520px"
+                     alt={featured.title} style="width:100%;height:100%;min-height:280px;object-fit:contain;background:var(--surface-2)" />
               : <div class="ph" style="min-height:280px;border-radius:0"></div>
             }
             <div style="padding:clamp(22px,3vw,40px);display:flex;flex-direction:column;justify-content:center">
@@ -53,7 +55,9 @@ const rest = articles.slice(1);
             {rest.map((a) => (
               <a href={`/articles/${a.slug}`} class="card" style="text-decoration:none">
                 {a.coverImageUrl
-                  ? <img src={a.coverImageUrl} alt={a.title} style="width:100%;aspect-ratio:16/10;object-fit:cover" />
+                  ? <img src={cfImage(a.coverImageUrl, 800)} srcset={cfSrcset(a.coverImageUrl, [400, 800])}
+                         sizes="(max-width:700px) 100vw, 320px"
+                         alt={a.title} style="width:100%;aspect-ratio:16/10;object-fit:cover" />
                   : <div class="ph" style="aspect-ratio:16/10"></div>
                 }
                 <div style="padding:20px 20px 24px;display:flex;flex-direction:column;flex:1">
@@ -71,3 +75,19 @@ const rest = articles.slice(1);
     </section>
   </main>
 </Layout>
+
+<style>
+  /* Featured article: side-by-side on desktop, stacked on phones (inline grid
+     styles can't carry a media query, so the two-column layout used to crush the
+     image + text below ~700px). */
+  .art-featured {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    overflow: hidden;
+    margin-bottom: 26px;
+    text-decoration: none;
+  }
+  @media (max-width: 760px) {
+    .art-featured { grid-template-columns: 1fr; }
+  }
+</style>

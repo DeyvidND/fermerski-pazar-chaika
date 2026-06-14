@@ -22,6 +22,7 @@ interface Props {
    *  fetches it ahead of other eager images. */
   priority?: boolean;
 }
+import { cfImage, cfSrcset } from '../lib/img';
 const { slot, media, label, ratio, rounded = false, klass = '', priority = false } = Astro.props;
 const url = media?.[slot]?.url;
 const cls = ['ph', rounded ? 'ph--rounded' : '', klass].filter(Boolean).join(' ');
@@ -30,7 +31,9 @@ const style = ratio ? `aspect-ratio:${ratio}` : undefined;
 <div class={cls} style={style}>
   {url ? (
     <img
-      src={url}
+      src={cfImage(url, 1600)}
+      srcset={cfSrcset(url, [800, 1600])}
+      sizes="100vw"
       alt={label}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"

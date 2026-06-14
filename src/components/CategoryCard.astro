@@ -1,5 +1,6 @@
 ---
 import { coverCropStyle } from '../lib/cover-crop';
+import { cfImage, cfSrcset } from '../lib/img';
 import type { Category } from '../lib/catalog';
 
 interface Props { category: Category }
@@ -8,7 +9,8 @@ const { category: c } = Astro.props;
 <a href={`/shop#${encodeURIComponent(c.id)}`} class="card category-card">
   <span class="ph category-card__photo">
     {c.imageUrl ? (
-      <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async"
+      <img src={cfImage(c.imageUrl, 800)} srcset={cfSrcset(c.imageUrl, [400, 800])}
+           sizes="(max-width:700px) 50vw, 360px" alt={c.name} loading="lazy" decoding="async"
            style={`position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(c.coverCrop)}`} />
     ) : (
       <span class="ph__label">{c.name}</span>

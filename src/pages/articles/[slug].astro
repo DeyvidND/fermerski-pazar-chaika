@@ -3,6 +3,7 @@ import Layout from '../../components/Layout.astro';
 import { getStorefront, getArticles, getArticle, FALLBACK_STOREFRONT } from '../../lib/api';
 import { formatDateBg } from '../../lib/dates';
 import { imageOrigin, safeHref } from '../../lib/site';
+import { cfImage, cfSrcset } from '../../lib/img';
 import { bodyToHtml } from '../../lib/article-html';
 
 const { slug } = Astro.params;
@@ -37,7 +38,9 @@ const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) :
     {article.coverImageUrl && (
       <div class="wrap" style="max-width:1000px;margin-bottom:36px">
         <img
-          src={article.coverImageUrl}
+          src={cfImage(article.coverImageUrl, 1200)}
+          srcset={cfSrcset(article.coverImageUrl, [800, 1200, 1600])}
+          sizes="(max-width:1040px) 100vw, 1000px"
           alt={article.title}
           style="width:100%;height:auto;border-radius:var(--radius-lg)"
         />
@@ -56,7 +59,9 @@ const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) :
           {article.media.map((m) => (
             m.type === 'image' ? (
               <figure style="margin:0">
-                <img src={m.url} alt={m.caption ?? ''} style="width:100%;border-radius:var(--radius)" />
+                <img src={cfImage(m.url, 1200)} srcset={cfSrcset(m.url, [800, 1200])}
+                     sizes="(max-width:840px) 100vw, 820px"
+                     alt={m.caption ?? ''} style="width:100%;border-radius:var(--radius)" />
                 {m.caption && (
                   <figcaption style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">{m.caption}</figcaption>
                 )}
@@ -113,7 +118,9 @@ const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) :
           {related.map((a) => (
             <a href={`/articles/${a.slug}`} class="card" style="text-decoration:none">
               {a.coverImageUrl
-                ? <img src={a.coverImageUrl} alt={a.title} style="width:100%;aspect-ratio:16/10;object-fit:cover" />
+                ? <img src={cfImage(a.coverImageUrl, 800)} srcset={cfSrcset(a.coverImageUrl, [400, 800])}
+                       sizes="(max-width:700px) 100vw, 320px"
+                       alt={a.title} style="width:100%;aspect-ratio:16/10;object-fit:cover" />
                 : <div class="ph" style="aspect-ratio:16/10"></div>
               }
               <div style="padding:18px 18px 22px">

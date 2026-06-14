@@ -5,6 +5,13 @@ const RAW_BASE = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:3000';
 export const API_BASE = RAW_BASE.replace(/\/+$/, '');
 export const TENANT_SLUG = import.meta.env.PUBLIC_TENANT_SLUG ?? 'ferma-petrovi';
 
+/** Image CDN base for Cloudflare Transformations. Platform-wide: every tenant's
+ *  objects live in one R2 bucket fronted by this domain, so the same value serves
+ *  all client-factory sites — hence it's the hardcoded default rather than a per-site
+ *  env var. Set PUBLIC_IMG_CDN='' (empty) to disable transforms (e.g. local dev
+ *  against a stub-R2 API). See src/lib/img.ts. */
+export const CDN_BASE = (import.meta.env.PUBLIC_IMG_CDN ?? 'https://cdn.farmsteadflow.com').replace(/\/+$/, '');
+
 /** Base of all storefront endpoints for the configured farm. */
 export const PUBLIC_BASE = `${API_BASE}/public/${TENANT_SLUG}`;
 

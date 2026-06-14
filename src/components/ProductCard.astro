@@ -2,6 +2,7 @@
 import Icon from './Icon.astro';
 import { money } from '../lib/money';
 import { coverCropStyle } from '../lib/cover-crop';
+import { cfImage, cfSrcset } from '../lib/img';
 import type { Product } from '../lib/types';
 
 interface Props {
@@ -27,7 +28,8 @@ const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape
       </span>
     )}
     {p.imageUrl ? (
-      <img src={p.imageUrl} alt={p.name} loading="lazy" decoding="async"
+      <img src={cfImage(p.imageUrl, 720)} srcset={cfSrcset(p.imageUrl, [360, 720])}
+           sizes="(max-width:700px) 50vw, 320px" alt={p.name} loading="lazy" decoding="async"
            style={`position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(p.coverCrop)}`} />
     ) : (
       <span class="ph__label">{p.name}</span>

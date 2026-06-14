@@ -3,6 +3,7 @@ import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
 import { coverCropStyle } from '../lib/cover-crop';
+import { cfImage } from '../lib/img';
 import { PUBLIC_BASE } from '../lib/config';
 import type { CoverCrop } from '../lib/types';
 
@@ -36,7 +37,7 @@ async function loadImages() {
 function thumb(it: { id: string; name: string }): string {
   const hit = imgMap.get(it.id);
   if (hit) {
-    return `<div class="ph ph--rounded"><img src="${esc(hit.src)}" alt="${esc(it.name)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(hit.crop)}"></div>`;
+    return `<div class="ph ph--rounded"><img src="${esc(cfImage(hit.src, 192) ?? hit.src)}" alt="${esc(it.name)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(hit.crop)}"></div>`;
   }
   return `<div class="ph"><span class="ph__label" style="font-size:9px">${esc(it.name)}</span></div>`;
 }
