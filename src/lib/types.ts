@@ -71,6 +71,21 @@ export interface Storefront {
     gtm: string | null;
     tiktok: string | null;
   };
+  // «Налично сега» home section. Optional (older backend) → section hidden.
+  // availabilityTitle: null/'' → falls back to „Налично сега" in the storefront.
+  availabilitySectionEnabled?: boolean;
+  availabilityTitle?: string | null;
+}
+
+/** A single active availability window from the FarmFlow API.
+ *  Returned by both `GET /public/:slug/bootstrap` (preferred) and the
+ *  dedicated `GET /public/:slug/availability` endpoint. */
+export interface PublicAvailabilityWindow {
+  productId: string;
+  startsAt: string;
+  endsAt: string;
+  quantity: number;
+  remaining: number;
 }
 
 export interface DeliveryPricing {

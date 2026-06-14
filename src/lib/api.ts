@@ -11,6 +11,7 @@ import type {
   Review,
   ReviewSummary,
   Article,
+  PublicAvailabilityWindow,
 } from './types';
 
 // Short-lived in-process cache for SSR reads. The node-standalone server is one
@@ -95,6 +96,9 @@ export interface Bootstrap {
   /** Farmer-picked reviews for the home block, in pick order. Empty/absent when
    *  the block is off or nothing is picked. */
   homeReviews?: Review[];
+  /** Active availability windows for today. Absent on older backends → treat as [].
+   *  Each entry refers to a product by id; remaining=0 means sold out. */
+  availability?: PublicAvailabilityWindow[];
 }
 
 export const getBootstrap = () =>
@@ -135,6 +139,7 @@ export async function getCatalog(): Promise<Bootstrap> {
     subcategories,
     productOfWeek: null,
     homeReviews: [],
+    availability: [],
   };
 }
 
@@ -169,4 +174,6 @@ export const FALLBACK_STOREFRONT: Storefront = {
     reviews: { show: false, ids: [] },
   },
   marketing: { ga4: null, googleAds: null, googleAdsLabel: null, metaPixel: null, gtm: null, tiktok: null },
+  availabilitySectionEnabled: false,
+  availabilityTitle: null,
 };
