@@ -5,6 +5,9 @@
  */
 export function bodyToHtml(body: string | null | undefined): string {
   if (!body) return '';
+  // Collapse non-breaking spaces — WYSIWYG paste (Word/PDF) joins whole paragraphs
+  // with &nbsp;, which can't wrap → text overflows the column + scrolls phones sideways.
+  body = body.replace(/&nbsp;/gi, ' ').replace(/ /g, ' ');
   // HTML only when it BEGINS with a tag (server-sanitized bodies always do).
   // Legacy plain text containing a stray "<tag" mid-string is escaped below.
   if (/^\s*<[a-z]/i.test(body)) return body;

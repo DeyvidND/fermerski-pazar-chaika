@@ -504,7 +504,7 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .review-card .who span { font-size: 13px; color: var(--muted); }
 
 /* ---------- article body ---------- */
-.prose { max-width: 720px; margin-inline: auto; }
+.prose { max-width: 720px; margin-inline: auto; overflow-wrap: break-word; word-break: break-word; }
 .prose p { font-size: 18px; line-height: 1.75; color: var(--ink-soft); margin-bottom: 22px; }
 .prose h2 { font-size: 30px; margin: 36px 0 16px; }
 .prose h3 { font-size: 22px; margin: 28px 0 12px; }
