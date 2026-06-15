@@ -12,8 +12,11 @@ const { slug } = Astro.params;
 // One /bootstrap round trip (shared memo). The backend's single-product endpoint
 // is just a find over this same cached catalog, so look the product up locally
 // instead of a redundant 5th call.
-const { storefront: sf, products, farmers, subcategories: subcats } = await getCatalog();
+const boot = await getCatalog();
+const { storefront: sf, products, farmers, subcategories: subcats } = boot;
 const product = products.find((p) => p.slug === slug) ?? null;
+// Per-product availability map: productId → remaining (defensive: field absent on older backends).
+const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 
 if (!product) {
   return Astro.redirect('/404');
@@ -35,6 +38,9 @@ const priceLv = (product.priceStotinki / 100).toFixed(2);
 const metaBits = [product.weight, farmer?.name].filter(Boolean).join(' · ');
 const tag = product.featured ? '★ Популярен' : product.compareAtPriceStotinki ? 'Промо' : null;
 const imgOrigin = imageOrigin(productImages[0]);
+// Availability for this specific product
+const productRemaining = availMap.has(product.id) ? (availMap.get(product.id) ?? null) : null;
+const productSoldOut = productRemaining !== null && productRemaining === 0;
 ---
 <Layout title={`${product.name} · ${sf.name}`} storefront={sf} imageOrigin={imgOrigin}>
   <main data-product>
@@ -77,15 +83,29 @@ const imgOrigin = imageOrigin(productImages[0]);
           )}
 
           <div class="note-fresh" style="margin:22px 0"><Icon name="leaf" /> Свежо за петъчния пазар</div>
-          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px">
-            <div class="stepper" aria-label="Количество">
-              <button data-dir="down" aria-label="по-малко">−</button>
-              <input type="number" value="1" min="1" inputmode="numeric" />
-              <button data-dir="up" aria-label="повече">+</button>
+          {/* Stock availability badge for detail page */}
+          {productRemaining !== null && (
+            <div style="margin-bottom:14px">
+              {productSoldOut ? (
+                <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:#c0392b;color:#fff;font-size:13px;font-weight:700">изчерпан</span>
+              ) : (
+                <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:var(--color-primary,#4C8A54);color:#fff;font-size:13px;font-weight:700">{productRemaining} в наличност</span>
+              )}
             </div>
+          )}
+          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px">
+            {!productSoldOut && (
+              <div class="stepper" aria-label="Количество">
+                <button data-dir="down" aria-label="по-малко">−</button>
+                <input type="number" value="1" min="1" inputmode="numeric" />
+                <button data-dir="up" aria-label="повече">+</button>
+              </div>
+            )}
             <button class="btn btn--primary btn--lg" data-add-cart
-              data-id={product.id} data-name={product.name} data-price={priceLv} data-weight={product.weight || ''}>
-              Добави в количка
+              data-id={product.id} data-name={product.name} data-price={priceLv} data-weight={product.weight || ''}
+              disabled={productSoldOut || undefined}
+              style={productSoldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
+              {productSoldOut ? 'Изчерпан' : 'Добави в количка'}
             </button>
           </div>
 
@@ -104,7 +124,7 @@ const imgOrigin = imageOrigin(productImages[0]);
         <div class="wrap">
           <h2 style="font-size:28px;margin-bottom:22px">Други от пазара</h2>
           <div class="grid grid--4">
-            {related.map((p) => <ProductCard product={p} />)}
+            {related.map((p) => <ProductCard product={p} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </div>
       </section>

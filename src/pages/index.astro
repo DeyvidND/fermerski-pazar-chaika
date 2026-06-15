@@ -9,7 +9,6 @@ import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin, mapEmbedSrc } from '../lib/site';
 import ProductOfWeek from '../components/ProductOfWeek.astro';
-import AvailabilitySection from '../components/AvailabilitySection.astro';
 
 // One round trip via /bootstrap (falls back to the four parallel reads on an older
 // backend). Seeds the per-resource memo so the rest of this render + a within-TTL
@@ -37,8 +36,8 @@ const catList = L.categories.count > 0 ? cats.slice(0, L.categories.count) : cat
 const farmerList = farmers.slice(0, L.farmers.count);
 const feat = featured(products, L.latest.count);
 const homeReviews = boot.homeReviews ?? [];
-// «Налично сега» — defensive: field absent on older backends → empty array.
-const windows = boot.availability ?? [];
+// Per-product availability map: productId → remaining (defensive: field absent on older backends).
+const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
@@ -81,17 +80,6 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
     {potw && sf.productOfWeekPlacement !== 'bar' && (
       <ProductOfWeek potw={potw} note={potwInfo?.note ?? null} />
-    )}
-
-    <!-- AVAILABILITY NOW · shown only when the feature is on + there are active windows -->
-    {sf.availabilitySectionEnabled && windows.length > 0 && (
-      <AvailabilitySection
-        title={(sf.availabilityTitle && sf.availabilityTitle.trim()) || 'Налично сега'}
-        products={products}
-        farmers={farmers}
-        windows={windows}
-        multiFarmer={sf.multiFarmer}
-      />
     )}
 
     <!-- TWO WAYS TO SHOP -->
@@ -182,7 +170,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
           <a href="/shop" class="btn btn--soft">Виж всички</a>
         </div>
         <div class="grid grid--4">
-          {feat.map((p) => <ProductCard product={p} />)}
+          {feat.map((p) => <ProductCard product={p} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
         </div>
       </div>
     </section>

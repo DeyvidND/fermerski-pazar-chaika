@@ -14,6 +14,8 @@ const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
 const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
+// Per-product availability map: productId → remaining (defensive: field absent on older backends).
+const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 ---
 <Layout title={`Магазин · ${sf.name}`} storefront={sf}>
   <main>
@@ -45,7 +47,8 @@ const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : nul
         <div class="grid grid--4" id="catalogGrid" data-tab-panels>
           {seeded
             ? active.map((p) => (
-                <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)} />
+                <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)}
+                  remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />
               ))
             : <p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0">Все още няма продукти.</p>}
         </div>

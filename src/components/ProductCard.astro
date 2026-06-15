@@ -10,16 +10,22 @@ interface Props {
   stepper?: boolean;
   farmerName?: string | null;
   cat?: string; // grouping id, used by the catalog filter tabs
+  remaining?: number | null; // active availability window remaining stock (undefined = no window)
 }
-const { product: p, stepper = false, farmerName = null, cat = '' } = Astro.props;
+const { product: p, stepper = false, farmerName = null, cat = '', remaining = null } = Astro.props;
 const href = p.slug ? `/product/${p.slug}` : '/shop';
 const priceLv = (p.priceStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : p.compareAtPriceStotinki ? 'Промо' : null;
 const metaBits = [p.weight, farmerName].filter(Boolean).join(' · ');
 const photoCount = p.images?.length ?? (p.imageUrl ? 1 : 0);
 const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape === 'tall' ? '4/5' : null;
+
+// Availability badge state
+const hasWindow = remaining !== null && remaining !== undefined;
+const soldOut = hasWindow && remaining === 0;
 ---
-<article class="card product" data-product data-cat={cat}>
+<article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat}
+  style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
     {photoCount > 1 && (
@@ -34,6 +40,14 @@ const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape
     ) : (
       <span class="ph__label">{p.name}</span>
     )}
+    {/* Stock badge — shown only when there is an active availability window */}
+    {hasWindow && (
+      soldOut ? (
+        <span class="stock-badge stock-badge--sold-out" aria-label="Изчерпан">изчерпан</span>
+      ) : (
+        <span class="stock-badge stock-badge--remaining">{remaining} в наличност</span>
+      )
+    )}
   </a>
   <div class="product__body">
     <a href={href}><h3 class="product__name">{p.name}</h3></a>
@@ -47,7 +61,7 @@ const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape
       )}
     </div>
     <div class="product__foot">
-      {stepper && (
+      {stepper && !soldOut && (
         <div class="stepper" aria-label="Количество">
           <button data-dir="down" aria-label="по-малко">−</button>
           <input type="number" value="1" min="1" inputmode="numeric" />
@@ -55,9 +69,37 @@ const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape
         </div>
       )}
       <button class="btn btn--primary btn--sm btn--full" data-add-cart
-        data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}>
-        <Icon name="cart" /> Добави
+        data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}
+        disabled={soldOut || undefined}
+        style={soldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
+        <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Добави'}
       </button>
     </div>
   </div>
 </article>
+
+<style>
+  /* Stock availability badge — overlays the product image */
+  .stock-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 3;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+
+  .stock-badge--remaining {
+    background: var(--color-primary, #4C8A54);
+    color: #fff;
+  }
+
+  .stock-badge--sold-out {
+    background: #c0392b;
+    color: #fff;
+  }
+</style>
