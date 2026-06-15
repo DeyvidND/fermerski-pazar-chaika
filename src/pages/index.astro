@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard.astro';
 import FarmerCard from '../components/FarmerCard.astro';
 import CategoryCard from '../components/CategoryCard.astro';
 import MediaSlot from '../components/MediaSlot.astro';
+import CopySlot from '../components/CopySlot.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin, mapEmbedSrc } from '../lib/site';
@@ -55,11 +56,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <section class="hero section">
       <div class="wrap hero-grid">
         <div>
-          <span class="eyebrow">Фермерски пазар · кв. Чайка, Варна</span>
-          <h1 style="margin-top:14px">Свежа храна директно от фермерите</h1>
-          <p class="lead" style="margin-top:20px;max-width:46ch">
-            Ела на живо всеки петък на Чайка или поръчай онлайн — плодове, мляко, мед, месо и домашни сладка с доставка до дома.
-          </p>
+          <span class="eyebrow"><CopySlot slot="home.hero.eyebrow" copy={sf.copy} fallback="Фермерски пазар · кв. Чайка, Варна" /></span>
+          <h1 style="margin-top:14px"><CopySlot slot="home.hero.title" copy={sf.copy} fallback="Свежа храна директно от фермерите" /></h1>
+          <p class="lead" style="margin-top:20px;max-width:46ch"><CopySlot slot="home.hero.lead" copy={sf.copy} multiline fallback="Ела на живо всеки петък на Чайка или поръчай онлайн — плодове, мляко, мед, месо и домашни сладка с доставка до дома." /></p>
           <div class="cta-row">
             <a href={shopCta.href} class="btn btn--primary btn--lg">{shopCta.label}</a>
             <a href="/shop" class="btn btn--ghost btn--lg">Поръчай онлайн</a>
@@ -86,16 +85,16 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <section class="section--tight">
       <div class="wrap">
         <div class="section-head center" style="margin-bottom:32px">
-          <span class="eyebrow">Два начина да пазаруваш</span>
-          <h2 style="margin-top:8px">На пазара или онлайн — ти избираш</h2>
+          <span class="eyebrow"><CopySlot slot="home.twoways.eyebrow" copy={sf.copy} fallback="Два начина да пазаруваш" /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="home.twoways.title" copy={sf.copy} fallback="На пазара или онлайн — ти избираш" /></h2>
         </div>
         <div class="grid grid--2">
           <article class="card pillar">
             <MediaSlot slot="site.pillar_market" media={sf.media} ratio="16/10" label="Пазар на Чайка · щандове · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="basket" /></span>
-              <h3>Пазар на място</h3>
-              <p>Всеки петък фермерите се събират на Чайка. Опитай, разгледай и вземи директно от стопанина — без посредник.</p>
+              <h3><CopySlot slot="home.pillar_market.title" copy={sf.copy} fallback="Пазар на място" /></h3>
+              <p><CopySlot slot="home.pillar_market.text" copy={sf.copy} multiline fallback="Всеки петък фермерите се събират на Чайка. Опитай, разгледай и вземи директно от стопанина — без посредник." /></p>
               <ul class="pillar__facts">
                 <li><span class="fic"><Icon name="pin" /></span> кв. Чайка, бул. „Ал. Стамболийски“ (пред „Фратели“)</li>
                 <li><span class="fic"><Icon name="clock" /></span> Всеки петък · 11:00–18:00</li>
@@ -107,8 +106,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             <MediaSlot slot="site.pillar_delivery" media={sf.media} ratio="16/10" label="Доставка до дома · кашон · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="truck" /></span>
-              <h3>Доставка до дома</h3>
-              <p>Запази продукти от сайта и ги получи удобно вкъщи. Поръчай онлайн, а ние ги доставяме свежи в петък.</p>
+              <h3><CopySlot slot="home.pillar_delivery.title" copy={sf.copy} fallback="Доставка до дома" /></h3>
+              <p><CopySlot slot="home.pillar_delivery.text" copy={sf.copy} multiline fallback="Запази продукти от сайта и ги получи удобно вкъщи. Поръчай онлайн, а ние ги доставяме свежи в петък." /></p>
               <ul class="pillar__facts">
                 <li><span class="fic"><Icon name="truck" /></span> Доставка в петък · между 11:00 и 20:00 ч.</li>
                 <li><span class="fic"><Icon name="leaf" /></span> Свежо, директно от щанда до вратата ти</li>
@@ -126,8 +125,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px;flex-wrap:wrap">
           <div class="section-head" style="margin:0">
-            <span class="eyebrow">Пазарувай по категория</span>
-            <h2 style="margin-top:8px">Какво ще намериш</h2>
+            <span class="eyebrow"><CopySlot slot="home.categories.eyebrow" copy={sf.copy} fallback="Пазарувай по категория" /></span>
+            <h2 style="margin-top:8px"><CopySlot slot="home.categories.title" copy={sf.copy} fallback="Какво ще намериш" /></h2>
           </div>
           <a href="/shop" class="btn btn--soft">Виж целия магазин</a>
         </div>
@@ -144,8 +143,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
         <div class="wrap">
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
             <div class="section-head" style="margin:0">
-              <span class="eyebrow">Хора зад щандовете</span>
-              <h2 style="margin-top:8px">Запознай се с фермерите</h2>
+              <span class="eyebrow"><CopySlot slot="home.farmers.eyebrow" copy={sf.copy} fallback="Хора зад щандовете" /></span>
+              <h2 style="margin-top:8px"><CopySlot slot="home.farmers.title" copy={sf.copy} fallback="Запознай се с фермерите" /></h2>
             </div>
             <a href="/farmers" class="btn btn--soft">Всички фермери</a>
           </div>
@@ -164,8 +163,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       <div class="wrap">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap">
           <div class="section-head" style="margin:0">
-            <span class="eyebrow">Свежо този петък</span>
-            <h2 style="margin-top:8px">Най-актуални предложения</h2>
+            <span class="eyebrow"><CopySlot slot="home.latest.eyebrow" copy={sf.copy} fallback="Свежо този петък" /></span>
+            <h2 style="margin-top:8px"><CopySlot slot="home.latest.title" copy={sf.copy} fallback="Най-актуални предложения" /></h2>
           </div>
           <a href="/shop" class="btn btn--soft">Виж всички</a>
         </div>
@@ -181,8 +180,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <section class="section--tight">
       <div class="wrap">
         <div class="section-head center" style="margin-bottom:32px">
-          <span class="eyebrow">Отзиви</span>
-          <h2 style="margin-top:8px">Какво казват клиентите</h2>
+          <span class="eyebrow"><CopySlot slot="home.reviews.eyebrow" copy={sf.copy} fallback="Отзиви" /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="home.reviews.title" copy={sf.copy} fallback="Какво казват клиентите" /></h2>
         </div>
         <div class="grid grid--3">
           {homeReviews.map((r) => (
@@ -206,14 +205,14 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <section class="section">
       <div class="wrap">
         <div class="section-head center" style="margin-bottom:34px">
-          <span class="eyebrow">Как е подреден магазинът</span>
-          <h2 style="margin-top:8px">Фермер → категория → продукт</h2>
-          <p>Всеки продукт идва от конкретен фермер и е подреден в категория. Така знаеш точно кой стопанин стои зад храната ти.</p>
+          <span class="eyebrow"><CopySlot slot="home.how.eyebrow" copy={sf.copy} fallback="Как е подреден магазинът" /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="home.how.title" copy={sf.copy} fallback="Фермер → категория → продукт" /></h2>
+          <p><CopySlot slot="home.how.text" copy={sf.copy} multiline fallback="Всеки продукт идва от конкретен фермер и е подреден в категория. Така знаеш точно кой стопанин стои зад храната ти." /></p>
         </div>
         <div class="grid grid--3">
-          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3>1 · Избираш фермер</h3><p>Всяко стопанство има профил със снимка, история и собствен асортимент.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3>2 · Разглеждаш категориите</h3><p>Продуктите на фермера са групирани по категории — плодове, мляко, мед, месо, сладка.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3>3 · Поръчваш продукта</h3><p>Добавяш в количката директно от категорията или запазваш за петъчния пазар.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3><CopySlot slot="home.how.s1.title" copy={sf.copy} fallback="1 · Избираш фермер" /></h3><p><CopySlot slot="home.how.s1.text" copy={sf.copy} multiline fallback="Всяко стопанство има профил със снимка, история и собствен асортимент." /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3><CopySlot slot="home.how.s2.title" copy={sf.copy} fallback="2 · Разглеждаш категориите" /></h3><p><CopySlot slot="home.how.s2.text" copy={sf.copy} multiline fallback="Продуктите на фермера са групирани по категории — плодове, мляко, мед, месо, сладка." /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3><CopySlot slot="home.how.s3.title" copy={sf.copy} fallback="3 · Поръчваш продукта" /></h3><p><CopySlot slot="home.how.s3.text" copy={sf.copy} multiline fallback="Добавяш в количката директно от категорията или запазваш за петъчния пазар." /></p></div>
         </div>
       </div>
     </section>
@@ -223,11 +222,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       <div class="wrap">
         <div class="market-block">
           <div>
-            <span class="eyebrow">Локация</span>
-            <h2 style="font-size:clamp(28px,4vw,42px);margin-top:10px">Фермерски пазар — Чайка</h2>
-            <p class="lead" style="margin-top:14px;max-width:42ch">
-              Намираш ни в кв. Чайка, Варна — на бул. „Ал. Стамболийски“, точно пред „Фратели“.
-            </p>
+            <span class=”eyebrow”><CopySlot slot=”home.location.eyebrow” copy={sf.copy} fallback=”Локация” /></span>
+            <h2 style=”font-size:clamp(28px,4vw,42px);margin-top:10px”><CopySlot slot=”home.location.title” copy={sf.copy} fallback=”Фермерски пазар — Чайка” /></h2>
+            <p class=”lead” style=”margin-top:14px;max-width:42ch”><CopySlot slot=”home.location.lead” copy={sf.copy} multiline fallback=”Намираш ни в кв. Чайка, Варна — на бул. „Ал. Стамболийски”, точно пред „Фратели”.” /></p>
             <ul class="market-facts">
               <li><span class="fic"><Icon name="pin" /></span><div><b>кв. Чайка, бул. „Ал. Стамболийски“</b><span>пред „Фратели“, гр. Варна</span></div></li>
               <li><span class="fic"><Icon name="clock" /></span><div><b>Всеки петък · 11:00–18:00</b><span>пазар на живо с фермерите</span></div></li>
@@ -255,9 +252,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
     <section class="section--tight">
       <div class="wrap">
         <div class="grid grid--3">
-          <div class="card value-card"><div class="ic"><Icon name="leaf" /></div><h3>Местно и сезонно</h3><p>Всичко идва от ферми в региона на Варна — толкова свежо, колкото изобщо е възможно.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="basket" /></div><h3>Директно от фермера</h3><p>Без вериги и без посредник. Парите отиват при стопанина, който е отгледал продукта.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3>Познаваме си хората</h3><p>Малка общност от стопани и клиенти, които се срещат всеки петък на Чайка.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="leaf" /></div><h3><CopySlot slot="home.trust.1.title" copy={sf.copy} fallback="Местно и сезонно" /></h3><p><CopySlot slot="home.trust.1.text" copy={sf.copy} multiline fallback="Всичко идва от ферми в региона на Варна — толкова свежо, колкото изобщо е възможно." /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="basket" /></div><h3><CopySlot slot="home.trust.2.title" copy={sf.copy} fallback="Директно от фермера" /></h3><p><CopySlot slot="home.trust.2.text" copy={sf.copy} multiline fallback="Без вериги и без посредник. Парите отиват при стопанина, който е отгледал продукта." /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3><CopySlot slot="home.trust.3.title" copy={sf.copy} fallback="Познаваме си хората" /></h3><p><CopySlot slot="home.trust.3.text" copy={sf.copy} multiline fallback="Малка общност от стопани и клиенти, които се срещат всеки петък на Чайка." /></p></div>
         </div>
       </div>
     </section>
@@ -267,8 +264,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
       <div class="wrap">
         <div class="newsletter">
           <div>
-            <h2>Какво има на пазара тази седмица?</h2>
-            <p>Абонирай се и получавай в четвъртък какво носят фермерите в петък. Без спам.</p>
+            <h2><CopySlot slot="home.newsletter.title" copy={sf.copy} fallback="Какво има на пазара тази седмица?" /></h2>
+            <p><CopySlot slot="home.newsletter.text" copy={sf.copy} multiline fallback="Абонирай се и получавай в четвъртък какво носят фермерите в петък. Без спам." /></p>
           </div>
           <form data-api-form="newsletter">
             <input type="email" name="email" placeholder="твоят имейл" required />
