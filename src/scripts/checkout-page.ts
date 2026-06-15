@@ -69,12 +69,16 @@ const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
 
 // Precise pin from Places Autocomplete (only when a browser Maps key is set).
 // Null otherwise → the backend geocodes the typed address (today's behaviour).
+// The key is rendered onto the form server-side from the runtime env (Dokploy),
+// not baked at build — see checkout.astro / address-autocomplete.ts.
+const mapsKey = form.dataset.mapsKey || '';
 let pickedCoords: PickedCoords | null = null;
 let acInited = false;
 function initAutocompleteOnce() {
   if (acInited || !addrInput) return;
   acInited = true;
   initAddressAutocomplete(
+    mapsKey,
     { street: addrInput, city: addrCity, postal: addrPostal, district: addrDistrict },
     (c) => {
       pickedCoords = c;

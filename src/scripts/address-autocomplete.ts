@@ -1,18 +1,20 @@
 // Optional Google Places Autocomplete for the checkout street field.
 //
-// Graceful degradation (mirrors the backend's no-key stub mode): when
-// PUBLIC_GOOGLE_MAPS_KEY is empty, initAddressAutocomplete() is a no-op and the
-// plain structured inputs behave exactly as before — the backend geocodes the
-// typed address on order intake. When the key is set, the Maps JS + Places
-// library is loaded lazily (first time address delivery is used), the street
-// field gets autocomplete, and on pick we:
+// The browser Maps key is passed in (read server-side from the runtime env and
+// rendered onto the form as data-maps-key — see checkout.astro). It is NOT a
+// build-time import.meta.env constant, because the production image is built in
+// CI before Dokploy runs it: only a runtime env read sees the Dokploy-provided
+// key. Empty key → initAddressAutocomplete() is a no-op and the plain structured
+// inputs behave exactly as before (the backend geocodes the typed address).
+//
+// When a key is present the Maps JS + Places library loads lazily (first time
+// address delivery is used) and the street field gets autocomplete; on pick we:
 //   - autofill city / postal / district from the chosen place, and
 //   - capture precise coords so the order carries deliveryLat/deliveryLng —
 //     the backend then skips its own (billed) Geocoding call and the farm's
 //     route pin is exact.
 // Any failure (bad key, Places API not enabled, offline) is swallowed, leaving
 // the plain inputs fully working. No regression is possible without the key.
-import { GOOGLE_MAPS_KEY } from '../lib/config';
 
 export interface PickedCoords {
   lat: number;
@@ -55,10 +57,14 @@ function loadMaps(key: string): Promise<any> {
  * place's coords (or null when the user edits the field after picking, which
  * invalidates the captured pin). No-op when no browser key is configured.
  */
-export function initAddressAutocomplete(els: AddressEls, onPick: (c: PickedCoords | null) => void): void {
-  if (!GOOGLE_MAPS_KEY) return; // no key → plain inputs, backend geocodes (today's behaviour)
+export function initAddressAutocomplete(
+  key: string,
+  els: AddressEls,
+  onPick: (c: PickedCoords | null) => void,
+): void {
+  if (!key) return; // no key → plain inputs, backend geocodes (today's behaviour)
 
-  loadMaps(GOOGLE_MAPS_KEY)
+  loadMaps(key)
     .then((maps: any) => {
       const ac = new maps.places.Autocomplete(els.street, {
         componentRestrictions: { country: 'bg' },

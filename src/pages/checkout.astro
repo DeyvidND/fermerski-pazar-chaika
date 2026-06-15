@@ -23,6 +23,17 @@ const eur = (st: number) => (st / 100).toFixed(2).replace('.', ',');
 const lvNum = (st: number) => (st / 100).toString();
 const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €` : '';
 const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €` : 'безплатна';
+
+// Browser Google Maps key for checkout address autocomplete. Read at REQUEST
+// time from the container's runtime env (set in Dokploy) — NOT a build-time
+// import.meta.env constant, because the prod image is built in CI before Dokploy
+// runs it, so only a runtime read sees the Dokploy-provided value. Falls back to
+// import.meta.env for local `astro dev` (.env). Empty → autocomplete stays off
+// and checkout uses the plain inputs (the backend geocodes the typed address).
+const runtimeEnv = (globalThis as any).process?.env ?? {};
+const mapsKey = String(
+  runtimeEnv.PUBLIC_GOOGLE_MAPS_KEY ?? import.meta.env.PUBLIC_GOOGLE_MAPS_KEY ?? '',
+).trim();
 ---
 <Layout title={`Каса · ${sf.name}`} storefront={sf}>
   <main>
@@ -46,7 +57,8 @@ const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €`
           data-free-over={lvNum(d.freeThresholdStotinki)}
           data-ship-address={lvNum(d.addressFeeStotinki)}
           data-ship-econt={lvNum(d.econtFeeStotinki)}
-          data-ship-econt-address={lvNum(d.econtAddressFeeStotinki)}>
+          data-ship-econt-address={lvNum(d.econtAddressFeeStotinki)}
+          data-maps-key={mapsKey}>
           <div class="stack" style="gap:26px">
 
             <!-- contact -->
