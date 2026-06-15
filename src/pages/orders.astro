@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
 import MediaSlot from '../components/MediaSlot.astro';
+import CopySlot from '../components/CopySlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 ---
@@ -14,9 +15,9 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
     <section class="section--tight">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow">Поръчки</span>
-          <h2 style="margin-top:8px">Как стига храната до теб</h2>
-          <p>Два начина да вземеш продуктите от фермерите — ела на пазара на Чайка всеки петък, или запази онлайн и получи доставка до дома. Ти избираш.</p>
+          <span class="eyebrow"><CopySlot slot='orders.head.eyebrow' copy={sf.copy} fallback='Поръчки' /></span>
+          <h2 style="margin-top:8px"><CopySlot slot='orders.head.title' copy={sf.copy} fallback='Как стига храната до теб' /></h2>
+          <p><CopySlot slot='orders.head.text' copy={sf.copy} multiline fallback='Два начина да вземеш продуктите от фермерите — ела на пазара на Чайка всеки петък, или запази онлайн и получи доставка до дома. Ти избираш.' /></p>
         </div>
       </div>
     </section>
@@ -28,8 +29,8 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
             <MediaSlot slot="site.pillar_market" media={sf.media} ratio="16/10" label="Пазар на Чайка · щандове · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="basket" /></span>
-              <h3>Вземане от пазара</h3>
-              <p>Запази продуктите си онлайн и ги вземи лично в петък от щандовете на Чайка — без такса за доставка.</p>
+              <h3><CopySlot slot='orders.pickup.title' copy={sf.copy} fallback='Вземане от пазара' /></h3>
+              <p><CopySlot slot='orders.pickup.text' copy={sf.copy} multiline fallback='Запази продуктите си онлайн и ги вземи лично в петък от щандовете на Чайка — без такса за доставка.' /></p>
               <ul class="pillar__facts">
                 <li><span class="fic"><Icon name="pin" /></span> кв. Чайка, бул. „Ал. Стамболийски“ (пред „Фратели“)</li>
                 <li><span class="fic"><Icon name="clock" /></span> Всеки петък · 11:00–18:00</li>
@@ -42,8 +43,8 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
             <MediaSlot slot="site.pillar_delivery" media={sf.media} ratio="16/10" label="Доставка до дома · кашон · 16:10" />
             <div class="pillar__body">
               <span class="pillar__ic"><Icon name="truck" /></span>
-              <h3>Доставка до адрес</h3>
-              <p>Поръчай онлайн и получи свежите продукти удобно вкъщи в петък между 11:00 и 20:00 ч.</p>
+              <h3><CopySlot slot='orders.delivery.title' copy={sf.copy} fallback='Доставка до адрес' /></h3>
+              <p><CopySlot slot='orders.delivery.text' copy={sf.copy} multiline fallback='Поръчай онлайн и получи свежите продукти удобно вкъщи в петък между 11:00 и 20:00 ч.' /></p>
               <ul class="pillar__facts">
                 <li><span class="fic"><Icon name="truck" /></span> Доставка в петък · 11:00–20:00 ч.</li>
                 <li><span class="fic"><Icon name="pin" /></span> Варна и близките квартали</li>
@@ -59,14 +60,14 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
     <section class="section" style="background:var(--surface-2)">
       <div class="wrap">
         <div class="section-head center" style="margin-bottom:34px">
-          <span class="eyebrow">Стъпка по стъпка</span>
-          <h2 style="margin-top:8px">Поръчката за 4 стъпки</h2>
+          <span class="eyebrow"><CopySlot slot='orders.steps.eyebrow' copy={sf.copy} fallback='Стъпка по стъпка' /></span>
+          <h2 style="margin-top:8px"><CopySlot slot='orders.steps.title' copy={sf.copy} fallback='Поръчката за 4 стъпки' /></h2>
         </div>
         <div class="grid grid--4">
-          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3>1 · Разгледай</h3><p>Избери фермер или категория и виж какво е свежо тази седмица.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3>2 · Добави</h3><p>Сложи продуктите в количката и избери количество.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="truck" /></div><h3>3 · Избери начин</h3><p>Вземане от пазара на Чайка или доставка до адрес.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="check" /></div><h3>4 · Готово</h3><p>Потвърждаваме поръчката и я приготвяме за петък.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3><CopySlot slot='orders.steps.1.title' copy={sf.copy} fallback='1 · Разгледай' /></h3><p><CopySlot slot='orders.steps.1.text' copy={sf.copy} multiline fallback='Избери фермер или категория и виж какво е свежо тази седмица.' /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3><CopySlot slot='orders.steps.2.title' copy={sf.copy} fallback='2 · Добави' /></h3><p><CopySlot slot='orders.steps.2.text' copy={sf.copy} multiline fallback='Сложи продуктите в количката и избери количество.' /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="truck" /></div><h3><CopySlot slot='orders.steps.3.title' copy={sf.copy} fallback='3 · Избери начин' /></h3><p><CopySlot slot='orders.steps.3.text' copy={sf.copy} multiline fallback='Вземане от пазара на Чайка или доставка до адрес.' /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="check" /></div><h3><CopySlot slot='orders.steps.4.title' copy={sf.copy} fallback='4 · Готово' /></h3><p><CopySlot slot='orders.steps.4.text' copy={sf.copy} multiline fallback='Потвърждаваме поръчката и я приготвяме за петък.' /></p></div>
         </div>
       </div>
     </section>
@@ -75,8 +76,8 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
       <div class="wrap">
         <div class="market-block">
           <div>
-            <span class="eyebrow">Доставка и плащане</span>
-            <h2 style="font-size:clamp(28px,4vw,40px);margin-top:10px">Добре е да знаеш</h2>
+            <span class="eyebrow"><CopySlot slot='orders.know.eyebrow' copy={sf.copy} fallback='Доставка и плащане' /></span>
+            <h2 style="font-size:clamp(28px,4vw,40px);margin-top:10px"><CopySlot slot='orders.know.title' copy={sf.copy} fallback='Добре е да знаеш' /></h2>
             <ul class="market-facts">
               <li><span class="fic"><Icon name="clock" /></span><div><b>Краен срок за поръчки — четвъртък 20:00 ч.</b><span>за да влязат в петъчната доставка</span></div></li>
               <li><span class="fic"><Icon name="truck" /></span><div><b>Доставка в петък · 11:00–20:00 ч.</b><span>куриерът се обажда преди да пристигне</span></div></li>
