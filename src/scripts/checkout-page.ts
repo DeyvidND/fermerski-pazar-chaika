@@ -9,7 +9,7 @@ import { ICONS } from '../lib/icons';
 import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
 import type { Slot } from '../lib/types';
-import { initAddressAutocomplete, type PickedCoords } from './address-autocomplete';
+import { initAddressAutocomplete, type PickedAddress } from './address-autocomplete';
 
 const MARKET = 'Вземане от пазара · Чайка, Варна';
 
@@ -51,12 +51,8 @@ document.querySelectorAll<HTMLElement>('[data-pay]').forEach((el) =>
 );
 
 const addr = document.getElementById('addressFields') as HTMLElement;
-const addrInput = document.getElementById('addressInput') as HTMLInputElement | null; // street + no
-const addrCity = document.getElementById('addrCity') as HTMLInputElement | null;
-const addrPostal = document.getElementById('addrPostal') as HTMLInputElement | null;
-const addrDistrict = document.getElementById('addrDistrict') as HTMLInputElement | null;
-const addrBlock = document.getElementById('addrBlock') as HTMLInputElement | null;
-const addrEntrance = document.getElementById('addrEntrance') as HTMLInputElement | null;
+const addrInput = document.getElementById('addressInput') as HTMLInputElement | null; // full address (Places)
+const addrDetails = document.getElementById('addrDetails') as HTMLInputElement | null; // block/entrance/floor/flat
 const econtFields = document.getElementById('econtOfficeFields') as HTMLElement | null;
 const econtCity = document.getElementById('econtCity') as HTMLInputElement | null;
 const econtOffice = document.getElementById('econtOffice') as
@@ -67,35 +63,28 @@ const slotCard = document.getElementById('slotCard') as HTMLElement | null;
 
 const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
 
-// Precise pin from Places Autocomplete (only when a browser Maps key is set).
-// Null otherwise → the backend geocodes the typed address (today's behaviour).
-// The key is rendered onto the form server-side from the runtime env (Dokploy),
-// not baked at build — see checkout.astro / address-autocomplete.ts.
+// Picked address from Places Autocomplete (only when a browser Maps key is set).
+// When set, the order carries exact coords (deliveryLat/Lng) + structured
+// city/postal and the backend skips geocoding. Null when the customer typed the
+// address by hand (no pick) → the backend geocodes the text (safety net). The key
+// is rendered onto the form server-side from the runtime env (Dokploy), not baked
+// at build — see checkout.astro / address-autocomplete.ts.
 const mapsKey = form.dataset.mapsKey || '';
-let pickedCoords: PickedCoords | null = null;
+let picked: PickedAddress | null = null;
 let acInited = false;
 function initAutocompleteOnce() {
   if (acInited || !addrInput) return;
   acInited = true;
-  initAddressAutocomplete(
-    mapsKey,
-    { street: addrInput, city: addrCity, postal: addrPostal, district: addrDistrict },
-    (c) => {
-      pickedCoords = c;
-    },
-  );
+  initAddressAutocomplete(mapsKey, addrInput, (a) => {
+    picked = a;
+  });
 }
 
-// Fold the structured fields into one geocode-friendly line:
-//   "<street+no>, <block>, <entrance>, <district>, <postal> <city>"
-// Empty parts are dropped. The backend geocodes this whole string (country:BG),
-// so the more it contains, the more precise the farm's route pin.
+// Final delivery address string: the (picked or typed) address plus the optional
+// block/entrance/floor/flat detail the courier needs (Places never returns it).
 function composeAddress(): string {
   const v = (el: HTMLInputElement | null) => (el?.value || '').trim();
-  const cityLine = [v(addrPostal), v(addrCity)].filter(Boolean).join(' ');
-  return [v(addrInput), v(addrBlock), v(addrEntrance), v(addrDistrict), cityLine]
-    .filter(Boolean)
-    .join(', ');
+  return [v(addrInput), v(addrDetails)].filter(Boolean).join(', ');
 }
 
 function shipping(sub: number): number {
@@ -298,28 +287,31 @@ form.addEventListener('submit', async (e) => {
     payload.deliveryAddress = MARKET;
     payload.notes = 'Вземане от пазара (Чайка)';
   } else if (method === 'address' || method === 'econt_address') {
-    const city = (addrCity?.value || '').trim();
     const street = (addrInput?.value || '').trim();
-    if (!city) {
-      toast?.('Въведи град за доставка.');
-      addrCity?.focus();
+    if (!street) {
+      toast?.('Въведи адрес за доставка.');
+      addrInput?.focus();
       return;
     }
-    if (!street) {
-      toast?.('Въведи улица и номер.');
+    // Econt routes a door label by structured city, which we only have from a
+    // picked Google address. Local farm delivery has no such need — a hand-typed
+    // address is geocoded by the backend.
+    if (method === 'econt_address' && !picked?.city) {
+      toast?.('Избери адрес от предложенията, за да определим града за Еконт.');
       addrInput?.focus();
       return;
     }
     payload.deliveryType = method;
-    payload.deliveryCity = city;
     payload.deliveryAddress = composeAddress();
-    const postal = (addrPostal?.value || '').trim();
-    if (postal) payload.deliveryPostal = postal;
-    // Precise pin from Places autocomplete — lets the backend skip its geocode
-    // (local delivery only; the backend ignores coords for the Econt methods).
-    if (method === 'address' && pickedCoords) {
-      payload.deliveryLat = pickedCoords.lat;
-      payload.deliveryLng = pickedCoords.lng;
+    // Structured city/postal from the picked place — sharpen the backend geocode
+    // (#3) for local delivery and satisfy Econt's door-label city requirement.
+    if (picked?.city) payload.deliveryCity = picked.city;
+    if (picked?.postal) payload.deliveryPostal = picked.postal;
+    // Exact pin from the picked address — the backend then skips geocoding
+    // entirely (local delivery only; the Econt methods are courier-shipped).
+    if (method === 'address' && picked) {
+      payload.deliveryLat = picked.lat;
+      payload.deliveryLng = picked.lng;
     }
     if (method === 'address' && selectedSlotId) payload.slotId = selectedSlotId;
   } else {
