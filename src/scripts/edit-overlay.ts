@@ -11,7 +11,7 @@ function getTokenAndClean(): string | null {
   const t = u.searchParams.get('edit');
   if (!t) return null;
   u.searchParams.delete('edit');
-  history.replaceState(null, '', u.pathname + (u.search ? u.search : '') + u.hash);
+  history.replaceState(null, '', u.toString());
   return t;
 }
 
@@ -31,7 +31,7 @@ async function boot() {
 
   // Load slot kinds (same-origin) + current overrides + faq.
   const [kinds, data] = await Promise.all([
-    fetch('/editable-manifest.json').then((r) => r.json()).then(flattenKindsSafe),
+    fetch('/editable-manifest.json').then(handle).then(flattenKindsSafe),
     fetch(`${API}/tenants/me/site-edit/data`, { headers: auth }).then(handle).catch(() => null),
   ]);
   if (!data) { banner('Сесията изтече. Отвори пак „Редактирай сайта" от панела.'); return; }
@@ -39,6 +39,7 @@ async function boot() {
   const draftCopy: Record<string, string> = { ...(data.copy ?? {}) };
   let draftFaq: { q: string; a: string }[] = Array.isArray(data.faq) ? data.faq.map((f: any) => ({ q: f.q, a: f.a })) : [];
   let dirty = false;
+  let saving = false;
   const markDirty = () => { dirty = true; updateBar(); };
 
   document.documentElement.classList.add('ff-edit-on');
@@ -47,13 +48,15 @@ async function boot() {
   wireImages(kinds, token, markDirty);
   wireFaq(draftFaq, (next) => { draftFaq = next; markDirty(); });
   const { updateBar } = buildBar(async () => {
+    if (saving) return; saving = true; updateBar();
     try {
       await handle(await fetch(`${API}/tenants/me/site-edit/content`, {
         method: 'PATCH', headers: { ...auth, 'content-type': 'application/json' },
         body: JSON.stringify({ copy: cleanCopy(draftCopy), faq: cleanFaq(draftFaq) }),
       }));
-      dirty = false; updateBar(); toast('Запазено');
-    } catch { toast('Грешка при запис'); }
+      dirty = false; toast('Запазено');
+    } catch (e) { console.error(e); toast('Грешка при запис'); }
+    finally { saving = false; updateBar(); }
   });
   updateBar();
 
@@ -97,12 +100,12 @@ async function boot() {
             const res = await fetch(`${API}/tenants/me/site-edit/media/${encodeURIComponent(key)}`, {
               method: 'POST', headers: { Authorization: `Bearer ${tok}` }, body: fd,
             });
-            if (!res.ok) throw new Error();
+            if (!res.ok) { let m = ''; try { m = (await res.json())?.message || ''; } catch {} throw new Error(m); }
             const { url } = await res.json();
             let img = el.querySelector('img');
             if (!img) { img = document.createElement('img'); img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover'; el.appendChild(img); el.querySelector('.ph__label')?.remove(); }
             img.src = url; toast('Снимката е качена'); onChange();
-          } catch { toast('Грешка при качване'); }
+          } catch (e) { console.error(e); toast(e instanceof Error && e.message ? e.message : 'Грешка при качване'); }
           finally { btn.textContent = 'Смени снимка'; }
         };
         inp.click();
@@ -122,7 +125,7 @@ async function boot() {
         if (faq[idx]) el.innerText = faq[idx][field];
         el.setAttribute('contenteditable', 'plaintext-only');
         el.classList.add('ff-edit-text');
-        el.oninput = () => { if (faq[idx]) { faq[idx][field] = el.innerText; setFaq([...faq]); } };
+        el.oninput = () => { if (faq[idx]) { const next = faq.map((it, i) => i === idx ? { ...it, [field]: el.innerText } : it); setFaq(next); } };
       });
     }
     // per-item controls
@@ -130,13 +133,13 @@ async function boot() {
       const idx = Number(item.getAttribute('data-faq-item'));
       const tools = document.createElement('div'); tools.className = 'ff-faq-tools';
       const mk = (txt: string, fn: () => void) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); fn(); }; tools.appendChild(b); };
-      mk('↑', () => { if (idx > 0) { [faq[idx - 1], faq[idx]] = [faq[idx], faq[idx - 1]]; setFaq([...faq]); rebuild(faq, setFaq); } });
-      mk('↓', () => { if (idx < faq.length - 1) { [faq[idx + 1], faq[idx]] = [faq[idx], faq[idx + 1]]; setFaq([...faq]); rebuild(faq, setFaq); } });
-      mk('✕', () => { faq.splice(idx, 1); setFaq([...faq]); rebuild(faq, setFaq); });
+      mk('↑', () => { if (idx > 0) { const next = [...faq]; [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]; setFaq(next); rebuild(next, setFaq); } });
+      mk('↓', () => { if (idx < faq.length - 1) { const next = [...faq]; [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]; setFaq(next); rebuild(next, setFaq); } });
+      mk('✕', () => { const next = faq.filter((_, i) => i !== idx); setFaq(next); rebuild(next, setFaq); });
       item.appendChild(tools);
     });
     const add = document.createElement('button'); add.type = 'button'; add.className = 'ff-faq-add'; add.textContent = '+ Добави въпрос';
-    add.onclick = (e) => { e.preventDefault(); faq.push({ q: 'Нов въпрос', a: 'Отговор' }); setFaq([...faq]); rebuild(faq, setFaq); };
+    add.onclick = (e) => { e.preventDefault(); const next = [...faq, { q: 'Нов въпрос', a: 'Отговор' }]; setFaq(next); rebuild(next, setFaq); };
     list.parentElement?.appendChild(add);
     render();
   }
@@ -159,7 +162,7 @@ async function boot() {
     const exit = document.createElement('button'); exit.type = 'button'; exit.className = 'ff-edit-exit'; exit.textContent = 'Изход';
     exit.onclick = () => { location.href = location.pathname; };
     bar.append(status, exit, save); document.body.appendChild(bar);
-    return { updateBar: () => { status.textContent = dirty ? 'Незаписани промени' : 'Режим на редактиране'; save.disabled = !dirty; } };
+    return { updateBar: () => { status.textContent = dirty ? 'Незаписани промени' : 'Режим на редактиране'; save.disabled = !dirty || saving; } };
   }
   function banner(msg: string) { const b = document.createElement('div'); b.className = 'ff-edit-bar'; b.textContent = msg; document.body.appendChild(b); }
   function toast(msg: string) { const t = document.createElement('div'); t.className = 'ff-edit-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
