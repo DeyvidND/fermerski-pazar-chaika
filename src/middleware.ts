@@ -7,14 +7,22 @@ import { defineMiddleware } from 'astro:middleware';
 // zero-breakage subset is frame-ancestors.
 export const onRequest = defineMiddleware(async (ctx, next) => {
   const res = await next();
-  res.headers.set('X-Frame-Options', 'DENY');
-  res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+
+  const isPreview = ctx.url.searchParams.get('preview') === '1';
+  const ADMIN = import.meta.env.PUBLIC_ADMIN_URL || '';
+  if (isPreview && ADMIN) {
+    // Allow embedding ONLY in the admin „Промени сайта" preview, ONLY from the
+    // configured admin origin. No X-Frame-Options (it has no multi-origin form);
+    // frame-ancestors is the authoritative control. Never cache a preview render.
+    res.headers.set('Content-Security-Policy', `frame-ancestors ${ADMIN}`);
+    res.headers.set('Cache-Control', 'no-store');
+  } else {
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+  }
   res.headers.set('X-Content-Type-Options', 'nosniff');
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.headers.set(
-    'Strict-Transport-Security',
-    'max-age=63072000; includeSubDomains; preload',
-  );
+  res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
 
   // Tag SSR HTML as edge-cacheable. The storefront is fully anonymous — cart +
   // session live in localStorage, never cookies — so every GET page renders
@@ -26,6 +34,7 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   // Rule (cache eligible, respect origin headers) — the header alone is inert on
   // Cloudflare's default (HTML isn't cached by extension).
   if (
+    !isPreview &&
     ctx.request.method === 'GET' &&
     res.headers.get('content-type')?.includes('text/html') &&
     !res.headers.has('cache-control')

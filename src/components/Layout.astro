@@ -52,6 +52,8 @@ const faviconType = faviconPath.endsWith('.svg')
       ? 'image/x-icon'
       : undefined;
 const themeColor = storefront.themeColor || '#3F7D43';
+const isPreview = Astro.url.searchParams.get('preview') === '1';
+const adminOrigin = import.meta.env.PUBLIC_ADMIN_URL || '';
 ---
 <!DOCTYPE html>
 <html lang="bg" data-theme="ferma">
@@ -106,6 +108,31 @@ const themeColor = storefront.themeColor || '#3F7D43';
   <script>
     import '../scripts/ui.ts';
   </script>
+  {isPreview && adminOrigin && (
+    <script is:inline define:vars={{ adminOrigin }}>
+      (function () {
+        var last;
+        function outline(el) {
+          if (!el) return;
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (last) last.style.outline = '';
+          last = el;
+          el.style.outline = '3px solid #3F7D43';
+          el.style.outlineOffset = '3px';
+          setTimeout(function () { if (el) { el.style.outline = ''; el.style.outlineOffset = ''; } }, 1600);
+        }
+        window.addEventListener('message', function (e) {
+          if (e.origin !== adminOrigin) return;
+          var d = e.data || {};
+          if (d.type === 'ff-preview-scroll' && typeof d.section === 'string') {
+            outline(document.querySelector('[data-copy-section="' + d.section.replace(/"/g, '') + '"]'));
+          }
+        });
+        // Announce ready so the admin can flush a queued scroll after navigation.
+        try { parent.postMessage({ type: 'ff-preview-ready' }, adminOrigin); } catch (_) {}
+      })();
+    </script>
+  )}
 </body>
 </html>
 
