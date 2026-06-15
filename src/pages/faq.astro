@@ -5,7 +5,7 @@ import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 
 const DEFAULT_FAQ = [
-  { q: 'Къде и кога е пазарът?', a: 'Пазарът е всеки петък от 11:00 до 18:00 ч. в кв. Чайка, Варна — на бул. „Ал. Стамболийски“, точно пред „Фратели“. Ела да разгледаш и да опиташ директно от фермерите.' },
+  { q: 'Къде и кога е пазарът?', a: 'Пазарът е всеки петък от 11:00 до 18:00 ч. в кв. Чайка, Варна — на бул. „Ал. Стамболийски", точно пред „Фратели". Ела да разгледаш и да опиташ директно от фермерите.' },
   { q: 'Мога ли да запазя продукти онлайн и да ги взема от място?', a: 'Да. Избираш продуктите от сайта, добавяш ги в количката и при поръчката избираш »Вземане от пазара«. Ние ги приготвяме и ги вземаш в петък от щанда — без такса.' },
   { q: 'Как работи доставката до дома?', a: 'Поръчваш онлайн до четвъртък вечер и получаваш продуктите в петък между 11:00 и 20:00 ч. В района на Варна. Доставката е 4,90 €, а за поръчки над 40,00 € — безплатна.' },
   { q: 'Откъде са продуктите?', a: 'Всички продукти са от местни стопанства в региона на Варна. Всеки фермер има своя страница в сайта, така че винаги знаеш кой стои зад храната.' },
@@ -20,11 +20,11 @@ const FAQ = sf.faq && sf.faq.length ? sf.faq : DEFAULT_FAQ;
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>ЧЗВ</span></nav>
     </div>
 
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="faq.head">
       <div class="wrap" style="max-width:820px">
         <div class="section-head center" style="margin-inline:auto">
-          <span class="eyebrow"><CopySlot slot="faq.head.eyebrow" copy={sf.copy} fallback="Често задавани въпроси" /></span>
-          <h2 style="margin-top:8px"><CopySlot slot="faq.head.title" copy={sf.copy} fallback="Каквото обикновено ни питат" /></h2>
+          <span class="eyebrow"><CopySlot slot="faq.head.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="faq.head.title" copy={sf.copy} /></h2>
           <p>Не намираш отговор? <a href="/contact" style="color:var(--primary);text-decoration:underline">Пиши ни</a> — отговаряме лично.</p>
         </div>
 
