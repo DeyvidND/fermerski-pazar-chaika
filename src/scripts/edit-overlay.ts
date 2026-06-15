@@ -102,7 +102,8 @@ async function boot() {
       if (kinds[key] !== 'image') return;
       el.classList.add('ff-edit-img');
       const btn = document.createElement('button');
-      btn.type = 'button'; btn.className = 'ff-edit-imgbtn'; btn.textContent = 'Смени снимка';
+      btn.type = 'button'; btn.className = 'ff-edit-imgbtn';
+      btn.textContent = el.querySelector('img') ? 'Смени снимка' : 'Добави снимка';
       btn.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
         const inp = document.createElement('input');
@@ -219,7 +220,12 @@ async function boot() {
       .ff-edit-text{outline:1px dashed rgba(63,125,67,.5);outline-offset:2px;cursor:text;border-radius:3px}
       .ff-edit-text:focus{outline:2px solid #3F7D43;background:rgba(63,125,67,.06)}
       .ff-edit-img{position:relative}
-      .ff-edit-imgbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:#3F7D43;color:#fff;border:0;border-radius:6px;padding:8px 12px;font:600 13px system-ui;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+      /* Corner button + high z-index so it's reachable even when text/labels sit on
+         the image (centered placeholder label, overlaid headings). Hide the slot's
+         own centered placeholder text in edit mode so it can't clash with the button. */
+      .ff-edit-img > .ph__label{display:none}
+      .ff-edit-imgbtn{position:absolute;top:8px;right:8px;z-index:9000;background:#3F7D43;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:7px 12px;font:600 13px system-ui;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+      .ff-edit-imgbtn:hover{background:#356b39}
       .ff-faq-tools{display:flex;gap:4px;margin:6px 0}
       .ff-faq-tools button{width:28px;height:28px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer}
       .ff-faq-add{margin:12px 0;background:#eef3ec;border:1px solid #cdddc9;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer}
