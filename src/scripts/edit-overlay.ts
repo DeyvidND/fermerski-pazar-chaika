@@ -57,6 +57,8 @@ async function boot() {
 
   document.documentElement.classList.add('ff-edit-on');
   injectStyles();
+  introNote();
+  keepEditOnNav(token);
   wireText(kinds, draftCopy, markDirty);
   wireImages(kinds, token, markDirty);
   wireFaq(draftFaq, (next) => { draftFaq = next; markDirty(); });
@@ -172,13 +174,45 @@ async function boot() {
     const bar = document.createElement('div'); bar.className = 'ff-edit-bar';
     const status = document.createElement('span'); status.className = 'ff-edit-status';
     const save = document.createElement('button'); save.type = 'button'; save.className = 'ff-edit-save'; save.textContent = 'Запази'; save.onclick = onSave;
-    const exit = document.createElement('button'); exit.type = 'button'; exit.className = 'ff-edit-exit'; exit.textContent = 'Изход';
-    exit.onclick = () => { location.href = location.pathname; };
+    const exit = document.createElement('button'); exit.type = 'button'; exit.className = 'ff-edit-exit'; exit.textContent = 'Изход от редактора';
+    exit.onclick = () => { if (dirty && !confirm('Има незаписани промени. Да изляза без запис?')) return; location.href = location.pathname; };
     bar.append(status, exit, save); document.body.appendChild(bar);
     return { updateBar: () => { status.textContent = dirty ? 'Незаписани промени' : 'Режим на редактиране'; save.disabled = !dirty || saving; } };
   }
   function banner(msg: string) { const b = document.createElement('div'); b.className = 'ff-edit-bar'; b.textContent = msg; document.body.appendChild(b); }
   function toast(msg: string) { const t = document.createElement('div'); t.className = 'ff-edit-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+  // Persistent scope note: only the static texts + decorative photos are editable
+  // here. Product/farmer/category images come from the admin panel (different slots,
+  // no data-editable-slot), so clicking them does nothing — say so explicitly.
+  function introNote() {
+    document.documentElement.classList.add('ff-note-on');
+    const n = document.createElement('div'); n.className = 'ff-edit-note';
+    const msg = document.createElement('span');
+    msg.innerHTML = 'Тук сменяш <b>текстовете</b> и <b>декоративните снимки</b> на сайта — кликни върху текст или снимка. Снимките на <b>продукти, фермери и категории</b> се управляват от админ панела, не оттук.';
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'ff-edit-note-x'; x.textContent = '✕'; x.title = 'Скрий';
+    x.onclick = () => { n.remove(); document.documentElement.classList.remove('ff-note-on'); };
+    n.append(msg, x); document.body.appendChild(n);
+  }
+
+  // Keep edit mode across internal navigation: clicking a same-origin link carries
+  // the edit token to the next page (it loads the overlay + strips the token from
+  // the URL), so the farmer can browse + edit every page without re-opening from
+  // the panel. External links / new-tab / hash links navigate normally (leave edit).
+  function keepEditOnNav(tok: string) {
+    document.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement)?.closest?.('a');
+      if (!a) return;
+      const href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || (a as HTMLAnchorElement).target === '_blank') return;
+      let url: URL; try { url = new URL(href, location.href); } catch { return; }
+      if (url.origin !== location.origin) return; // external → normal nav (leaves edit mode)
+      e.preventDefault();
+      if (dirty && !confirm('Има незаписани промени. Да напусна страницата без запис?')) return;
+      url.searchParams.set('edit', tok);
+      location.href = url.toString();
+    }, true);
+  }
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
@@ -195,6 +229,10 @@ async function boot() {
       .ff-edit-save:disabled{opacity:.5;cursor:default}
       .ff-edit-exit{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:9px 16px;cursor:pointer}
       .ff-edit-toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);z-index:10000;background:#1f2a1f;color:#fff;padding:10px 18px;border-radius:8px;font:600 14px system-ui}
+      .ff-edit-note{position:fixed;top:0;left:0;right:0;z-index:10000;display:flex;align-items:center;gap:12px;background:#3F7D43;color:#fff;padding:10px 18px;font:500 13.5px/1.4 system-ui}
+      .ff-edit-note b{font-weight:700}
+      .ff-edit-note-x{margin-left:auto;flex:none;background:transparent;border:0;color:#fff;font-size:16px;line-height:1;cursor:pointer;opacity:.85}
+      html.ff-note-on body{padding-top:56px}
       body{padding-bottom:64px}
     `;
     document.head.appendChild(s);
