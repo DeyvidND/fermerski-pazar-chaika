@@ -1,9 +1,10 @@
 ---
 import Layout from '../components/Layout.astro';
+import CopySlot from '../components/CopySlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 
-const FAQ = [
+const DEFAULT_FAQ = [
   { q: 'Къде и кога е пазарът?', a: 'Пазарът е всеки петък от 11:00 до 18:00 ч. в кв. Чайка, Варна — на бул. „Ал. Стамболийски“, точно пред „Фратели“. Ела да разгледаш и да опиташ директно от фермерите.' },
   { q: 'Мога ли да запазя продукти онлайн и да ги взема от място?', a: 'Да. Избираш продуктите от сайта, добавяш ги в количката и при поръчката избираш »Вземане от пазара«. Ние ги приготвяме и ги вземаш в петък от щанда — без такса.' },
   { q: 'Как работи доставката до дома?', a: 'Поръчваш онлайн до четвъртък вечер и получаваш продуктите в петък между 11:00 и 20:00 ч. В района на Варна. Доставката е 4,90 €, а за поръчки над 40,00 € — безплатна.' },
@@ -11,6 +12,7 @@ const FAQ = [
   { q: 'Какви категории предлагате?', a: 'Плодове и зеленчуци, млечни продукти, мед, месни продукти, както и домашни сладка и сиропи. Асортиментът се променя според сезона и какво носят фермерите тази седмица.' },
   { q: 'Как плащам?', a: 'На място на пазара можеш да платиш в брой или с карта. При доставка плащаш при получаване — също в брой или с карта на куриера.' },
 ];
+const FAQ = sf.faq && sf.faq.length ? sf.faq : DEFAULT_FAQ;
 ---
 <Layout title={`Чести въпроси · ${sf.name}`} storefront={sf}>
   <main>
@@ -21,8 +23,8 @@ const FAQ = [
     <section class="section--tight">
       <div class="wrap" style="max-width:820px">
         <div class="section-head center" style="margin-inline:auto">
-          <span class="eyebrow">Често задавани въпроси</span>
-          <h2 style="margin-top:8px">Каквото обикновено ни питат</h2>
+          <span class="eyebrow"><CopySlot slot="faq.head.eyebrow" copy={sf.copy} fallback="Често задавани въпроси" /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="faq.head.title" copy={sf.copy} fallback="Каквото обикновено ни питат" /></h2>
           <p>Не намираш отговор? <a href="/contact" style="color:var(--primary);text-decoration:underline">Пиши ни</a> — отговаряме лично.</p>
         </div>
 

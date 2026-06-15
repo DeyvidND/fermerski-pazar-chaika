@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/Layout.astro';
 import Icon from '../components/Icon.astro';
+import CopySlot from '../components/CopySlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 import { telHref, resolveSocials, contactPhone, contactEmail, customFields, contactValueHref, contactAddress, contactHours, mapEmbedSrc } from '../lib/site';
 
@@ -22,9 +23,9 @@ const mapSrc = mapEmbedSrc(sf);
     <section class="section--tight">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow">Контакти</span>
-          <h2 style="margin-top:8px">Ще се радваме да чуем</h2>
-          <p>Въпрос за поръчка, продукт от пазара или просто здравей — пиши ни по който начин ти е удобен. Ще се радваме да те видим и на живо в петък на Чайка.</p>
+          <span class="eyebrow"><CopySlot slot="contact.head.eyebrow" copy={sf.copy} fallback="Контакти" /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="contact.head.title" copy={sf.copy} fallback="Ще се радваме да чуем" /></h2>
+          <p><CopySlot slot="contact.head.text" copy={sf.copy} fallback="Въпрос за поръчка, продукт от пазара или просто здравей — пиши ни по който начин ти е удобен. Ще се радваме да те видим и на живо в петък на Чайка." multiline /></p>
         </div>
 
         <div class="split" style="margin-top:30px;align-items:flex-start">
@@ -83,8 +84,8 @@ const mapSrc = mapEmbedSrc(sf);
           </div>
 
           <div class="card" style="padding:clamp(22px,3vw,34px)">
-            <h3 style="font-size:24px;margin-bottom:6px">Изпрати съобщение</h3>
-            <p class="muted" style="margin-bottom:22px">Отговаряме в рамките на работния ден.</p>
+            <h3 style="font-size:24px;margin-bottom:6px"><CopySlot slot="contact.form.title" copy={sf.copy} fallback="Изпрати съобщение" /></h3>
+            <p class="muted" style="margin-bottom:22px"><CopySlot slot="contact.form.note" copy={sf.copy} fallback="Отговаряме в рамките на работния ден." /></p>
             <form class="stack" style="gap:14px" data-api-form="contact">
               <div class="field-row">
                 <div class="field"><label>Име</label><input class="input" name="name" placeholder="Твоето име" required /></div>
