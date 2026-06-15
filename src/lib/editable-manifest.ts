@@ -183,6 +183,63 @@ export const MANIFEST: EditableManifest = {
         ]},
       ],
     },
+    {
+      route: '/shop', label: 'Магазин',
+      sections: [
+        { id: 'shop.head', label: 'Заглавна', slots: [
+          { kind: 'text', key: 'shop.head.eyebrow', label: 'Надпис', default: 'Магазин' },
+          { kind: 'text', key: 'shop.head.title', label: 'Заглавие', default: 'Всичко от пазара на едно място' },
+          { kind: 'text', key: 'shop.head.text', label: 'Текст', multiline: true, default: 'Избери категория. Продуктите идват от местните фермери и се запазват за петъчния пазар или за доставка до дома.' },
+        ]},
+      ],
+    },
+    {
+      route: '/reviews', label: 'Отзиви',
+      sections: [
+        { id: 'reviews.head', label: 'Заглавна', slots: [
+          { kind: 'text', key: 'reviews.head.eyebrow', label: 'Надпис', default: 'Отзиви' },
+          { kind: 'text', key: 'reviews.head.title', label: 'Заглавие', default: 'Какво казват клиентите' },
+          { kind: 'text', key: 'reviews.head.text', label: 'Текст', multiline: true, default: 'Истински думи от хората, които пазаруват при нас на Чайка. Поръчвал/а си? Сподели и ти впечатленията си по-долу.' },
+        ]},
+        { id: 'reviews.form', label: 'Форма за ревю', slots: [
+          { kind: 'text', key: 'reviews.form.title', label: 'Заглавие', default: 'Остави ревю' },
+          { kind: 'text', key: 'reviews.form.note', label: 'Бележка', multiline: true, default: 'Поръчвал/а си от нас? Сподели впечатленията си — помага на други да изберат.' },
+        ]},
+        { id: 'reviews.all', label: 'Всички отзиви', slots: [
+          { kind: 'text', key: 'reviews.all.eyebrow', label: 'Надпис', default: 'Всички отзиви' },
+        ]},
+      ],
+    },
+    {
+      route: '/farmers', label: 'Фермери',
+      sections: [
+        { id: 'farmers.head', label: 'Заглавна', slots: [
+          { kind: 'text', key: 'farmers.head.eyebrow', label: 'Надпис', default: 'Хора зад щандовете' },
+          { kind: 'text', key: 'farmers.head.title', label: 'Заглавие', default: 'Нашите фермери' },
+          { kind: 'text', key: 'farmers.head.text', label: 'Текст', multiline: true, default: 'Местни семейни стопанства от региона на Варна. Всеки фермер има своя страница с продукти, подредени по категории — избери чие стопанство да разгледаш.' },
+        ]},
+        { id: 'farmers.how', label: 'Как е подреден магазинът', slots: [
+          { kind: 'text', key: 'farmers.how.eyebrow', label: 'Надпис', default: 'Как е подреден магазинът' },
+          { kind: 'text', key: 'farmers.how.title', label: 'Заглавие', default: 'Фермер → категория → продукт' },
+          { kind: 'text', key: 'farmers.how.s1.title', label: 'Стъпка 1 · заглавие', default: '1 · Избираш фермер' },
+          { kind: 'text', key: 'farmers.how.s1.text', label: 'Стъпка 1 · текст', multiline: true, default: 'Всяко стопанство има профил със снимка, история и собствен асортимент.' },
+          { kind: 'text', key: 'farmers.how.s2.title', label: 'Стъпка 2 · заглавие', default: '2 · Разглеждаш категориите' },
+          { kind: 'text', key: 'farmers.how.s2.text', label: 'Стъпка 2 · текст', multiline: true, default: 'Продуктите на фермера са групирани по категории — плодове, мляко, мед, месо, сладка.' },
+          { kind: 'text', key: 'farmers.how.s3.title', label: 'Стъпка 3 · заглавие', default: '3 · Поръчваш продукта' },
+          { kind: 'text', key: 'farmers.how.s3.text', label: 'Стъпка 3 · текст', multiline: true, default: 'Добавяш в количката директно от категорията. Всичко идва от едно стопанство.' },
+        ]},
+      ],
+    },
+    {
+      route: '/articles', label: 'Статии',
+      sections: [
+        { id: 'articles.head', label: 'Заглавна', slots: [
+          { kind: 'text', key: 'articles.head.eyebrow', label: 'Надпис', default: 'Статии' },
+          { kind: 'text', key: 'articles.head.title', label: 'Заглавие', default: 'Новини и истории от фермата' },
+          { kind: 'text', key: 'articles.head.text', label: 'Текст', multiline: true, default: 'Рецепти, съвети и истории зад продуктите.' },
+        ]},
+      ],
+    },
   ],
 };
 

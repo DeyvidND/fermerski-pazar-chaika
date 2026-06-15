@@ -1,5 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
+import CopySlot from '../components/CopySlot.astro';
 import Icon from '../components/Icon.astro';
 import FarmerCard from '../components/FarmerCard.astro';
 import GhostFarmerCard from '../components/GhostFarmerCard.astro';
@@ -19,12 +20,12 @@ const farmerCats = (id: string) =>
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Фермери</span></nav>
     </div>
 
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="farmers.head">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow">Хора зад щандовете</span>
-          <h2 style="margin-top:8px">Нашите фермери</h2>
-          <p>Местни семейни стопанства от региона на Варна. Всеки фермер има своя страница с продукти, подредени по категории — избери чие стопанство да разгледаш.</p>
+          <span class="eyebrow"><CopySlot slot="farmers.head.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="farmers.head.title" copy={sf.copy} /></h2>
+          <p><CopySlot slot="farmers.head.text" copy={sf.copy} /></p>
         </div>
 
         {farmers.length === 0 && (
@@ -42,16 +43,16 @@ const farmerCats = (id: string) =>
       </div>
     </section>
 
-    <section class="section" style="background:var(--surface-2)">
+    <section class="section" style="background:var(--surface-2)" data-copy-section="farmers.how">
       <div class="wrap">
         <div class="section-head center" style="margin-bottom:34px">
-          <span class="eyebrow">Как е подреден магазинът</span>
-          <h2 style="margin-top:8px">Фермер → категория → продукт</h2>
+          <span class="eyebrow"><CopySlot slot="farmers.how.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="farmers.how.title" copy={sf.copy} /></h2>
         </div>
         <div class="grid grid--3">
-          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3>1 · Избираш фермер</h3><p>Всяко стопанство има профил със снимка, история и собствен асортимент.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3>2 · Разглеждаш категориите</h3><p>Продуктите на фермера са групирани по категории — плодове, мляко, мед, месо, сладка.</p></div>
-          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3>3 · Поръчваш продукта</h3><p>Добавяш в количката директно от категорията. Всичко идва от едно стопанство.</p></div>
+          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3><CopySlot slot="farmers.how.s1.title" copy={sf.copy} /></h3><p><CopySlot slot="farmers.how.s1.text" copy={sf.copy} /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3><CopySlot slot="farmers.how.s2.title" copy={sf.copy} /></h3><p><CopySlot slot="farmers.how.s2.text" copy={sf.copy} /></p></div>
+          <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3><CopySlot slot="farmers.how.s3.title" copy={sf.copy} /></h3><p><CopySlot slot="farmers.how.s3.text" copy={sf.copy} /></p></div>
         </div>
       </div>
     </section>

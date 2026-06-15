@@ -1,5 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
+import CopySlot from '../components/CopySlot.astro';
 import Icon from '../components/Icon.astro';
 import { getStorefront, getReviews, FALLBACK_STOREFRONT } from '../lib/api';
 
@@ -15,13 +16,13 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
     </div>
 
     <!-- Header -->
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="reviews.head">
       <div class="wrap">
         <div class="split" style="align-items:center">
           <div class="section-head" style="margin:0">
-            <span class="eyebrow">Отзиви</span>
-            <h2 style="margin-top:8px">Какво казват клиентите</h2>
-            <p>Истински думи от хората, които пазаруват при нас на Чайка. Поръчвал/а си? Сподели и ти впечатленията си по-долу.</p>
+            <span class="eyebrow"><CopySlot slot="reviews.head.eyebrow" copy={sf.copy} /></span>
+            <h2 style="margin-top:8px"><CopySlot slot="reviews.head.title" copy={sf.copy} /></h2>
+            <p><CopySlot slot="reviews.head.text" copy={sf.copy} /></p>
           </div>
           {hasReviews && (
             <div style="display:flex;gap:28px;align-items:center;justify-content:flex-end;flex-wrap:wrap">
@@ -39,11 +40,11 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
     </section>
 
     <!-- Submit form -->
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="reviews.form">
       <div class="wrap">
         <div class="card" style="padding:clamp(24px,4vw,40px);max-width:720px;margin-inline:auto">
-          <h3 style="font-size:26px;margin-bottom:6px">Остави ревю</h3>
-          <p class="muted" style="margin-bottom:22px">Поръчвал/а си от нас? Сподели впечатленията си — помага на други да изберат.</p>
+          <h3 style="font-size:26px;margin-bottom:6px"><CopySlot slot="reviews.form.title" copy={sf.copy} /></h3>
+          <p class="muted" style="margin-bottom:22px"><CopySlot slot="reviews.form.note" copy={sf.copy} /></p>
           <form class="stack" data-api-form="reviews" id="reviewForm">
             <div class="field-row">
               <div class="field"><label>Име</label><input class="input" name="authorName" placeholder="Твоето име" required /></div>
@@ -67,10 +68,10 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
 
     <!-- Reviews grid (below form) -->
     {hasReviews && (
-      <section class="section--tight">
+      <section class="section--tight" data-copy-section="reviews.all">
         <div class="wrap">
           <div class="section-head" style="margin-bottom:24px">
-            <span class="eyebrow">Всички отзиви</span>
+            <span class="eyebrow"><CopySlot slot="reviews.all.eyebrow" copy={sf.copy} /></span>
           </div>
           <div class="grid grid--3">
             {summary.reviews.map((r) => (

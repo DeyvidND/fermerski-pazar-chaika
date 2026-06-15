@@ -1,5 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
+import CopySlot from '../components/CopySlot.astro';
 import AdminNote from '../components/AdminNote.astro';
 import { getStorefront, getArticles, FALLBACK_STOREFRONT } from '../lib/api';
 import { formatDateBg } from '../lib/dates';
@@ -16,12 +17,12 @@ const rest = articles.slice(1);
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Статии</span></nav>
     </div>
 
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="articles.head">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow">Статии</span>
-          <h2 style="margin-top:8px">Новини и истории от фермата</h2>
-          <p>Рецепти, съвети и истории зад продуктите.</p>
+          <span class="eyebrow"><CopySlot slot="articles.head.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="articles.head.title" copy={sf.copy} /></h2>
+          <p><CopySlot slot="articles.head.text" copy={sf.copy} /></p>
         </div>
 
         {articles.length === 0 && (

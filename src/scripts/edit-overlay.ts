@@ -224,7 +224,10 @@ async function boot() {
          the image (centered placeholder label, overlaid headings). Hide the slot's
          own centered placeholder text in edit mode so it can't clash with the button. */
       .ff-edit-img > .ph__label{display:none}
-      .ff-edit-imgbtn{position:absolute;top:8px;right:8px;z-index:9000;background:#3F7D43;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:7px 12px;font:600 13px system-ui;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+      /* pointer-events:auto re-enables the button even when a theme sets the image
+         layer to pointer-events:none (e.g. the ferma full-bleed hero, where text is
+         overlaid on the photo) — otherwise the button is visible but unclickable. */
+      .ff-edit-imgbtn{position:absolute;top:8px;right:8px;z-index:9000;pointer-events:auto;background:#3F7D43;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:8px;padding:7px 12px;font:600 13px system-ui;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45)}
       .ff-edit-imgbtn:hover{background:#356b39}
       .ff-faq-tools{display:flex;gap:4px;margin:6px 0}
       .ff-faq-tools button{width:28px;height:28px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer}

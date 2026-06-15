@@ -1,5 +1,6 @@
 ---
 import Layout from '../components/Layout.astro';
+import CopySlot from '../components/CopySlot.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
@@ -28,12 +29,12 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
       <ProductOfWeek potw={potw} note={potwInfo?.note ?? null} />
     )}
 
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="shop.head">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow">Магазин</span>
-          <h2 style="margin-top:8px">Всичко от пазара на едно място</h2>
-          <p>Избери категория. Продуктите идват от местните фермери и се запазват за петъчния пазар или за доставка до дома.</p>
+          <span class="eyebrow"><CopySlot slot="shop.head.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="shop.head.title" copy={sf.copy} /></h2>
+          <p><CopySlot slot="shop.head.text" copy={sf.copy} /></p>
         </div>
 
         {cats.length > 0 && (
