@@ -30,9 +30,9 @@ const FAQ = sf.faq && sf.faq.length ? sf.faq : DEFAULT_FAQ;
 
         <div class="acc" style="margin-top:32px">
           {FAQ.map((f, i) => (
-            <div class={`acc__item${i === 0 ? ' open' : ''}`}>
-              <button class="acc__head"><span>{f.q}</span><span class="ico">+</span></button>
-              <div class="acc__body"><div class="acc__body-inner">{f.a}</div></div>
+            <div class={`acc__item${i === 0 ? ' open' : ''}`} data-faq-item={i}>
+              <button class="acc__head"><span data-faq-field="q" data-faq-index={i}>{f.q}</span><span class="ico">+</span></button>
+              <div class="acc__body"><div class="acc__body-inner" data-faq-field="a" data-faq-index={i}>{f.a}</div></div>
             </div>
           ))}
         </div>
