@@ -68,7 +68,11 @@ export function initAddressAutocomplete(
       const ac = new maps.places.Autocomplete(input, {
         componentRestrictions: { country: 'bg' },
         fields: ['address_components', 'geometry', 'formatted_address'],
-        types: ['address'],
+        // 'geocode' (not 'address') → broader, earlier suggestions: streets,
+        // neighbourhoods and settlements, not only addresses with a precise house
+        // number — so a partial query (e.g. a Burgas street) shows up sooner.
+        // Still geographic only (no businesses/POIs).
+        types: ['geocode'],
       });
 
       const comp = (place: any, type: string): string => {
