@@ -29,12 +29,25 @@ async function boot() {
   if (!token) return;
   const auth = { Authorization: `Bearer ${token}` };
 
-  // Load slot kinds (same-origin) + current overrides + faq.
-  const [kinds, data] = await Promise.all([
-    fetch('/editable-manifest.json').then(handle).then(flattenKindsSafe),
-    fetch(`${API}/tenants/me/site-edit/data`, { headers: auth }).then(handle).catch(() => null),
-  ]);
-  if (!data) { banner('Сесията изтече. Отвори пак „Редактирай сайта" от панела.'); return; }
+  // Load slot kinds (same-origin) + current overrides + faq. Distinguish an
+  // expired/invalid token (401 → re-open from the panel) from a connection/CORS
+  // failure (fetch rejects with no status → check the server/CORS), so the banner
+  // isn't misleadingly "session expired" when the real issue is the network/CORS.
+  let kinds: Record<string, 'text' | 'image'> = {};
+  try { kinds = flattenKindsSafe(await fetch('/editable-manifest.json').then(handle)); } catch { /* same-origin static; ignore */ }
+  let data: { copy?: Record<string, string>; faq?: { q: string; a: string }[]; media?: Record<string, { url: string }> } | null = null;
+  let failed: 'expired' | 'connect' | '' = '';
+  try {
+    data = await fetch(`${API}/tenants/me/site-edit/data`, { headers: auth }).then(handle);
+  } catch (e) {
+    failed = e instanceof Error && (e.message === '401' || e.message === '403') ? 'expired' : 'connect';
+  }
+  if (!data) {
+    banner(failed === 'expired'
+      ? 'Сесията изтече. Отвори пак „Редактирай сайта" от панела.'
+      : 'Неуспешна връзка със сървъра за редактиране. Провери връзката и опитай пак.');
+    return;
+  }
 
   const draftCopy: Record<string, string> = { ...(data.copy ?? {}) };
   let draftFaq: { q: string; a: string }[] = Array.isArray(data.faq) ? data.faq.map((f: any) => ({ q: f.q, a: f.a })) : [];
