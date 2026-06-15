@@ -9,6 +9,7 @@ import { ICONS } from '../lib/icons';
 import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
 import type { Slot } from '../lib/types';
+import { initAddressAutocomplete, type PickedCoords } from './address-autocomplete';
 
 const MARKET = 'Вземане от пазара · Чайка, Варна';
 
@@ -66,6 +67,21 @@ const slotCard = document.getElementById('slotCard') as HTMLElement | null;
 
 const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
 
+// Precise pin from Places Autocomplete (only when a browser Maps key is set).
+// Null otherwise → the backend geocodes the typed address (today's behaviour).
+let pickedCoords: PickedCoords | null = null;
+let acInited = false;
+function initAutocompleteOnce() {
+  if (acInited || !addrInput) return;
+  acInited = true;
+  initAddressAutocomplete(
+    { street: addrInput, city: addrCity, postal: addrPostal, district: addrDistrict },
+    (c) => {
+      pickedCoords = c;
+    },
+  );
+}
+
 // Fold the structured fields into one geocode-friendly line:
 //   "<street+no>, <block>, <entrance>, <district>, <postal> <city>"
 // Empty parts are dropped. The backend geocodes this whole string (country:BG),
@@ -110,6 +126,9 @@ function setMethod(m: Method) {
   );
   // Structured address fields: local delivery + Econt-to-door.
   addr.style.display = usesAddress(m) ? '' : 'none';
+  // Load Places autocomplete lazily the first time an address method is used —
+  // a pickup/Econt-office customer never triggers the Maps JS load.
+  if (usesAddress(m)) initAutocompleteOnce();
   // Econt office picker: office method only.
   if (econtFields) econtFields.style.display = m === 'econt' ? '' : 'none';
   // Slot: local farm delivery only (Econt is courier-shipped). Fetch the slots
@@ -290,6 +309,14 @@ form.addEventListener('submit', async (e) => {
     payload.deliveryType = method;
     payload.deliveryCity = city;
     payload.deliveryAddress = composeAddress();
+    const postal = (addrPostal?.value || '').trim();
+    if (postal) payload.deliveryPostal = postal;
+    // Precise pin from Places autocomplete — lets the backend skip its geocode
+    // (local delivery only; the backend ignores coords for the Econt methods).
+    if (method === 'address' && pickedCoords) {
+      payload.deliveryLat = pickedCoords.lat;
+      payload.deliveryLng = pickedCoords.lng;
+    }
     if (method === 'address' && selectedSlotId) payload.slotId = selectedSlotId;
   } else {
     const code = (econtOffice?.value || '').trim();

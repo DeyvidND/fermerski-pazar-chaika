@@ -15,6 +15,15 @@ export const CDN_BASE = (import.meta.env.PUBLIC_IMG_CDN ?? 'https://cdn.farmstea
 /** Base of all storefront endpoints for the configured farm. */
 export const PUBLIC_BASE = `${API_BASE}/public/${TENANT_SLUG}`;
 
+/** Optional Google Maps **browser** key (Places + Maps JS). When set, the
+ *  checkout street field gets address autocomplete and a precise pin is sent
+ *  with the order (the backend then skips its own billed geocode). When empty
+ *  (the default), checkout uses plain inputs and the backend geocodes the typed
+ *  address — i.e. exactly today's behaviour. Separate from the server-side
+ *  GOOGLE_MAPS_API_KEY; this one is exposed to the browser, so restrict it by
+ *  HTTP referrer in the Google Cloud console. */
+export const GOOGLE_MAPS_KEY = (import.meta.env.PUBLIC_GOOGLE_MAPS_KEY ?? '').trim();
+
 /** FarmFlow admin panel (the @farmflow/web app) where the owner logs in to
  *  manage products, farmers, toggles and delivery. Footer links to its /login. */
 export const ADMIN_URL = (import.meta.env.PUBLIC_ADMIN_URL ?? 'http://localhost:3005').replace(/\/+$/, '');
