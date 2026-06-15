@@ -52,7 +52,6 @@ const faviconType = faviconPath.endsWith('.svg')
       ? 'image/x-icon'
       : undefined;
 const themeColor = storefront.themeColor || '#3F7D43';
-const isEdit = Astro.url.searchParams.get('edit') !== null;
 ---
 <!DOCTYPE html>
 <html lang="bg" data-theme="ferma">
@@ -106,8 +105,17 @@ const isEdit = Astro.url.searchParams.get('edit') !== null;
   <ConsentBanner storefront={storefront} />
   <script>
     import '../scripts/ui.ts';
+    // The edit overlay loads lazily, only in edit mode. It MUST be a runtime
+    // dynamic import inside this single always-on script: a conditionally
+    // *rendered* `<script>` ({isEdit && <script>…}) is still statically hoisted
+    // by Astro regardless of the condition, and that collided with bundling so
+    // the always-on ui.ts chunk was dropped from normal pages — add-to-cart
+    // (and every other ui.ts handler) silently died. One hoisted script keeps
+    // ui.ts on every page and gates the overlay correctly.
+    if (new URLSearchParams(window.location.search).has('edit')) {
+      import('../scripts/edit-overlay.ts');
+    }
   </script>
-  {isEdit && <script>import '../scripts/edit-overlay.ts';</script>}
 </body>
 </html>
 
