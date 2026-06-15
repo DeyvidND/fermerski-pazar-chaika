@@ -48,6 +48,7 @@ jobs:
             PUBLIC_API_BASE=${{ vars.PAZAR_API_BASE }}
             PUBLIC_TENANT_SLUG=${{ vars.PAZAR_TENANT_SLUG }}
             PUBLIC_ADMIN_URL=${{ vars.PAZAR_ADMIN_URL }}
+            PUBLIC_GOOGLE_MAPS_KEY=${{ vars.PAZAR_GOOGLE_MAPS_KEY }}
 
   deploy:
     name: Trigger Dokploy Deploy

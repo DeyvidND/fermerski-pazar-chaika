@@ -8,9 +8,16 @@ COPY . .
 ARG PUBLIC_API_BASE=http://localhost:3000
 ARG PUBLIC_TENANT_SLUG=ferma-petrovi
 ARG PUBLIC_ADMIN_URL=http://localhost:3005
+# Browser Google Maps key (Places + Maps JS) for checkout address autocomplete.
+# Baked at build like the other PUBLIC_* vars — the runtime-env path via Dokploy
+# Compose proved unreliable in this setup. Empty default keeps autocomplete off
+# (plain field, backend geocodes). It's a referrer-restricted public key, so
+# baking it into the browser bundle is fine.
+ARG PUBLIC_GOOGLE_MAPS_KEY=
 ENV PUBLIC_API_BASE=$PUBLIC_API_BASE \
     PUBLIC_TENANT_SLUG=$PUBLIC_TENANT_SLUG \
-    PUBLIC_ADMIN_URL=$PUBLIC_ADMIN_URL
+    PUBLIC_ADMIN_URL=$PUBLIC_ADMIN_URL \
+    PUBLIC_GOOGLE_MAPS_KEY=$PUBLIC_GOOGLE_MAPS_KEY
 RUN npm run build
 
 # Slim runtime: production deps + built server only.
