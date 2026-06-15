@@ -597,9 +597,12 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .slot-step .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-050); color: var(--primary); font-size: 12px; flex: none; }
 .date-pills { display: flex; gap: 10px; flex-wrap: wrap; }
 /* Stack weekday / day / month vertically — inline they read as one cramped word. */
-.date-pill { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--btn-radius); background: var(--surface); text-align: center; min-width: 74px; transition: all .15s; }
+.date-pill { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--btn-radius); background: var(--surface); text-align: center; min-width: 92px; transition: all .15s; }
 .date-pill .d { font-size: 20px; font-weight: 700; font-family: var(--font-head); line-height: 1.1; }
 .date-pill .m { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+/* Weekday is now a full name (Понеделник, Четвъртък…) — drop the all-caps + tight
+   spacing so the longer word stays on one tidy line. */
+.date-pill .wd { text-transform: capitalize; letter-spacing: .01em; white-space: nowrap; }
 .date-pill:hover { border-color: var(--primary); }
 .date-pill.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .date-pill.is-active .m { color: rgba(255,255,255,.8); }

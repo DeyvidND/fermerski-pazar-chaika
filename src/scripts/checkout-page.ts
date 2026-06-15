@@ -171,7 +171,7 @@ if (econtCity && form.dataset.econtMode === 'auto') {
 }
 
 /* ---------- slot picker (local delivery only) ---------- */
-const WD = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const WD = ['неделя', 'понеделник', 'вторник', 'сряда', 'четвъртък', 'петък', 'събота'];
 const MO = ['яну', 'фев', 'мар', 'апр', 'май', 'юни', 'юли', 'авг', 'сеп', 'окт', 'ное', 'дек'];
 
 let slotsLoaded = false;
@@ -179,8 +179,14 @@ async function loadSlots() {
   if (!deliveryEnabled || !slotCard || slotsLoaded) return;
   slotsLoaded = true; // memoize: one fetch per checkout view, on first address pick
   let slots: Slot[] = [];
+  // Only offer slots within the next 21 days. A farm may seed slots far ahead,
+  // but a months-long pill strip is noise — `to` is an inclusive upper bound.
+  const horizon = new Date();
+  horizon.setDate(horizon.getDate() + 21);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const to = `${horizon.getFullYear()}-${pad(horizon.getMonth() + 1)}-${pad(horizon.getDate())}`;
   try {
-    const res = await fetch(`${PUBLIC_BASE}/slots`, { headers: { accept: 'application/json' } });
+    const res = await fetch(`${PUBLIC_BASE}/slots?to=${to}`, { headers: { accept: 'application/json' } });
     if (res.ok) slots = (await res.json()) as Slot[];
   } catch {
     slotsLoaded = false; // transient failure — allow a retry on the next selection
@@ -211,7 +217,7 @@ async function loadSlots() {
       .map((d) => {
         const dt = new Date(`${d}T00:00:00`);
         return `<button type="button" class="date-pill${d === activeDate ? ' is-active' : ''}" data-date="${esc(d)}">
-          <span class="m">${WD[dt.getDay()]}</span><span class="d">${dt.getDate()}</span><span class="m">${MO[dt.getMonth()]}</span></button>`;
+          <span class="m wd">${WD[dt.getDay()]}</span><span class="d">${dt.getDate()}</span><span class="m">${MO[dt.getMonth()]}</span></button>`;
       })
       .join('');
     datePills.querySelectorAll<HTMLElement>('.date-pill').forEach((p) =>
