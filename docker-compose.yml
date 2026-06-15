@@ -9,11 +9,20 @@
 # Note: PUBLIC_API_BASE / PUBLIC_TENANT_SLUG / PUBLIC_ADMIN_URL are baked into the
 # image at BUILD time (Vite-inlined) via GitHub Actions build-args — they are not
 # set here.
+#
+# PUBLIC_GOOGLE_MAPS_KEY is the exception: it's read at RUNTIME (server-side in
+# checkout.astro → process.env), so it must be passed into the CONTAINER here.
+# A Dokploy "Environment" var alone is only available for ${...} interpolation in
+# this file — it does NOT reach the container unless mapped in via `environment:`.
+# Empty/unset → checkout address autocomplete stays off (plain field, backend
+# geocodes); no rebuild needed to set or rotate the key, just redeploy.
 services:
   storefront:
     image: ghcr.io/deyvidnd/fermerski-pazar-chaika:${IMAGE_TAG:-latest}
     pull_policy: always
     restart: unless-stopped
+    environment:
+      - PUBLIC_GOOGLE_MAPS_KEY=${PUBLIC_GOOGLE_MAPS_KEY:-}
     networks: [dokploy-network]
     labels:
       - "traefik.enable=true"
