@@ -20,12 +20,12 @@ const mapSrc = mapEmbedSrc(sf);
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Контакти</span></nav>
     </div>
 
-    <section class="section--tight">
+    <section class="section--tight" data-copy-section="contact.head">
       <div class="wrap">
         <div class="section-head">
-          <span class="eyebrow"><CopySlot slot="contact.head.eyebrow" copy={sf.copy} fallback="Контакти" /></span>
-          <h2 style="margin-top:8px"><CopySlot slot="contact.head.title" copy={sf.copy} fallback="Ще се радваме да чуем" /></h2>
-          <p><CopySlot slot="contact.head.text" copy={sf.copy} fallback="Въпрос за поръчка, продукт от пазара или просто здравей — пиши ни по който начин ти е удобен. Ще се радваме да те видим и на живо в петък на Чайка." multiline /></p>
+          <span class="eyebrow"><CopySlot slot="contact.head.eyebrow" copy={sf.copy} /></span>
+          <h2 style="margin-top:8px"><CopySlot slot="contact.head.title" copy={sf.copy} /></h2>
+          <p><CopySlot slot="contact.head.text" copy={sf.copy} /></p>
         </div>
 
         <div class="split" style="margin-top:30px;align-items:flex-start">
@@ -83,9 +83,9 @@ const mapSrc = mapEmbedSrc(sf);
             </div>
           </div>
 
-          <div class="card" style="padding:clamp(22px,3vw,34px)">
-            <h3 style="font-size:24px;margin-bottom:6px"><CopySlot slot="contact.form.title" copy={sf.copy} fallback="Изпрати съобщение" /></h3>
-            <p class="muted" style="margin-bottom:22px"><CopySlot slot="contact.form.note" copy={sf.copy} fallback="Отговаряме в рамките на работния ден." /></p>
+          <div class="card" style="padding:clamp(22px,3vw,34px)" data-copy-section="contact.form">
+            <h3 style="font-size:24px;margin-bottom:6px"><CopySlot slot="contact.form.title" copy={sf.copy} /></h3>
+            <p class="muted" style="margin-bottom:22px"><CopySlot slot="contact.form.note" copy={sf.copy} /></p>
             <form class="stack" style="gap:14px" data-api-form="contact">
               <div class="field-row">
                 <div class="field"><label>Име</label><input class="input" name="name" placeholder="Твоето име" required /></div>
