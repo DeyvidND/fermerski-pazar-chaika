@@ -75,6 +75,11 @@ export interface Storefront {
   // availabilityTitle: null/'' → falls back to „Налично сега" in the storefront.
   availabilitySectionEnabled?: boolean;
   availabilityTitle?: string | null;
+  // Editable body copy (settings.copy) — slot key → override text. Optional (older
+  // backend) → CopySlot renders its inline fallback. Empty value = use the default.
+  copy?: Record<string, string>;
+  // Editable FAQ list (settings.faq). Optional/empty → faq.astro uses DEFAULT_FAQ.
+  faq?: { q: string; a: string }[];
 }
 
 /** A single active availability window from the FarmFlow API.

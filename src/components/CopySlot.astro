@@ -1,0 +1,21 @@
+---
+/**
+ * Editable text slot. Renders the tenant override `copy[slot]` when non-empty,
+ * otherwise the inline `fallback` (the original storefront text) — so the design
+ * stays correct before the farm edits anything and on an older backend that
+ * doesn't send `copy`. Managed in the FarmFlow admin → „Промени сайта → Текстове".
+ *
+ * `multiline` preserves the farmer's line breaks (white-space:pre-line). Without
+ * it the component emits a bare text node, so it composes inside <h1>/<h2>/<p>.
+ */
+interface Props {
+  slot: string;
+  copy?: Record<string, string> | null;
+  fallback: string;
+  multiline?: boolean;
+}
+const { slot, copy, fallback, multiline = false } = Astro.props;
+const raw = copy?.[slot];
+const text = typeof raw === 'string' && raw.trim() ? raw : fallback;
+---
+{multiline ? <span style="white-space:pre-line">{text}</span> : <Fragment>{text}</Fragment>}
