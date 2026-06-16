@@ -9,9 +9,13 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   const res = await next();
 
   res.headers.set('X-Frame-Options', 'DENY');
-  res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+  // frame-ancestors blocks clickjacking; object-src/base-uri are zero-breakage
+  // hardening (a full script-src is omitted — it would need allowlists for the
+  // fonts/maps/youtube/Stripe.js/R2 hosts the shop loads).
+  res.headers.set('Content-Security-Policy', "frame-ancestors 'none'; object-src 'none'; base-uri 'none'");
   res.headers.set('X-Content-Type-Options', 'nosniff');
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   const isEdit = ctx.url.searchParams.get('edit') !== null;
   if (isEdit) res.headers.set('Cache-Control', 'no-store');

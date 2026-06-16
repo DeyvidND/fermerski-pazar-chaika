@@ -23,9 +23,10 @@ const consentDefault = `window.dataLayer=window.dataLayer||[];function gtag(){da
 
 const gtagConfig = `gtag('js',new Date());${ga4 ? `gtag('config','${ga4}');` : ''}${googleAds ? `gtag('config','${googleAds}');` : ''}`;
 
-const gtmSnippet = gtm
-  ? `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtm}');`
-  : '';
+// GTM is NOT injected on load — its container can fire arbitrary third-party
+// tags before the visitor consents (GDPR gap). The id is stashed on window and
+// the loader runs from ffGrantConsent() only after the banner is accepted
+// (mirrors the TikTok deferral). Id is regex-validated upstream.
 
 // Meta: load fbq, REVOKE consent, then init + PageView. Revoke makes fbq queue
 // events without sending until ffGrantConsent() grants.
@@ -44,7 +45,7 @@ const purchaseTargets = JSON.stringify({ ga4, googleAds, googleAdsLabel, metaPix
 
 // Consent flip hooks. ConsentBanner calls these; both are idempotent + guarded so
 // they're safe to call before a vendor library has finished loading.
-const consentHooks = `window.__ffPurchase=${purchaseTargets};window.ffGrantConsent=function(){try{if(window.gtag){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}try{if(window.fbq){fbq('consent','grant');}}catch(e){}try{if(window.ttq&&window.__ffTikTokId){window.ttq.load(window.__ffTikTokId);window.ttq.page();}}catch(e){}};window.ffDenyConsent=function(){};`;
+const consentHooks = `window.__ffPurchase=${purchaseTargets};${gtm ? `window.__ffGtmId='${gtm}';` : ''}window.ffGrantConsent=function(){try{if(window.gtag){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}try{if(window.fbq){fbq('consent','grant');}}catch(e){}try{if(window.ttq&&window.__ffTikTokId){window.ttq.load(window.__ffTikTokId);window.ttq.page();}}catch(e){}try{if(window.__ffGtmId&&!window.__ffGtmLoaded){window.__ffGtmLoaded=true;(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',window.__ffGtmId);}}catch(e){}};window.ffDenyConsent=function(){};`;
 ---
 {show && (
   <>
@@ -53,7 +54,6 @@ const consentHooks = `window.__ffPurchase=${purchaseTargets};window.ffGrantConse
       <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gtagLoaderId}`}></script>
     )}
     {gtagLoaderId && <script is:inline set:html={gtagConfig}></script>}
-    {gtm && <script is:inline set:html={gtmSnippet}></script>}
     {metaPixel && <script is:inline set:html={metaSnippet}></script>}
     {tiktok && <script is:inline set:html={tiktokSnippet}></script>}
     <script is:inline set:html={consentHooks}></script>

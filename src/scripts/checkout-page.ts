@@ -360,8 +360,25 @@ form.addEventListener('submit', async (e) => {
         slot: selectedSlotLabel,
       }),
     );
-    if (out.checkoutUrl) {
-      window.location.href = out.checkoutUrl; // Stripe-hosted payment
+    // Only ever navigate to an https: payment URL. The backend returns a
+    // Stripe-hosted URL, but validate the scheme at the sink so a bug/compromise
+    // can't push the browser to a javascript:/data: location.
+    const httpsCheckout = (() => {
+      if (!out.checkoutUrl) return null;
+      try {
+        return new URL(out.checkoutUrl).protocol === 'https:' ? out.checkoutUrl : null;
+      } catch {
+        return null;
+      }
+    })();
+    if (out.checkoutUrl && !httpsCheckout) {
+      toast?.('Грешка при плащането. Опитай отново.');
+      btn.disabled = false;
+      btn.textContent = 'Завърши поръчката';
+      return;
+    }
+    if (httpsCheckout) {
+      window.location.href = httpsCheckout; // Stripe-hosted payment
     } else {
       Cart.set([]);
       window.location.href = `/confirmation?order=${out.orderId}`;
