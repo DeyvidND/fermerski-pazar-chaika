@@ -48,6 +48,9 @@ interface RecProduct {
   coverCrop?: CoverCrop | null;
 }
 const recCache = new Map<string, RecProduct[]>();
+// Attention animation fires once per page visit, when the block first scrolls
+// into view — re-renders (qty changes) don't replay it.
+let recRevealed = false;
 
 async function loadRecs(ids: string[]): Promise<RecProduct[]> {
   const key = [...ids].sort().join(',');
@@ -84,21 +87,23 @@ async function renderRecs(ids: string[]) {
     return;
   }
   host.innerHTML = `
-    <h2 style="font-size:24px;margin:40px 0 16px">Често купувано заедно</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
-      ${recs
-        .map(
-          (p) => `
-        <article class="card" data-rec data-id="${esc(p.id)}" style="padding:10px">
-          ${recThumb(p)}
-          <div style="padding:12px 4px 4px">
-            <div style="font-family:var(--font-head);font-size:17px;font-weight:var(--h-weight)">${esc(p.name)}</div>
-            <div class="muted" style="font-size:13px;margin:2px 0 10px">${p.weight ? esc(p.weight) + ' · ' : ''}${money(p.priceStotinki / 100)}</div>
-            <button class="btn btn--primary btn--sm btn--full" data-add>Добави</button>
-          </div>
-        </article>`,
-        )
-        .join('')}
+    <div class="rec-block">
+      <div class="rec-block__head">Често купувано заедно <span class="rec-block__badge">Препоръчано</span></div>
+      <div class="rec-grid">
+        ${recs
+          .map(
+            (p, i) => `
+          <article class="card rec-card" data-rec data-id="${esc(p.id)}" style="--i:${i};padding:10px">
+            ${recThumb(p)}
+            <div style="padding:12px 4px 4px">
+              <div style="font-family:var(--font-head);font-size:17px;font-weight:var(--h-weight)">${esc(p.name)}</div>
+              <div class="muted" style="font-size:13px;margin:2px 0 10px">${p.weight ? esc(p.weight) + ' · ' : ''}${money(p.priceStotinki / 100)}</div>
+              <button class="btn btn--primary btn--sm btn--full" data-add>Добави</button>
+            </div>
+          </article>`,
+          )
+          .join('')}
+      </div>
     </div>`;
 
   host.querySelectorAll<HTMLElement>('[data-rec]').forEach((card) => {
@@ -112,6 +117,28 @@ async function renderRecs(ids: string[]) {
       render();
     });
   });
+
+  // Play the entrance + glow pulse the first time the block reaches the viewport,
+  // so a customer scrolling down to it actually notices it. Once only.
+  const block = host.querySelector<HTMLElement>('.rec-block');
+  if (block && !recRevealed) {
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            block.classList.add('is-seen');
+            recRevealed = true;
+            io.disconnect();
+          }
+        },
+        { threshold: 0.25 },
+      );
+      io.observe(block);
+    } else {
+      block.classList.add('is-seen');
+      recRevealed = true;
+    }
+  }
 }
 
 function thumb(it: { id: string; name: string }): string {

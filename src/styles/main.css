@@ -582,6 +582,38 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .line-item .ph { width: 84px; height: 84px; }
 @media (max-width: 520px) { .line-item { grid-template-columns: 64px 1fr; } .line-item .li-price { grid-column: 2; } .line-item .ph { width: 64px; height: 64px; } }
 
+/* cart „Често купувано заедно" — highlighted recommendations panel */
+.rec-block {
+  margin-top: 28px;
+  padding: 22px 22px 26px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.rec-block__head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: var(--font-head); font-weight: var(--h-weight);
+  font-size: 24px; margin: 0 0 16px;
+}
+.rec-block__badge {
+  font-size: 12px; font-weight: 700; color: var(--primary);
+  background: var(--primary-050); padding: 4px 10px; border-radius: 999px;
+}
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.rec-card .btn { transition: transform .15s ease; }
+.rec-card:hover .btn { transform: translateY(-1px); }
+/* Attention: entrance + a couple of glow pulses, fired when scrolled into view. */
+.rec-block.is-seen { animation: recIn .55s cubic-bezier(.32,.72,0,1) both, recPulse 2.2s ease-out .45s 2; }
+.rec-block.is-seen .rec-card { animation: recIn .5s ease both; animation-delay: calc(var(--i, 0) * .08s + .15s); }
+@keyframes recIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes recPulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  35% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 30%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rec-block.is-seen, .rec-block.is-seen .rec-card { animation: none; }
+}
+
 /* slot picker */
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .slot {
