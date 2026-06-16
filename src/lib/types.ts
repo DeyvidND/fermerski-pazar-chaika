@@ -79,9 +79,7 @@ export interface Storefront {
     tiktok: string | null;
   };
   // «Налично сега» home section. Optional (older backend) → section hidden.
-  // availabilityTitle: null/'' → falls back to „Налично сега" in the storefront.
   availabilitySectionEnabled?: boolean;
-  availabilityTitle?: string | null;
   // Editable body copy (settings.copy) — slot key → override text. Optional (older
   // backend) → CopySlot renders its inline fallback. Empty value = use the default.
   copy?: Record<string, string>;

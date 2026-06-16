@@ -178,7 +178,6 @@ export const FALLBACK_STOREFRONT: Storefront = {
   },
   marketing: { ga4: null, googleAds: null, googleAdsLabel: null, metaPixel: null, gtm: null, tiktok: null },
   availabilitySectionEnabled: false,
-  availabilityTitle: null,
   copy: {},
   faq: [],
 };
