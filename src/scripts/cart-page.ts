@@ -34,6 +34,86 @@ async function loadImages() {
   }
 }
 
+// «Често купувано заедно» — up to 3 bought-together picks from the backend,
+// keyed by the cart's product ids. Gated on the farm's recommendations toggle
+// (the cart area carries `data-recommend="1"` when it's on). Cached per id-set so
+// a quantity change (same ids) doesn't refetch.
+interface RecProduct {
+  id: string;
+  name: string;
+  priceStotinki: number;
+  weight?: string | null;
+  imageUrl?: string | null;
+  images?: string[];
+  coverCrop?: CoverCrop | null;
+}
+const recCache = new Map<string, RecProduct[]>();
+
+async function loadRecs(ids: string[]): Promise<RecProduct[]> {
+  const key = [...ids].sort().join(',');
+  const hit = recCache.get(key);
+  if (hit) return hit;
+  try {
+    const res = await fetch(
+      `${PUBLIC_BASE}/recommendations?ids=${encodeURIComponent(ids.join(','))}`,
+      { headers: { accept: 'application/json' } },
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as RecProduct[];
+    recCache.set(key, data);
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+function recThumb(p: RecProduct): string {
+  const src = p.imageUrl ?? p.images?.[0] ?? null;
+  if (src) {
+    return `<div class="ph ph--rounded" style="aspect-ratio:1/1"><img src="${esc(cfImage(src, 320) ?? src)}" alt="${esc(p.name)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(p.coverCrop ?? null)}"></div>`;
+  }
+  return `<div class="ph" style="aspect-ratio:1/1"><span class="ph__label" style="font-size:9px">${esc(p.name)}</span></div>`;
+}
+
+async function renderRecs(ids: string[]) {
+  const host = document.getElementById('recArea');
+  if (!host || area?.dataset.recommend !== '1' || !ids.length) return;
+  const recs = await loadRecs(ids);
+  if (!recs.length) {
+    host.innerHTML = '';
+    return;
+  }
+  host.innerHTML = `
+    <h2 style="font-size:24px;margin:40px 0 16px">Често купувано заедно</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+      ${recs
+        .map(
+          (p) => `
+        <article class="card" data-rec data-id="${esc(p.id)}" style="padding:10px">
+          ${recThumb(p)}
+          <div style="padding:12px 4px 4px">
+            <div style="font-family:var(--font-head);font-size:17px;font-weight:var(--h-weight)">${esc(p.name)}</div>
+            <div class="muted" style="font-size:13px;margin:2px 0 10px">${p.weight ? esc(p.weight) + ' · ' : ''}${money(p.priceStotinki / 100)}</div>
+            <button class="btn btn--primary btn--sm btn--full" data-add>Добави</button>
+          </div>
+        </article>`,
+        )
+        .join('')}
+    </div>`;
+
+  host.querySelectorAll<HTMLElement>('[data-rec]').forEach((card) => {
+    const p = recs.find((r) => r.id === card.dataset.id);
+    if (!p) return;
+    card.querySelector('[data-add]')!.addEventListener('click', () => {
+      Cart.add(
+        { id: p.id, name: p.name, price: p.priceStotinki / 100, weight: p.weight ?? undefined },
+        1,
+      );
+      render();
+    });
+  });
+}
+
 function thumb(it: { id: string; name: string }): string {
   const hit = imgMap.get(it.id);
   if (hit) {
@@ -74,7 +154,8 @@ function render() {
         <a href="/checkout" class="btn btn--primary btn--full btn--lg" style="margin-top:16px">Към касата</a>
         <div class="note-fresh" style="margin-top:16px;width:100%;justify-content:center">${ICONS.leaf} Свежо за петъчната доставка</div>
       </aside>
-    </div>`;
+    </div>
+    <div id="recArea"></div>`;
 
   const lines = document.getElementById('lines')!;
   lines.innerHTML = items
@@ -110,6 +191,8 @@ function render() {
       render();
     });
   });
+
+  void renderRecs(items.map((it) => it.id));
 }
 
 render();

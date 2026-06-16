@@ -60,6 +60,13 @@ export interface Storefront {
     latest: { show: boolean; count: number };
     reviews: { show: boolean; ids: string[] };
   };
+  // Merchandising toggles (settings.merchandising). Optional (older backend) →
+  // both features treated as off. bestSellers gates the shop „Най-продавани" chip;
+  // recommendations gates the cart's „Често купувано заедно" picks.
+  merchandising?: {
+    bestSellers: { show: boolean };
+    recommendations: { show: boolean };
+  };
   // Per-vendor ad/analytics tracking IDs (settings.marketing). Optional (older
   // backend) → no scripts injected. A null field = that vendor is off. IDs are
   // server-validated (alphanumeric + -/_ only), safe to interpolate into <script>.

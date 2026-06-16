@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import CopySlot from '../components/CopySlot.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { getCatalog } from '../lib/api';
-import { categoriesFrom, catIdOf } from '../lib/catalog';
+import { categoriesFrom, catIdOf, featured } from '../lib/catalog';
 import ProductOfWeek from '../components/ProductOfWeek.astro';
 
 const boot = await getCatalog();
@@ -11,6 +11,21 @@ const { storefront: sf, products, farmers, subcategories: subcats } = boot;
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
 const active = products.filter((p) => p.isActive !== false);
 const seeded = active.length > 0;
+// „Най-продавани" chip — gated on the toggle. Membership = the sales-ranked ids
+// from the bootstrap (∩ the active catalog), padded with featured/newest up to 8
+// so the chip is never thin on a quiet shop. The chip filters by this set; cards
+// keep their catalog order within it.
+const BEST_SELLER_CAP = 8;
+const bestSellersOn = sf.merchandising?.bestSellers?.show ?? false;
+const activeIds = new Set(active.map((p) => p.id));
+const bestSellerSet = new Set((boot.bestSellerIds ?? []).filter((id) => activeIds.has(id)));
+if (bestSellersOn) {
+  for (const p of featured(active, active.length)) {
+    if (bestSellerSet.size >= BEST_SELLER_CAP) break;
+    bestSellerSet.add(p.id);
+  }
+}
+const showBestChip = bestSellersOn && bestSellerSet.size > 0;
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
 const potwInfo = boot?.productOfWeek ?? null;
@@ -37,10 +52,11 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           <p><CopySlot slot="shop.head.text" copy={sf.copy} /></p>
         </div>
 
-        {cats.length > 0 && (
+        {(cats.length > 0 || showBestChip) && (
           <div class="chips-row" data-tabs data-tabs-target="#catalogGrid"
                style="display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 22px" id="catChips">
             <button class="chip is-active" data-tab="all">Всички</button>
+            {showBestChip && <button class="chip" data-tab="best-sellers">Най-продавани</button>}
             {cats.map((c) => <button class="chip" data-tab={c.id}>{c.name}</button>)}
           </div>
         )}
@@ -49,7 +65,8 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           {seeded
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)}
-                  remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />
+                  remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null}
+                  bestSeller={bestSellerSet.has(p.id)} />
               ))
             : <p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0">Все още няма продукти.</p>}
         </div>

@@ -11,8 +11,16 @@ interface Props {
   farmerName?: string | null;
   cat?: string; // grouping id, used by the catalog filter tabs
   remaining?: number | null; // active availability window remaining stock (undefined = no window)
+  bestSeller?: boolean; // member of the „Най-продавани" set → shown under that chip
 }
-const { product: p, stepper = false, farmerName = null, cat = '', remaining = null } = Astro.props;
+const {
+  product: p,
+  stepper = false,
+  farmerName = null,
+  cat = '',
+  remaining = null,
+  bestSeller = false,
+} = Astro.props;
 const href = p.slug ? `/product/${p.slug}` : '/shop';
 const priceLv = (p.priceStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : p.compareAtPriceStotinki ? 'Промо' : null;
@@ -24,7 +32,7 @@ const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape
 const hasWindow = remaining !== null && remaining !== undefined;
 const soldOut = hasWindow && remaining === 0;
 ---
-<article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat}
+<article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat} data-bestseller={bestSeller ? '1' : undefined}
   style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}

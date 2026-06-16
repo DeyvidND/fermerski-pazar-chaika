@@ -12,7 +12,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
     <section class="section--tight">
       <div class="wrap">
         <h1 style="font-size:clamp(30px,4.5vw,46px);margin-bottom:24px">Твоята количка</h1>
-        <div id="cartArea"></div>
+        <div id="cartArea" data-recommend={sf.merchandising?.recommendations?.show ? '1' : undefined}></div>
       </div>
     </section>
   </main>

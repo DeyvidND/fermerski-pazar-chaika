@@ -141,7 +141,12 @@ function tabs() {
       );
       if (!target) return;
       target.querySelectorAll<HTMLElement>('[data-cat]').forEach((card) => {
-        const show = key === 'all' || card.dataset.cat === key;
+        // „Най-продавани" is a cross-category set, not a real category — match the
+        // best-seller flag instead of the grouping id.
+        const show =
+          key === 'all' ||
+          card.dataset.cat === key ||
+          (key === 'best-sellers' && card.dataset.bestseller === '1');
         card.style.display = show ? '' : 'none';
       });
     });

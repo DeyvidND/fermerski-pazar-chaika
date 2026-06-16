@@ -99,6 +99,9 @@ export interface Bootstrap {
   /** Active availability windows for today. Absent on older backends → treat as [].
    *  Each entry refers to a product by id; remaining=0 means sold out. */
   availability?: PublicAvailabilityWindow[];
+  /** Sales-ranked product ids for the „Най-продавани" shop chip, highest first.
+   *  Empty/absent when the chip is off or the farm has no sales yet. */
+  bestSellerIds?: string[];
 }
 
 export const getBootstrap = () =>
