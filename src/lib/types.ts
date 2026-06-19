@@ -2,6 +2,15 @@
 // These mirror @farmflow/types' Public* types (tenant_id + internal fields
 // already stripped server-side).
 
+/** One dynamic landing block. `mode`/`ids` are absent on an older backend → the
+ *  storefront treats the block as auto (count-driven), preserving old behavior. */
+export interface LandingBlock {
+  show: boolean;
+  mode?: 'auto' | 'manual';
+  count: number;
+  ids?: string[];
+}
+
 export interface Storefront {
   name: string;
   slug: string;
@@ -54,10 +63,12 @@ export interface Storefront {
   productOfWeekPlacement?: 'section' | 'bar';
   // Configurable landing blocks (settings.landing). Optional (older backend) →
   // index.astro falls back to DEFAULT_LANDING (all cats, 3 farmers, 4 latest).
+  // Each dynamic block: `mode: 'auto'` shows the first N (count); `mode: 'manual'`
+  // shows exactly the hand-picked `ids` (older backend omits mode/ids → auto).
   landing?: {
-    categories: { show: boolean; count: number };
-    farmers: { show: boolean; count: number };
-    latest: { show: boolean; count: number };
+    categories: LandingBlock;
+    farmers: LandingBlock;
+    latest: LandingBlock;
     reviews: { show: boolean; ids: string[] };
   };
   // Merchandising toggles (settings.merchandising). Optional (older backend) →

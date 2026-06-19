@@ -27,15 +27,32 @@ const seeded = products.length > 0;
 // Configurable landing blocks (settings.landing). Falls back to the storefront's
 // original hardcoded behavior on an older backend: all cats, 3 farmers, 4 latest.
 const DEFAULT_LANDING = {
-  categories: { show: true, count: 0 },
-  farmers: { show: true, count: 3 },
-  latest: { show: true, count: 4 },
+  categories: { show: true, mode: 'auto', count: 0, ids: [] },
+  farmers: { show: true, mode: 'auto', count: 3, ids: [] },
+  latest: { show: true, mode: 'auto', count: 4, ids: [] },
   reviews: { show: false, ids: [] },
 };
 const L = sf.landing ?? DEFAULT_LANDING;
-const catList = L.categories.count > 0 ? cats.slice(0, L.categories.count) : cats;
-const farmerList = farmers.slice(0, L.farmers.count);
-const feat = featured(products, L.latest.count);
+// Manual mode → render exactly the picked ids in pick order (dropping any that no
+// longer exist); auto mode → the original count-based behavior.
+const pickByIds = <T extends { id: string }>(list: T[], ids: string[] = []): T[] => {
+  const byId = new Map(list.map((x) => [x.id, x]));
+  return ids.map((id) => byId.get(id)).filter((x): x is T => Boolean(x));
+};
+const catList =
+  L.categories.mode === 'manual'
+    ? pickByIds(cats, L.categories.ids)
+    : L.categories.count > 0
+      ? cats.slice(0, L.categories.count)
+      : cats;
+const farmerList =
+  L.farmers.mode === 'manual'
+    ? pickByIds(farmers, L.farmers.ids)
+    : farmers.slice(0, L.farmers.count);
+const feat =
+  L.latest.mode === 'manual'
+    ? pickByIds(products, L.latest.ids).filter((p) => p.isActive !== false)
+    : featured(products, L.latest.count);
 const homeReviews = boot.homeReviews ?? [];
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
