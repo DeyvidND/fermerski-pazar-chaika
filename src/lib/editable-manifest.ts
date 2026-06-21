@@ -21,6 +21,18 @@ export const MANIFEST: EditableManifest = {
     {
       route: '/', label: 'Начало',
       sections: [
+        // Site-wide header + footer chrome (renders on every page). Defaults are
+        // empty where the real source is dynamic (brand name = storefront.name,
+        // footer about = contactTagline) — CopySlot's `fallback` prop supplies it.
+        { id: 'site.chrome', label: 'Хедър и футър (цял сайт)', slots: [
+          { kind: 'text', key: 'site.brand.name', label: 'Лого · име', default: '' },
+          { kind: 'text', key: 'site.brand.tag', label: 'Лого · подзаглавие', default: 'Фермерски пазар · Чайка, Варна' },
+          { kind: 'text', key: 'site.footer.about', label: 'Футър · описание', multiline: true, default: '' },
+          { kind: 'text', key: 'site.footer.col_shop', label: 'Футър · колона „Пазарувай“', default: 'Пазарувай' },
+          { kind: 'text', key: 'site.footer.col_info', label: 'Футър · колона „Информация“', default: 'Информация' },
+          { kind: 'text', key: 'site.footer.col_contact', label: 'Футър · колона „Пазар & контакти“', default: 'Пазар & контакти' },
+          { kind: 'text', key: 'site.footer.copyright', label: 'Футър · долен ред (след името)', default: 'Фермерски пазар Чайка, Варна.' },
+        ]},
         { id: 'home.hero', label: 'Hero', slots: [
           { kind: 'text', key: 'home.hero.eyebrow', label: 'Hero · надпис отгоре', default: 'Фермерски пазар · кв. Чайка, Варна' },
           { kind: 'text', key: 'home.hero.title', label: 'Hero · заглавие', default: 'Свежа храна директно от фермерите' },

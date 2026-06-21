@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import CopySlot from './CopySlot.astro';
 import { telHref, resolveSocials, contactPhone, contactEmail, customFields, contactValueHref, contactAddress, contactHours, contactTagline } from '../lib/site';
 import { ADMIN_LOGIN_URL } from '../lib/config';
 import type { Storefront } from '../lib/types';
@@ -17,10 +18,10 @@ const year = 2026;
     <div>
       <span class="brand">
         <span class="brand__mark"><Icon name="berry" /></span>
-        <span class="brand__name">{storefront.name}</span>
+        <span class="brand__name"><CopySlot slot="site.brand.name" copy={storefront.copy} fallback={storefront.name} /></span>
       </span>
       <p style="margin-top:14px;opacity:.85;max-width:32ch;font-size:15px">
-        {contactTagline(storefront)}
+        <CopySlot slot="site.footer.about" copy={storefront.copy} fallback={contactTagline(storefront)} />
       </p>
       <div class="socials">
         {socials.map((s) => (
@@ -29,7 +30,7 @@ const year = 2026;
       </div>
     </div>
     <div>
-      <h4>Пазарувай</h4>
+      <h4><CopySlot slot="site.footer.col_shop" copy={storefront.copy} /></h4>
       <div class="footer-links">
         <a href="/shop">Магазин</a>
         {storefront.multiFarmer && <a href="/farmers">Фермери</a>}
@@ -38,7 +39,7 @@ const year = 2026;
       </div>
     </div>
     <div>
-      <h4>Информация</h4>
+      <h4><CopySlot slot="site.footer.col_info" copy={storefront.copy} /></h4>
       <div class="footer-links">
         <a href="/about">За нас</a>
         <a href="/reviews">Отзиви</a>
@@ -47,7 +48,7 @@ const year = 2026;
       </div>
     </div>
     <div>
-      <h4>Пазар &amp; контакти</h4>
+      <h4><CopySlot slot="site.footer.col_contact" copy={storefront.copy} /></h4>
       <div class="footer-contact">
         {contactAddress(storefront)}<br>
         <b style="color:#fff">{contactHours(storefront)}</b><br>
@@ -66,7 +67,7 @@ const year = 2026;
     </div>
   </div>
   <div class="wrap footer-bottom">
-    <span>© {year} {storefront.name} · Фермерски пазар Чайка, Варна.</span>
+    <span>© {year} <CopySlot slot="site.brand.name" copy={storefront.copy} fallback={storefront.name} /> · <CopySlot slot="site.footer.copyright" copy={storefront.copy} /></span>
     <span style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
       <a href={ADMIN_LOGIN_URL} rel="nofollow">Вход за стопани</a>
       <span>Всички права запазени.</span>

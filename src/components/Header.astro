@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import CopySlot from './CopySlot.astro';
 import { navLinks, isActive } from '../lib/nav';
 import { BRAND_TAG, telHref, contactPhone, safeHref } from '../lib/site';
 import type { Storefront } from '../lib/types';
@@ -26,8 +27,8 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
           {brandIcon ? <img src={brandIcon} alt={storefront.name} /> : <Icon name="berry" />}
         </span>
         <span>
-          <span class="brand__name">{storefront.name}</span>
-          <span class="brand__tag" style="display:block">{BRAND_TAG}</span>
+          <span class="brand__name"><CopySlot slot="site.brand.name" copy={storefront.copy} fallback={storefront.name} /></span>
+          <span class="brand__tag" style="display:block"><CopySlot slot="site.brand.tag" copy={storefront.copy} fallback={BRAND_TAG} /></span>
         </span>
       </a>
       <div class="nav__links">
@@ -53,7 +54,7 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
     <span class="brand"><span class:list={["brand__mark", brandIcon && "brand__mark--img"]}>
         {brandIcon ? <img src={brandIcon} alt={storefront.name} /> : <Icon name="berry" />}
       </span>
-      <span class="brand__name">{storefront.name}</span></span>
+      <span class="brand__name"><CopySlot slot="site.brand.name" copy={storefront.copy} fallback={storefront.name} /></span></span>
     <button class="icon-btn" id="drawerClose" aria-label="Затвори"><Icon name="close" /></button>
   </div>
   {links.map((l) => (
