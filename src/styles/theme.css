@@ -23,6 +23,10 @@
   --line: #E2DAC8;
   --line-strong: #D2C7AC;
 
+  /* Form validation — defined once on the base :root; inherits to all themes. */
+  --danger: #C0392B;
+  --danger-soft: rgba(192, 57, 43, .14);
+
   --font-head: "Lora", Georgia, serif;
   --font-body: "Commissioner", system-ui, sans-serif;
   --h-weight: 600;

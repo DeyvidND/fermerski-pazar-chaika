@@ -10,12 +10,26 @@ import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
 import type { Slot } from '../lib/types';
 import { initAddressAutocomplete, type PickedAddress } from './address-autocomplete';
+import { validateName, validateEmail, validatePhone, wireField } from '../lib/validate';
 
 const MARKET = 'Вземане от пазара · Чайка, Варна';
 
 const form = document.getElementById('checkoutForm') as HTMLFormElement | null;
 if (!form) throw new Error('no checkout form');
 const deliveryEnabled = form.dataset.delivery === '1';
+// Own the validation: suppress the browser's default (English) constraint bubbles
+// so our inline Bulgarian messages are the single source of truth.
+form.noValidate = true;
+
+// Contact fields — validated inline on blur/submit (see ../lib/validate).
+const nameInput = form.elements.namedItem('customerName') as HTMLInputElement | null;
+const phoneInput = form.elements.namedItem('customerPhone') as HTMLInputElement | null;
+const emailInput = form.elements.namedItem('customerEmail') as HTMLInputElement | null;
+const contactChecks = [
+  wireField(nameInput, validateName),
+  wireField(phoneInput, validatePhone),
+  wireField(emailInput, validateEmail),
+].filter(Boolean) as { check: () => boolean }[];
 
 // Delivery fees + free-over threshold come from the farm's config, server-rendered
 // onto the form as data-* (in leva). Fall back to legacy defaults. The server is
@@ -279,6 +293,15 @@ form.addEventListener('submit', async (e) => {
   const customerPhone = String(data.get('customerPhone') || '').trim();
   const customerEmail = String(data.get('customerEmail') || '').trim();
   const toast = (window as any).FFtoast as (m: string) => void;
+
+  // Validate contact fields first — run every check (so all errors show at once),
+  // then focus the first invalid input.
+  const results = contactChecks.map((c) => c.check());
+  if (results.some((ok) => !ok)) {
+    [nameInput, phoneInput, emailInput].find((el) => el?.classList.contains('is-invalid'))?.focus();
+    toast?.('Провери въведените данни за контакт.');
+    return;
+  }
 
   const payload: Record<string, unknown> = {
     items: items.map((it) => ({ productId: it.id, quantity: it.qty })),
