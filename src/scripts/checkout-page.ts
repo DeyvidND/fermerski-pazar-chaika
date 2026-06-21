@@ -308,7 +308,17 @@ form.addEventListener('submit', async (e) => {
       return;
     }
     payload.deliveryType = method;
-    payload.deliveryAddress = composeAddress();
+    if (method === 'address') {
+      // Local delivery: street goes to deliveryAddress (geocoded by the backend),
+      // block/entrance detail goes to deliveryNote (display + route only, NEVER
+      // geocoded — keeping it out of the address is the whole point).
+      payload.deliveryAddress = street;
+      const note = (addrDetails?.value || '').trim();
+      if (note) payload.deliveryNote = note;
+    } else {
+      // econt_address: Econt's door label needs the full string; keep it merged.
+      payload.deliveryAddress = composeAddress();
+    }
     // Structured city/postal from the picked place — sharpen the backend geocode
     // (#3) for local delivery and satisfy Econt's door-label city requirement.
     if (picked?.city) payload.deliveryCity = picked.city;
