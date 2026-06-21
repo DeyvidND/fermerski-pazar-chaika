@@ -81,9 +81,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             <a href="/shop" class="btn btn--ghost btn--lg">Поръчай онлайн</a>
           </div>
           <div class="hero-stats">
-            <div><div class="n">Петък</div><div class="l">пазар на живо · Чайка</div></div>
-            <div><div class="n">{cats.length || 5}</div><div class="l">категории продукти</div></div>
-            <div><div class="n">100% българско</div><div class="l">местно от региона</div></div>
+            <div><div class="n"><CopySlot slot="home.hero.stat1.n" copy={sf.copy} /></div><div class="l"><CopySlot slot="home.hero.stat1.l" copy={sf.copy} /></div></div>
+            <div><div class="n">{cats.length || 5}</div><div class="l"><CopySlot slot="home.hero.stat2.l" copy={sf.copy} /></div></div>
+            <div><div class="n"><CopySlot slot="home.hero.stat3.n" copy={sf.copy} /></div><div class="l"><CopySlot slot="home.hero.stat3.l" copy={sf.copy} /></div></div>
           </div>
         </div>
         <div>
@@ -112,8 +112,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
               <h3><CopySlot slot="home.pillar_market.title" copy={sf.copy} /></h3>
               <p><CopySlot slot="home.pillar_market.text" copy={sf.copy} /></p>
               <ul class="pillar__facts">
-                <li><span class="fic"><Icon name="pin" /></span> кв. Чайка, бул. „Ал. Стамболийски" (пред „Фратели")</li>
-                <li><span class="fic"><Icon name="clock" /></span> Всеки петък · 11:00–18:00</li>
+                <li><span class="fic"><Icon name="pin" /></span> <CopySlot slot="home.pillar_market.fact1" copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="clock" /></span> <CopySlot slot="home.pillar_market.fact2" copy={sf.copy} /></li>
               </ul>
               <a href="/orders" class="btn btn--soft">Как работи пазарът</a>
             </div>
@@ -125,8 +125,8 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
               <h3><CopySlot slot="home.pillar_delivery.title" copy={sf.copy} /></h3>
               <p><CopySlot slot="home.pillar_delivery.text" copy={sf.copy} /></p>
               <ul class="pillar__facts">
-                <li><span class="fic"><Icon name="truck" /></span> Доставка в петък · между 11:00 и 20:00 ч.</li>
-                <li><span class="fic"><Icon name="leaf" /></span> Свежо, директно от щанда до вратата ти</li>
+                <li><span class="fic"><Icon name="truck" /></span> <CopySlot slot="home.pillar_delivery.fact1" copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="leaf" /></span> <CopySlot slot="home.pillar_delivery.fact2" copy={sf.copy} /></li>
               </ul>
               <a href="/shop" class="btn btn--soft">Към магазина</a>
             </div>
@@ -207,7 +207,6 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
               ))}</div>
               <p>„{r.body}"</p>
               <div class="who">
-                <div class="ph avatar"></div>
                 <div><b>{r.authorName}</b><span>{r.authorLocation || 'клиент'}</span></div>
               </div>
             </article>
@@ -242,9 +241,9 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             <h2 style="font-size:clamp(28px,4vw,42px);margin-top:10px"><CopySlot slot="home.location.title" copy={sf.copy} /></h2>
             <p class="lead" style="margin-top:14px;max-width:42ch"><CopySlot slot="home.location.lead" copy={sf.copy} /></p>
             <ul class="market-facts">
-              <li><span class="fic"><Icon name="pin" /></span><div><b>кв. Чайка, бул. „Ал. Стамболийски"</b><span>пред „Фратели", гр. Варна</span></div></li>
-              <li><span class="fic"><Icon name="clock" /></span><div><b>Всеки петък · 11:00–18:00</b><span>пазар на живо с фермерите</span></div></li>
-              <li><span class="fic"><Icon name="truck" /></span><div><b>Доставка в петък · 11:00–20:00 ч.</b><span>за онлайн поръчки до адрес</span></div></li>
+              <li><span class="fic"><Icon name="pin" /></span><div><b><CopySlot slot="home.location.fact1.title" copy={sf.copy} /></b><span><CopySlot slot="home.location.fact1.sub" copy={sf.copy} /></span></div></li>
+              <li><span class="fic"><Icon name="clock" /></span><div><b><CopySlot slot="home.location.fact2.title" copy={sf.copy} /></b><span><CopySlot slot="home.location.fact2.sub" copy={sf.copy} /></span></div></li>
+              <li><span class="fic"><Icon name="truck" /></span><div><b><CopySlot slot="home.location.fact3.title" copy={sf.copy} /></b><span><CopySlot slot="home.location.fact3.sub" copy={sf.copy} /></span></div></li>
             </ul>
             <div class="cta-row" style="margin-top:26px">
               <a href="/orders" class="btn btn--primary">Как да поръчам</a>
