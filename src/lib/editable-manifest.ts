@@ -32,6 +32,8 @@ export const MANIFEST: EditableManifest = {
           { kind: 'text', key: 'site.footer.col_info', label: 'Футър · колона „Информация“', default: 'Информация' },
           { kind: 'text', key: 'site.footer.col_contact', label: 'Футър · колона „Пазар & контакти“', default: 'Пазар & контакти' },
           { kind: 'text', key: 'site.footer.copyright', label: 'Футър · долен ред (след името)', default: 'Фермерски пазар Чайка, Варна.' },
+          { kind: 'text', key: 'site.footer.login_label', label: 'Футър · линк „Вход за стопани“', default: 'Вход за стопани' },
+          { kind: 'text', key: 'site.footer.rights', label: 'Футър · „Всички права запазени“', default: 'Всички права запазени.' },
         ]},
         { id: 'home.hero', label: 'Hero', slots: [
           { kind: 'text', key: 'home.hero.eyebrow', label: 'Hero · надпис отгоре', default: 'Фермерски пазар · кв. Чайка, Варна' },

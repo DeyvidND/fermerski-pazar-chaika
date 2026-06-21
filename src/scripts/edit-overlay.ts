@@ -202,7 +202,11 @@ async function boot() {
   // the panel. External links / new-tab / hash links navigate normally (leave edit).
   function keepEditOnNav(tok: string) {
     document.addEventListener('click', (e) => {
-      const a = (e.target as HTMLElement)?.closest?.('a');
+      const t = e.target as HTMLElement;
+      // Editing a text slot nested inside a link (e.g. the footer „Вход за стопани“
+      // label) — let the click place the caret instead of navigating away.
+      if (t?.closest?.('[contenteditable]')) return;
+      const a = t?.closest?.('a');
       if (!a) return;
       const href = a.getAttribute('href');
       if (!href || href.startsWith('#') || (a as HTMLAnchorElement).target === '_blank') return;

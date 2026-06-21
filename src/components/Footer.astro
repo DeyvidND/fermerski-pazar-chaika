@@ -69,8 +69,8 @@ const year = 2026;
   <div class="wrap footer-bottom">
     <span>© {year} <CopySlot slot="site.brand.name" copy={storefront.copy} fallback={storefront.name} /> · <CopySlot slot="site.footer.copyright" copy={storefront.copy} /></span>
     <span style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-      <a href={ADMIN_LOGIN_URL} rel="nofollow">Вход за стопани</a>
-      <span>Всички права запазени.</span>
+      <a href={ADMIN_LOGIN_URL} rel="nofollow"><CopySlot slot="site.footer.login_label" copy={storefront.copy} /></a>
+      <span><CopySlot slot="site.footer.rights" copy={storefront.copy} /></span>
     </span>
   </div>
 </footer>
