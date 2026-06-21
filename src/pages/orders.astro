@@ -32,9 +32,9 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
               <h3><CopySlot slot='orders.pickup.title' copy={sf.copy} /></h3>
               <p><CopySlot slot='orders.pickup.text' copy={sf.copy} /></p>
               <ul class="pillar__facts">
-                <li><span class="fic"><Icon name="pin" /></span> кв. Чайка, бул. „Ал. Стамболийски" (пред „Фратели")</li>
-                <li><span class="fic"><Icon name="clock" /></span> Всеки петък · 11:00–18:00</li>
-                <li><span class="fic"><Icon name="leaf" /></span> Без такса · плащаш на място</li>
+                <li><span class="fic"><Icon name="pin" /></span> <CopySlot slot='orders.pickup.fact1' copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="clock" /></span> <CopySlot slot='orders.pickup.fact2' copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="leaf" /></span> <CopySlot slot='orders.pickup.fact3' copy={sf.copy} /></li>
               </ul>
               <a href="/shop" class="btn btn--soft">Запази продукти</a>
             </div>
@@ -46,9 +46,9 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
               <h3><CopySlot slot='orders.delivery.title' copy={sf.copy} /></h3>
               <p><CopySlot slot='orders.delivery.text' copy={sf.copy} /></p>
               <ul class="pillar__facts">
-                <li><span class="fic"><Icon name="truck" /></span> Доставка в петък · 11:00–20:00 ч.</li>
-                <li><span class="fic"><Icon name="pin" /></span> Варна и близките квартали</li>
-                <li><span class="fic"><Icon name="leaf" /></span> Безплатна доставка над 40,00 €</li>
+                <li><span class="fic"><Icon name="truck" /></span> <CopySlot slot='orders.delivery.fact1' copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="pin" /></span> <CopySlot slot='orders.delivery.fact2' copy={sf.copy} /></li>
+                <li><span class="fic"><Icon name="leaf" /></span> <CopySlot slot='orders.delivery.fact3' copy={sf.copy} /></li>
               </ul>
               <a href="/shop" class="btn btn--soft">Поръчай онлайн</a>
             </div>
@@ -79,8 +79,8 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
             <span class="eyebrow"><CopySlot slot='orders.know.eyebrow' copy={sf.copy} /></span>
             <h2 style="font-size:clamp(28px,4vw,40px);margin-top:10px"><CopySlot slot='orders.know.title' copy={sf.copy} /></h2>
             <ul class="market-facts">
-              <li><span class="fic"><Icon name="clock" /></span><div><b>Краен срок за поръчки — четвъртък 20:00 ч.</b><span>за да влязат в петъчната доставка</span></div></li>
-              <li><span class="fic"><Icon name="truck" /></span><div><b>Доставка в петък · 11:00–20:00 ч.</b><span>куриерът се обажда преди да пристигне</span></div></li>
+              <li><span class="fic"><Icon name="clock" /></span><div><b><CopySlot slot='orders.know.fact1.title' copy={sf.copy} /></b><span><CopySlot slot='orders.know.fact1.sub' copy={sf.copy} /></span></div></li>
+              <li><span class="fic"><Icon name="truck" /></span><div><b><CopySlot slot='orders.know.fact2.title' copy={sf.copy} /></b><span><CopySlot slot='orders.know.fact2.sub' copy={sf.copy} /></span></div></li>
             </ul>
             <div class="cta-row" style="margin-top:26px">
               <a href="/shop" class="btn btn--primary">Към магазина</a>

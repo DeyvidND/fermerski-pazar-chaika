@@ -163,10 +163,16 @@ export const MANIFEST: EditableManifest = {
         { id: 'orders.pickup', label: 'Вземане от пазара', slots: [
           { kind: 'text', key: 'orders.pickup.title', label: 'Вземане · заглавие', default: 'Вземане от пазара' },
           { kind: 'text', key: 'orders.pickup.text', label: 'Вземане · текст', multiline: true, default: 'Запази продуктите си онлайн и ги вземи лично в петък от щандовете на Чайка — без такса за доставка.' },
+          { kind: 'text', key: 'orders.pickup.fact1', label: 'Вземане · ред 1 (адрес)', default: 'кв. Чайка, бул. „Ал. Стамболийски" (пред „Фратели")' },
+          { kind: 'text', key: 'orders.pickup.fact2', label: 'Вземане · ред 2 (часове)', default: 'Всеки петък · 11:00–18:00' },
+          { kind: 'text', key: 'orders.pickup.fact3', label: 'Вземане · ред 3', default: 'Без такса · плащаш на място' },
         ]},
         { id: 'orders.delivery', label: 'Доставка до адрес', slots: [
           { kind: 'text', key: 'orders.delivery.title', label: 'Доставка · заглавие', default: 'Доставка до адрес' },
           { kind: 'text', key: 'orders.delivery.text', label: 'Доставка · текст', multiline: true, default: 'Поръчай онлайн и получи свежите продукти удобно вкъщи в петък между 11:00 и 20:00 ч.' },
+          { kind: 'text', key: 'orders.delivery.fact1', label: 'Доставка · ред 1 (часове)', default: 'Доставка в петък · 11:00–20:00 ч.' },
+          { kind: 'text', key: 'orders.delivery.fact2', label: 'Доставка · ред 2 (район)', default: 'Варна и близките квартали' },
+          { kind: 'text', key: 'orders.delivery.fact3', label: 'Доставка · ред 3 (такса)', default: 'Безплатна доставка над 40,00 €' },
         ]},
         { id: 'orders.steps', label: 'Стъпки', slots: [
           { kind: 'text', key: 'orders.steps.eyebrow', label: 'Стъпки · надпис', default: 'Стъпка по стъпка' },
@@ -183,6 +189,10 @@ export const MANIFEST: EditableManifest = {
         { id: 'orders.know', label: 'Добре е да знаеш', slots: [
           { kind: 'text', key: 'orders.know.eyebrow', label: 'Добре е да знаеш · надпис', default: 'Доставка и плащане' },
           { kind: 'text', key: 'orders.know.title', label: 'Добре е да знаеш · заглавие', default: 'Добре е да знаеш' },
+          { kind: 'text', key: 'orders.know.fact1.title', label: 'Добре е да знаеш · факт 1 (главен)', default: 'Краен срок за поръчки — четвъртък 20:00 ч.' },
+          { kind: 'text', key: 'orders.know.fact1.sub', label: 'Добре е да знаеш · факт 1 (под)', default: 'за да влязат в петъчната доставка' },
+          { kind: 'text', key: 'orders.know.fact2.title', label: 'Добре е да знаеш · факт 2 (главен)', default: 'Доставка в петък · 11:00–20:00 ч.' },
+          { kind: 'text', key: 'orders.know.fact2.sub', label: 'Добре е да знаеш · факт 2 (под)', default: 'куриерът се обажда преди да пристигне' },
           { kind: 'image', key: 'orders.box', label: 'Кашон с поръчка', ratio: '4/3', rounded: true },
         ]},
       ],
