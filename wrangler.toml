@@ -1,0 +1,11 @@
+# Cloudflare Pages config for the chaika storefront (Astro SSR via @astrojs/cloudflare).
+# `astro build` emits ./dist with a _worker.js entry; Pages serves it on Workers.
+#
+# nodejs_compat is enabled so the small set of Node-style reads still resolve on
+# the Workers runtime (see checkout.astro's globalThis.process?.env fallback).
+# Build-time PUBLIC_* vars are inlined by Vite at `astro build`; set them as
+# build environment variables in the Pages project (see CLOUDFLARE.md).
+name = "fermerski-pazar-chaika"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
