@@ -686,6 +686,9 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 [data-theme="klasik"] .farmer-card__name { font-size: 30px; }
 .farmer-card__person { font-size: 14px; color: var(--muted); font-weight: 600; }
 .farmer-card__blurb { color: var(--ink-soft); font-size: 15px; margin-top: 8px; }
+.farmer-card__blurb.is-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.farmer-card__more { align-self: flex-start; margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--primary); }
+.farmer-card__more:hover { text-decoration: underline; }
 .farmer-card__foot {
   margin-top: auto; padding-top: 18px; display: flex; align-items: center;
   justify-content: space-between; gap: 14px; flex-wrap: wrap;
