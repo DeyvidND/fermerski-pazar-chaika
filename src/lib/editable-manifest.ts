@@ -98,14 +98,6 @@ export const MANIFEST: EditableManifest = {
           { kind: 'text', key: 'home.location.fact3.title', label: 'Локация · факт 3 — доставка', default: 'Доставка в петък · 11:00–20:00 ч.' },
           { kind: 'text', key: 'home.location.fact3.sub', label: 'Локация · факт 3 — под доставка', default: 'за онлайн поръчки до адрес' },
         ]},
-        { id: 'home.trust', label: 'Доверие', slots: [
-          { kind: 'text', key: 'home.trust.1.title', label: 'Доверие · карта 1 заглавие', default: 'Местно и сезонно' },
-          { kind: 'text', key: 'home.trust.1.text', label: 'Доверие · карта 1 текст', multiline: true, default: 'Всичко идва от ферми в региона на Варна — толкова свежо, колкото изобщо е възможно.' },
-          { kind: 'text', key: 'home.trust.2.title', label: 'Доверие · карта 2 заглавие', default: 'Директно от фермера' },
-          { kind: 'text', key: 'home.trust.2.text', label: 'Доверие · карта 2 текст', multiline: true, default: 'Без вериги и без посредник. Парите отиват при стопанина, който е отгледал продукта.' },
-          { kind: 'text', key: 'home.trust.3.title', label: 'Доверие · карта 3 заглавие', default: 'Познаваме си хората' },
-          { kind: 'text', key: 'home.trust.3.text', label: 'Доверие · карта 3 текст', multiline: true, default: 'Малка общност от стопани и клиенти, които се срещат всеки петък на Чайка.' },
-        ]},
         { id: 'home.newsletter', label: 'Бюлетин', slots: [
           { kind: 'text', key: 'home.newsletter.title', label: 'Бюлетин · заглавие', default: 'Какво има на пазара тази седмица?' },
           { kind: 'text', key: 'home.newsletter.text', label: 'Бюлетин · текст', multiline: true, default: 'Абонирай се и получавай в четвъртък какво носят фермерите в петък. Без спам.' },

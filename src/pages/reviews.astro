@@ -73,7 +73,7 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
           <div class="section-head" style="margin-bottom:24px">
             <span class="eyebrow"><CopySlot slot="reviews.all.eyebrow" copy={sf.copy} /></span>
           </div>
-          <div class="grid grid--3">
+          <div class="reviews-grid">
             {summary.reviews.map((r) => (
               <article class="card review-card">
                 <div class="stars">{[0, 1, 2, 3, 4].map((i) => (

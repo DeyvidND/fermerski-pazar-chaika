@@ -90,5 +90,8 @@ const rest = articles.slice(1);
   }
   @media (max-width: 760px) {
     .art-featured { grid-template-columns: 1fr; }
+    /* On phones the image sits on top; let it size to its natural ratio instead
+       of being letterboxed inside a forced 280px-tall contain box. */
+    .art-featured img { height: auto !important; min-height: 0 !important; }
   }
 </style>

@@ -164,7 +164,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             </div>
             <a href="/farmers" class="btn btn--soft">Всички фермери</a>
           </div>
-          <div class="grid grid--3">
+          <div class="grid grid--3 grid--farmers">
             {farmerList.map((f) => (
               <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
             ))}
@@ -199,7 +199,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
           <span class="eyebrow"><CopySlot slot="home.reviews.eyebrow" copy={sf.copy} /></span>
           <h2 style="margin-top:8px"><CopySlot slot="home.reviews.title" copy={sf.copy} /></h2>
         </div>
-        <div class="grid grid--3">
+        <div class="reviews-grid">
           {homeReviews.map((r) => (
             <article class="card review-card">
               <div class="stars">{[0, 1, 2, 3, 4].map((i) => (
@@ -259,17 +259,6 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
             referrerpolicy="no-referrer-when-downgrade"
             allowfullscreen
           ></iframe>
-        </div>
-      </div>
-    </section>
-
-    <!-- TRUST -->
-    <section class="section--tight" data-copy-section="home.trust">
-      <div class="wrap">
-        <div class="grid grid--3">
-          <div class="card value-card"><div class="ic"><Icon name="leaf" /></div><h3><CopySlot slot="home.trust.1.title" copy={sf.copy} /></h3><p><CopySlot slot="home.trust.1.text" copy={sf.copy} /></p></div>
-          <div class="card value-card"><div class="ic"><Icon name="basket" /></div><h3><CopySlot slot="home.trust.2.title" copy={sf.copy} /></h3><p><CopySlot slot="home.trust.2.text" copy={sf.copy} /></p></div>
-          <div class="card value-card"><div class="ic"><Icon name="heart" /></div><h3><CopySlot slot="home.trust.3.title" copy={sf.copy} /></h3><p><CopySlot slot="home.trust.3.text" copy={sf.copy} /></p></div>
         </div>
       </div>
     </section>

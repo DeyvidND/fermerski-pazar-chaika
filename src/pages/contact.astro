@@ -29,7 +29,7 @@ const mapSrc = mapEmbedSrc(sf);
         </div>
 
         <div class="split" style="margin-top:30px;align-items:flex-start">
-          <div class="stack" style="gap:18px">
+          <div class="stack contact-cards" style="gap:18px">
             <div class="grid grid--2" style="gap:14px">
               {phone && (
                 <a href={telHref(phone)} class="card" style="padding:20px;display:flex;gap:14px;align-items:center">
@@ -103,4 +103,9 @@ const mapSrc = mapEmbedSrc(sf);
   <script>
     import '../scripts/forms.ts';
   </script>
+  <style>
+    /* Cards stack icon-on-top (the shared .card is a flex column); center the
+       text so multi-line values (address) read centered like the short ones. */
+    .contact-cards .card { text-align: center; }
+  </style>
 </Layout>

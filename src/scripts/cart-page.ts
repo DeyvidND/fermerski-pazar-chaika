@@ -156,7 +156,7 @@ function render() {
   if (!items.length) {
     area.innerHTML = `
       <div class="empty-state">
-        <div class="ph"><span class="ph__label">празна<br>количка</span></div>
+        <div class="empty-ic">${ICONS.cart}</div>
         <h2 style="font-size:28px;margin-bottom:10px">Количката е празна</h2>
         <p class="muted" style="margin-bottom:24px">Разгледай свежите продукти от пазара и добави любимите си.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">

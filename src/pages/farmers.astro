@@ -33,7 +33,7 @@ const farmerCats = (id: string) =>
             <AdminNote text="Фермерите се добавят от админ панела — всеки нов профил се появява автоматично тук." />
           </div>
         )}
-        <div class="grid grid--3" style="margin-top:8px">
+        <div class="grid grid--3 grid--farmers" style="margin-top:8px">
           {farmers.length
             ? farmers.map((f) => (
                 <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
