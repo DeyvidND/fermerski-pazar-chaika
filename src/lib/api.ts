@@ -1,4 +1,4 @@
-// Server-side data layer. Each call hits the FarmFlow public API for the
+// Server-side data layer. Each call hits the ФермериБГ public API for the
 // configured tenant. Failures degrade gracefully (empty / null) so the
 // storefront still renders its skeleton "ghost" + admin-note states rather
 // than erroring — the design is reviewable before the admin adds content.

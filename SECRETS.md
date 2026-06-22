@@ -1,7 +1,7 @@
 # Deployment — production (one VM via Dokploy)
 
 The **third-party Ferma Petrovi storefront** (Astro SSR) — points at the **real
-FarmFlow public API**, not the mock demo. Runs on the same VM as the other apps,
+ФермериБГ public API**, not the mock demo. Runs on the same VM as the other apps,
 under Dokploy. CI builds the image in GitHub Actions, pushes to GHCR, and a single
 webhook tells Dokploy to pull + restart. Nothing compiles on the VM. Mirrors
 `hogan-assessments-platform`.
@@ -29,9 +29,9 @@ the built-in `GITHUB_TOKEN` — no secret to add.
 ### Repository **variables** (baked into the image at build time)
 | Name | Value | Notes |
 | --- | --- | --- |
-| `PAZAR_API_BASE` | Real FarmFlow public API base, e.g. `https://api.farmflow.example` | `PUBLIC_API_BASE` |
+| `PAZAR_API_BASE` | Real ФермериБГ public API base, e.g. `https://api.fermeribg.example` | `PUBLIC_API_BASE` |
 | `PAZAR_TENANT_SLUG` | `ferma-petrovi` | tenant served |
-| `PAZAR_ADMIN_URL` | Farmer admin URL, e.g. `https://admin.farmflow.example` | `PUBLIC_ADMIN_URL` |
+| `PAZAR_ADMIN_URL` | Farmer admin URL, e.g. `https://admin.fermeribg.example` | `PUBLIC_ADMIN_URL` |
 
 > `PUBLIC_*` are Vite-inlined → baked at **build**; changing them needs a rebuild
 > (push / `workflow_dispatch`), not just a redeploy.

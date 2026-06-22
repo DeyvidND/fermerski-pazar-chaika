@@ -30,7 +30,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 # Drop root: run the SSR server as the unprivileged `node` user shipped by the
-# base image (matches the FarmFlow images). Copied files are world-readable, so
+# base image (matches the ФермериБГ images). Copied files are world-readable, so
 # read-only execution needs no extra chown.
 USER node
 EXPOSE 3003

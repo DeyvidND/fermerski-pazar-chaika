@@ -1,5 +1,5 @@
 /* =========================================================
-   FarmFlow — Base reset + layout + shared components
+   ФермериБГ — Base reset + layout + shared components
    Tokens come from theme.css. All components read var(--*)
    so they restyle instantly when [data-theme] changes.
    ========================================================= */

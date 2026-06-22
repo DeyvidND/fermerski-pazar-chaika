@@ -1,5 +1,5 @@
-// Public storefront shapes returned by the FarmFlow `/public/:slug/*` API.
-// These mirror @farmflow/types' Public* types (tenant_id + internal fields
+// Public storefront shapes returned by the ФермериБГ `/public/:slug/*` API.
+// These mirror @fermeribg/types' Public* types (tenant_id + internal fields
 // already stripped server-side).
 
 /** One dynamic landing block. `mode`/`ids` are absent on an older backend → the
@@ -98,7 +98,7 @@ export interface Storefront {
   faq?: { q: string; a: string }[];
 }
 
-/** A single active availability window from the FarmFlow API.
+/** A single active availability window from the ФермериБГ API.
  *  Returned by both `GET /public/:slug/bootstrap` (preferred) and the
  *  dedicated `GET /public/:slug/availability` endpoint. */
 export interface PublicAvailabilityWindow {
@@ -150,7 +150,7 @@ export interface Product {
 }
 
 /** How a cover image is framed: focal point (x/y, 0..1) + zoom (1..3). Returned
- *  by the FarmFlow public API; null/absent = centered, no zoom. */
+ *  by the ФермериБГ public API; null/absent = centered, no zoom. */
 export interface CoverCrop {
   x: number;
   y: number;

@@ -1,7 +1,7 @@
 /**
  * Body → render-ready HTML. New bodies are already server-sanitized HTML
  * (passthrough); legacy bodies are plain text → escape + split blank lines
- * into <p>. Mirrors the FarmFlow admin + storefront helper.
+ * into <p>. Mirrors the ФермериБГ admin + storefront helper.
  */
 export function bodyToHtml(body: string | null | undefined): string {
   if (!body) return '';

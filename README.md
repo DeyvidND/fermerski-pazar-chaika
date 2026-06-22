@@ -3,7 +3,7 @@
 Storefront for a Bulgarian farmers-market business (кв. Чайка, Варна), in the
 **"Пазар"** theme — a bright, photo-forward look with a full-bleed hero,
 mirroring [berriesfresh.net](https://berriesfresh.net/). Built from the
-`FarmFlow Templates` design handoff and wired to the **FarmFlow** backend's
+`ФермериБГ Templates` design handoff and wired to the **ФермериБГ** backend's
 public storefront API.
 
 ## Stack
@@ -17,7 +17,7 @@ public storefront API.
 
 ## Connecting to the backend
 
-Everything comes from the FarmFlow public API (CORS-open, no auth):
+Everything comes from the ФермериБГ public API (CORS-open, no auth):
 
 ```
 GET  /public/:slug                      profile + module toggles
@@ -34,7 +34,7 @@ POST /public/:slug/{newsletter,contact,reviews}
 Configure via env (see `.env.example`):
 
 ```
-PUBLIC_API_BASE=http://localhost:3000      # FarmFlow API base
+PUBLIC_API_BASE=http://localhost:3000      # ФермериБГ API base
 PUBLIC_TENANT_SLUG=ferma-petrovi           # which farm (tenants.slug)
 ```
 
@@ -57,8 +57,8 @@ Prices are stored as integer stotinki on the backend and shown as `X,XX лв`.
 
 ## Admin panel (the farm owner)
 
-The owner does **not** edit this site — they manage everything in the FarmFlow
-admin panel (the `@farmflow/web` app) and it shows up here automatically (the
+The owner does **not** edit this site — they manage everything in the ФермериБГ
+admin panel (the `@fermeribg/web` app) and it shows up here automatically (the
 SSR pages re-fetch the public API on each request).
 
 - The footer carries a **"Вход за стопани"** link to `<PUBLIC_ADMIN_URL>/login`
@@ -77,11 +77,11 @@ credentials; the link just sends the owner to the panel to sign in.
 
 ```bash
 npm install
-cp .env.example .env        # point PUBLIC_API_BASE at your FarmFlow API
+cp .env.example .env        # point PUBLIC_API_BASE at your ФермериБГ API
 npm run dev                 # http://localhost:3003
 ```
 
-Make sure the FarmFlow backend (and its Postgres/Redis) is running and seeded
+Make sure the ФермериБГ backend (and its Postgres/Redis) is running and seeded
 so the storefront has data to show.
 
 ## Build

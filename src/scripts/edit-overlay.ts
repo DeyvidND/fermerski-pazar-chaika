@@ -2,7 +2,7 @@
 /**
  * Storefront inline-edit overlay. Loaded only with ?edit=<token> (Layout gate).
  * Lets the farm edit text + photos + the FAQ list in place and save via the
- * FarmFlow site-edit API (Bearer = the short-lived edit token). No deps.
+ * ФермериБГ site-edit API (Bearer = the short-lived edit token). No deps.
  */
 const API = import.meta.env.PUBLIC_API_BASE as string;
 

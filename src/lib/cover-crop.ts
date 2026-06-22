@@ -4,7 +4,7 @@ import type { CoverCrop } from './types';
  * Cover-image framing for an `object-fit: cover` image. Returns the extra inline
  * CSS (object-position pans to the focal point; transform scales/zooms around it)
  * to append after the base `…;object-fit:cover` declaration. The image must sit in
- * an `overflow: hidden` box. Mirrors the FarmFlow admin editor + Next storefront
+ * an `overflow: hidden` box. Mirrors the ФермериБГ admin editor + Next storefront
  * math so the framing is identical. null/absent = centered, no zoom.
  */
 const clamp = (n: number, lo: number, hi: number) =>
