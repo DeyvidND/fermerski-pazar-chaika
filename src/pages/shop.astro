@@ -4,7 +4,6 @@ import CopySlot from '../components/CopySlot.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf, featured } from '../lib/catalog';
-import ProductOfWeek from '../components/ProductOfWeek.astro';
 
 const boot = await getCatalog();
 const { storefront: sf, products, farmers, subcategories: subcats } = boot;
@@ -27,9 +26,6 @@ if (bestSellersOn) {
 }
 const showBestChip = bestSellersOn && bestSellerSet.size > 0;
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
-// «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
-const potwInfo = boot?.productOfWeek ?? null;
-const potw = potwInfo ? products.find((p) => p.id === potwInfo.id) ?? null : null;
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 ---
@@ -38,11 +34,6 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Магазин</span></nav>
     </div>
-
-    <!-- PRODUCT OF THE WEEK · optional highlight (hidden here when shown as a top bar) -->
-    {potw && sf.productOfWeekPlacement !== 'bar' && (
-      <ProductOfWeek potw={potw} note={potwInfo?.note ?? null} />
-    )}
 
     <section class="section--tight" data-copy-section="shop.head">
       <div class="wrap">

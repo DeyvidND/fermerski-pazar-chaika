@@ -230,11 +230,13 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 .stepper button {
   width: 46px; height: 44px; display: grid; place-items: center;
-  font-size: 20px; color: var(--primary); transition: background .15s;
+  font-size: 22px; font-weight: 800; line-height: 1; color: var(--primary-600);
+  transition: background .15s, color .15s;
 }
-.stepper button:hover { background: var(--primary-050); }
+.stepper button:hover { background: var(--primary-050); color: var(--primary); }
 .stepper input {
-  width: 48px; height: 44px; text-align: center; border: 0; background: transparent;
+  width: 48px; height: 44px; text-align: center; border: 0;
+  border-inline: 1.5px solid var(--line-strong); background: transparent;
   font-weight: 700; -moz-appearance: textfield;
 }
 .stepper input::-webkit-outer-spin-button,
