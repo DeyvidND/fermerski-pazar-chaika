@@ -209,7 +209,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .product { display: flex; flex-direction: column; }
 .product .ph { aspect-ratio: 4/3; border-radius: 0; }
 .product__body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.product__name { font-family: var(--font-head); font-size: 20px; font-weight: var(--h-weight); }
+.product__name { font-family: var(--font-head); font-size: 20px; font-weight: var(--h-weight); overflow-wrap: anywhere; }
 [data-theme="klasik"] .product__name { font-size: 24px; }
 .product__meta { font-size: 13.5px; color: var(--muted); }
 /* margin-top:auto pushes the price + foot (Add button) to the bottom of the card.
@@ -218,7 +218,10 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .product__price { font-size: 20px; font-weight: 700; color: var(--primary); margin-top: auto; padding-top: 6px; }
 [data-theme="svezho"] .product__price { color: var(--primary); }
 [data-theme="klasik"] .product__price { color: var(--ink); font-family: var(--font-head); font-size: 26px; }
-.product__foot { margin-top: 14px; display: flex; align-items: center; gap: 14px; }
+/* Stack the foot: stepper on top, full-width „Добави" below. Side-by-side
+   overflowed on narrow 2-up cards (the button got pushed out). */
+.product__foot { margin-top: 14px; display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.product__foot .stepper { align-self: center; }
 
 /* =========================================================
    Quantity stepper
