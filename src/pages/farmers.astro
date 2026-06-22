@@ -10,6 +10,8 @@ import { catIdOf } from '../lib/catalog';
 
 // One /bootstrap round trip (shared memo) instead of three separate reads.
 const { storefront: sf, farmers, products } = await getCatalog();
+// Hide empty profiles — a farmer with no products renders a dead „0 продукта" card.
+const sellingFarmers = farmers.filter((f) => products.some((p) => p.farmerId === f.id));
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
@@ -28,14 +30,14 @@ const farmerCats = (id: string) =>
           <p><CopySlot slot="farmers.head.text" copy={sf.copy} /></p>
         </div>
 
-        {farmers.length === 0 && (
+        {sellingFarmers.length === 0 && (
           <div style="margin-top:28px">
             <AdminNote text="Фермерите се добавят от админ панела — всеки нов профил се появява автоматично тук." />
           </div>
         )}
         <div class="grid grid--3 grid--farmers" style="margin-top:8px">
-          {farmers.length
-            ? farmers.map((f) => (
+          {sellingFarmers.length
+            ? sellingFarmers.map((f) => (
                 <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
               ))
             : [0, 1, 2].map(() => <GhostFarmerCard />)}
