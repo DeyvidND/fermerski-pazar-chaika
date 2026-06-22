@@ -178,8 +178,11 @@ const mapsKey = String(
             <h3 style="font-size:22px;margin-bottom:14px">Твоята поръчка</h3>
             <div id="orderLines"></div>
             <div id="orderTotals"></div>
-            <button class="btn btn--primary btn--full btn--lg" type="submit" id="placeOrder" style="margin-top:16px">Завърши поръчката</button>
-            <p class="muted center" style="font-size:12.5px;margin-top:10px">С натискане приемаш Общите условия</p>
+            <label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5;margin-top:16px;cursor:pointer">
+              <input type="checkbox" required style="margin-top:2px;flex:none;width:16px;height:16px" />
+              <span>Прочетох и приемам <a href="/terms" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Общите условия</a> и <a href="/privacy" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Политиката за поверителност</a>.</span>
+            </label>
+            <button class="btn btn--primary btn--full btn--lg" type="submit" id="placeOrder" style="margin-top:14px">Поръчка със задължение за плащане</button>
           </aside>
         </form>
       </div>
