@@ -224,15 +224,15 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
    Quantity stepper
    ========================================================= */
 .stepper {
-  display: inline-flex; align-items: center;
+  display: inline-flex; align-items: center; flex: none;
   border: 1.5px solid var(--line-strong); border-radius: var(--btn-radius);
   overflow: hidden; background: var(--surface);
 }
 .stepper button {
-  width: 46px; height: 44px; display: grid; place-items: center;
-  font-size: 22px; font-weight: 800; line-height: 1; color: var(--primary-600);
-  transition: background .15s, color .15s;
+  width: 46px; height: 44px; flex: none; display: grid; place-items: center;
+  color: var(--primary-600); transition: background .15s, color .15s;
 }
+.stepper button svg { width: 20px; height: 20px; flex: none; }
 .stepper button:hover { background: var(--primary-050); color: var(--primary); }
 .stepper input {
   width: 48px; height: 44px; text-align: center; border: 0;
