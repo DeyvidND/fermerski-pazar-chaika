@@ -14,11 +14,6 @@ const phone = contactPhone(storefront);
 // replaces the static berry mark in the header/drawer brand; else fall back.
 const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : storefront.faviconUrl;
 ---
-<div class="promo" id="promo">
-  🧺 Пазар на Чайка · <b>всеки петък</b> 11:00–18:00 — или поръчай онлайн.
-  <button class="promo__close" id="promoClose" aria-label="Затвори"><Icon name="close" /></button>
-</div>
-
 <header class="site-header">
   <div class="wrap">
     <nav class="nav">
