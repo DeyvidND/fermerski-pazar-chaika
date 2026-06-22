@@ -10,9 +10,10 @@ interface Props {
 }
 const { farmer: f, productCount, categoryCount } = Astro.props;
 const eyebrow = [f.role, f.since ? 'от ' + f.since : null].filter(Boolean).join(' · ');
-// Long bios are clamped to a few lines with a „Прочети още" link to the full
-// profile, so cards stay compact and even-height (esp. 2-up on phones).
-const longBio = (f.bio?.length ?? 0) > 120;
+// Bios are always clamped to 3 lines so cards stay even-height (esp. 2-up on
+// phones, where a narrow column wraps even short bios past 3 lines). The
+// „Прочети още" link shows whenever the bio is long enough to likely be cut.
+const longBio = (f.bio?.length ?? 0) > 50;
 ---
 <article class="card farmer-card">
   <a href={`/farmer/${f.id}`} class="ph farmer-card__photo">
@@ -28,7 +29,7 @@ const longBio = (f.bio?.length ?? 0) > 120;
     {eyebrow && <span class="eyebrow">{eyebrow}</span>}
     <h3 class="farmer-card__name">{f.name}</h3>
     {f.role && <div class="farmer-card__person">{f.role}</div>}
-    {f.bio && <p class={`farmer-card__blurb${longBio ? ' is-clamped' : ''}`}>{f.bio}</p>}
+    {f.bio && <p class="farmer-card__blurb is-clamped">{f.bio}</p>}
     {longBio && <a href={`/farmer/${f.id}`} class="farmer-card__more">Прочети още →</a>}
     <div class="farmer-card__foot">
       <span class="farmer-card__count">{productCount} продукта · {categoryCount} категории</span>

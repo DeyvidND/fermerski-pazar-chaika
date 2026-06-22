@@ -63,7 +63,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
           <span class="eyebrow"><CopySlot slot='orders.steps.eyebrow' copy={sf.copy} /></span>
           <h2 style="margin-top:8px"><CopySlot slot='orders.steps.title' copy={sf.copy} /></h2>
         </div>
-        <div class="grid grid--4">
+        <div class="grid grid--4 grid--steps">
           <div class="card value-card"><div class="ic"><Icon name="produce" /></div><h3><CopySlot slot='orders.steps.1.title' copy={sf.copy} /></h3><p><CopySlot slot='orders.steps.1.text' copy={sf.copy} /></p></div>
           <div class="card value-card"><div class="ic"><Icon name="cart" /></div><h3><CopySlot slot='orders.steps.2.title' copy={sf.copy} /></h3><p><CopySlot slot='orders.steps.2.text' copy={sf.copy} /></p></div>
           <div class="card value-card"><div class="ic"><Icon name="truck" /></div><h3><CopySlot slot='orders.steps.3.title' copy={sf.copy} /></h3><p><CopySlot slot='orders.steps.3.text' copy={sf.copy} /></p></div>

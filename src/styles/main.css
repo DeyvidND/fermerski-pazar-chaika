@@ -470,6 +470,8 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 /* Phone: categories + farmers go 2-up (like products) to cut page length. */
 @media (max-width: 600px) {
   .cat-grid, .grid--farmers { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  /* Step cards are text-heavy → 1 per row on the narrow „Поръчки“ page. */
+  .grid--steps { grid-template-columns: 1fr; }
 }
 
 .stars { display: inline-flex; gap: 2px; color: var(--accent); }
@@ -511,6 +513,11 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 [data-theme="svezho"] .value-card .ic { background: var(--accent-050); color: var(--accent); border-radius: 50%; }
 .value-card h3 { font-size: 20px; margin-bottom: 8px; }
 .value-card p { color: var(--ink-soft); font-size: 15.5px; }
+/* Phone: a single narrow column looks off left-aligned — center icon + text. */
+@media (max-width: 600px) {
+  .value-card { text-align: center; }
+  .value-card .ic { margin-inline: auto; }
+}
 
 /* Reviews: fit as many per row as the width allows and center them, so a
    handful of reviews sit on one tidy row instead of a sparse 2-row grid. */
@@ -821,6 +828,14 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .pillar__facts .fic { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--surface-2); color: var(--primary); }
 .pillar__facts .fic svg { width: 17px; height: 17px; }
 .pillar__body .btn { margin-top: auto; align-self: flex-start; }
+/* Phone: center the pillar contents (icon, text, facts, button) — left-aligned
+   reads as off-centre on a single narrow column. */
+@media (max-width: 600px) {
+  .pillar__body { align-items: center; text-align: center; }
+  .pillar__body .btn { align-self: center; }
+  .pillar__facts { align-items: center; }
+  .pillar__facts li { justify-content: center; }
+}
 
 .market-block { display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: center; }
 @media (max-width: 820px) { .market-block { grid-template-columns: 1fr; gap: 26px; } }
