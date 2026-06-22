@@ -1,77 +1,59 @@
-# Cloudflare Pages migration (WIP)
+# Cloudflare deploy (Workers, Git integration)
 
-Branch `feat/cloudflare-pages` moves the storefront's deploy target from the
-GHCR-image + Dokploy-container path (`@astrojs/node`) to **Cloudflare Pages**
-(`@astrojs/cloudflare`, Workers SSR), deployed via **Cloudflare Pages Git
-integration** (CF builds on push — no GitHub Actions, no API token). This branch
-removes the old Docker/Dokploy files entirely. The `main` *branch* still carries
-the live Node/Dokploy path until this branch is merged + the domain is cut over.
+The storefront (Astro SSR via `@astrojs/cloudflare`) deploys to **Cloudflare
+Workers** through **Workers Builds Git integration**: CF builds on push to `main`
+and runs `wrangler deploy`. No VM, no container, no GitHub Actions, no API token
+in the repo. Merged to `main` 2026-06-22 (replaced the old GHCR + Dokploy path).
 
-## Done on this branch
+## What's in the repo
 
-- `@astrojs/node` → `@astrojs/cloudflare@^12` (Astro 5 compatible).
-- `astro.config.mjs` adapter swapped; `output: 'server'` kept; `platformProxy`
-  on so `Astro.locals.runtime.env` works in `astro dev`.
-- `wrangler.toml` — Pages output dir + `nodejs_compat` (read by the CF build).
-- `.node-version` → 20 (pins the CF build runtime).
-- Removed the entire old deploy: `deploy.yml`, `Dockerfile`, `docker-compose.yml`,
-  `.dockerignore`, and the interim `deploy-cloudflare.yml` GH Actions workflow.
-  Deploy is now **CF Pages Git integration**. `ci.yml` (PR type-check/build) kept.
-- **`npm run build` is green** → `dist/_worker.js` + `dist/_routes.json` emitted
-  (valid Pages SSR output). The SSR code is clean: no `node:` imports.
+- `@astrojs/cloudflare@^12` adapter (Astro 5 compatible); `output: 'server'`,
+  `platformProxy` on so `Astro.locals.runtime.env` works in `astro dev`.
+- `wrangler.toml` — Workers format: `main = ./dist/_worker.js/index.js`,
+  `[assets] directory = ./dist`, `nodejs_compat`.
+- `.node-version` → 20 (CF build runtime).
+- `ci.yml` — PR type-check + build. The old `deploy.yml`, `Dockerfile`,
+  `docker-compose.yml`, `.dockerignore` are gone.
+- `npm run build` is green → `dist/_worker.js/index.js` + static `dist/`.
 
-## Set up the Cloudflare Pages project (Git integration)
+## Cloudflare project setup (one-time)
 
-In the CF dashboard → Workers & Pages → Create → Pages → **Import an existing Git
-repository** → `DeyvidND/fermerski-pazar-chaika`:
+Workers & Pages → Create → connect repo `DeyvidND/fermerski-pazar-chaika`:
+- **Production branch:** `main`
+- **Build command:** `npm run build` · **Deploy:** `npx wrangler deploy`
+- **Build variables** (set BEFORE first build — Vite inlines them, else it bakes
+  `localhost`): `PUBLIC_API_BASE`, `PUBLIC_TENANT_SLUG`, `PUBLIC_ADMIN_URL`
+  (same values as the old `PAZAR_*` repo vars), `PUBLIC_GOOGLE_MAPS_KEY` (optional).
 
-- **Project name:** `fermerski-pazar-chaika`
-- **Production branch:** `feat/cloudflare-pages` *(NOT `main` yet — main still has
-  the Node adapter + no wrangler.toml; switch to `main` after merge + cutover)*
-- **Framework preset:** Astro (or build command `npm run build`, output dir `dist`)
-- **Environment variables** (Settings → Variables, Production) — set BEFORE first
-  build or it bakes `localhost` defaults:
-  - `PUBLIC_API_BASE` = real ФермериБГ API base (e.g. `https://app.fermeribg.com`)
-  - `PUBLIC_TENANT_SLUG` = `ferma-petrovi`
-  - `PUBLIC_ADMIN_URL` = farmer admin URL
-  - `PUBLIC_GOOGLE_MAPS_KEY` = optional browser Maps key
+Push to `main` → CF builds + deploys to `*.workers.dev`.
 
-Push to the production branch → CF builds + deploys to `*.pages.dev`. No GitHub
-secrets or API token needed — the Git connection authorizes CF.
-
-## Still TODO to actually serve traffic
+## Still TODO to fully serve the live domain
 
 1. **Runtime Google Maps key** — `src/pages/checkout.astro` reads it via
-   `globalThis.process?.env.PUBLIC_GOOGLE_MAPS_KEY`. On Workers that is not
-   populated the Node way. Switch to `Astro.locals.runtime.env.PUBLIC_GOOGLE_MAPS_KEY`.
-   (The other `PUBLIC_*` are inlined by Vite at build time — already fine.)
-
-2. **SESSION KV binding** — the build warns the CF adapter enables Astro sessions
-   expecting a `SESSION` KV namespace. The cart is client-side, so sessions are
-   likely unused; if a runtime `Invalid binding SESSION` appears, create a KV
-   namespace and bind it as `SESSION` in `wrangler.toml`, or disable sessions.
-
-3. **Images / sharp** — CF has no `sharp` at runtime. Product images come from the
-   R2 CDN (`CDN_BASE`), so the built-in image service should not run; if any local
-   optimization breaks, set the image service to `passthrough`/`compile`.
-
-4. **Local preview** needs wrangler: `npm i -D wrangler` (for `npm run preview` →
-   `wrangler pages dev ./dist`). Not needed for CF git builds.
-
+   `globalThis.process?.env.PUBLIC_GOOGLE_MAPS_KEY`. With `nodejs_compat` this may
+   resolve from the Worker's vars; if not, switch to
+   `Astro.locals.runtime.env.PUBLIC_GOOGLE_MAPS_KEY`. (Other `PUBLIC_*` are
+   build-time inlined — fine.)
+2. **SESSION KV binding** — build warns the adapter enables Astro sessions
+   expecting a `SESSION` KV namespace. Cart is client-side, so likely unused; if a
+   runtime `Invalid binding SESSION` appears, bind a KV namespace as `SESSION` or
+   disable sessions.
+3. **Images / sharp** — no `sharp` at runtime; product images come from the R2 CDN
+   (`CDN_BASE`), so fine. If local optimization breaks, set image service to
+   `passthrough`/`compile`.
+4. **Local preview** — `npm i -D wrangler`, then `npm run preview`.
 5. **Smoke test** home / product / cart / checkout / `?edit` token on the
-   `*.pages.dev` URL, then attach the storefront's custom domain to the Pages
-   project (DNS is already on Cloudflare) and retire the Dokploy container.
-
-6. **Cutover** — after launch + verification: merge this branch to `main`, switch
-   the Pages project's production branch to `main`, point the domain, decommission
-   the Dokploy app.
-
-7. **Control plane** — once proven, update the `new-storefront` skill +
-   `provision.ps1` + storefront-ops PLAYBOOK to provision CF Pages projects
-   (Git-connected) instead of Dokploy services for future storefronts.
+   `*.workers.dev` URL.
+6. **Domain cutover** — attach the storefront's custom domain to the Worker (DNS
+   is already on Cloudflare), then **decommission the Dokploy container** (the live
+   domain is still served by it until this step).
+7. **Control plane** — update the `new-storefront` skill + `provision.ps1` +
+   storefront-ops PLAYBOOK to provision CF Workers (Git-connected) for future
+   storefronts.
 
 ## Rollback
 
-The `main` branch still has the full Node/Dokploy path. To abandon this work:
-delete this branch (and the CF Pages project). To restore the Node path on this
-branch: `git checkout main -- .` then `npm i`.
+`main` no longer has the Node/Dokploy files. To revert: `git revert` the merge
+commits, or restore the deleted files (`Dockerfile`, `docker-compose.yml`,
+`deploy.yml`, `.dockerignore`) and reinstall `@astrojs/node`. The live domain is
+unaffected by code changes until the DNS cutover, so there's no rush.
