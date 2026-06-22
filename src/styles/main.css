@@ -694,6 +694,13 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   justify-content: space-between; gap: 14px; flex-wrap: wrap;
 }
 .farmer-card__count { font-size: 13px; color: var(--muted); font-weight: 600; }
+/* 2-up on phones: the foot is too narrow for count + a nowrap button side by
+   side, so stack them and let the button fill the card width. */
+@media (max-width: 600px) {
+  .farmer-card__body { padding: 16px 16px 18px; }
+  .farmer-card__foot { flex-direction: column; align-items: stretch; gap: 10px; }
+  .farmer-card__foot .btn { width: 100%; padding-inline: 8px; font-size: 13px; }
+}
 
 /* single farmer hero */
 .farmer-hero { display: grid; grid-template-columns: .82fr 1.18fr; gap: 48px; align-items: center; }
