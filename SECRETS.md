@@ -1,51 +1,37 @@
-# Deployment — production (one VM via Dokploy)
+# Deployment — Cloudflare Pages
 
-The **third-party Ferma Petrovi storefront** (Astro SSR) — points at the **real
-ФермериБГ public API**, not the mock demo. Runs on the same VM as the other apps,
-under Dokploy. CI builds the image in GitHub Actions, pushes to GHCR, and a single
-webhook tells Dokploy to pull + restart. Nothing compiles on the VM. Mirrors
-`hogan-assessments-platform`.
+The storefront (Astro SSR via `@astrojs/cloudflare`) deploys to **Cloudflare
+Pages**. CI builds the Workers output (`dist/_worker.js`) and `wrangler` ships it.
+No VM, no container, no Docker. See `CLOUDFLARE.md` for the migration status and
+the full cutover checklist.
 
-## Image (GHCR package)
-`ghcr.io/deyvidnd/fermerski-pazar-chaika:latest` (+ `:<sha>`). Pushing uses
-the built-in `GITHUB_TOKEN` — no secret to add.
-
-## One-time Dokploy setup (on the VM)
-1. **Settings → Registry**: add `ghcr.io` (username `DeyvidND`, PAT with `read:packages`)
-   — only needed once for the whole VM.
-2. **Project → Create Service → Docker Compose**: Source = Git
-   `https://github.com/DeyvidND/fermerski-pazar-chaika.git`, branch `main`,
-   compose path `docker-compose.yml`.
-3. **Environment** tab:
-   ```
-   PAZAR_DOMAIN=pazar.example.com
-   # optional: IMAGE_TAG=<git-sha> to pin/rollback
-   ```
-   Point that DNS record at the VM; Traefik issues TLS automatically.
-4. **Deployments → Webhook** — copy the URL.
+## One-time Cloudflare setup
+1. Create a Pages project named **`fermerski-pazar-chaika`**.
+2. Create an API token with **Pages: Edit** permission; note your **Account ID**.
+3. After first deploy, attach the storefront's custom domain in the Pages project
+   (DNS is already on Cloudflare).
 
 ## GitHub → Settings → Secrets and variables → Actions
 
-### Repository **variables** (baked into the image at build time)
-| Name | Value | Notes |
-| --- | --- | --- |
-| `PAZAR_API_BASE` | Real ФермериБГ public API base, e.g. `https://api.fermeribg.example` | `PUBLIC_API_BASE` |
-| `PAZAR_TENANT_SLUG` | `ferma-petrovi` | tenant served |
-| `PAZAR_ADMIN_URL` | Farmer admin URL, e.g. `https://admin.fermeribg.example` | `PUBLIC_ADMIN_URL` |
-
-> `PUBLIC_*` are Vite-inlined → baked at **build**; changing them needs a rebuild
-> (push / `workflow_dispatch`), not just a redeploy.
-
-### Repository **secret**
+### Repository **secrets**
 | Name | Value |
 | --- | --- |
-| `DOKPLOY_PAZAR_WEBHOOK` | the Dokploy Compose app's deploy webhook URL |
+| `CLOUDFLARE_API_TOKEN` | API token with Pages: Edit |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id |
 
-The deploy job skips the webhook if unset (build + push still run).
+### Repository **variables** (`PUBLIC_*` are Vite-inlined at build → rebuild to change)
+| Name | Value | Maps to |
+| --- | --- | --- |
+| `PAZAR_API_BASE` | ФермериБГ public API base, e.g. `https://app.fermeribg.com` | `PUBLIC_API_BASE` |
+| `PAZAR_TENANT_SLUG` | `ferma-petrovi` | `PUBLIC_TENANT_SLUG` |
+| `PAZAR_ADMIN_URL` | farmer admin URL | `PUBLIC_ADMIN_URL` |
+| `PAZAR_GOOGLE_MAPS_KEY` | optional browser Maps key | `PUBLIC_GOOGLE_MAPS_KEY` |
 
-## Notes
-- **No host ports** — Traefik routes `PAZAR_DOMAIN` over `dokploy-network`. Router
-  name `pazar` is unique on the VM's Traefik.
-- The container listens on **:3003** (Astro node standalone, `HOST`/`PORT` set in the image).
-- **The deploy fires on `main`.** The infra currently sits on branch
-  `feat/media-galleries` — merge it to `main` to build + ship the package.
+> The runtime Maps key read in `checkout.astro` (`globalThis.process?.env`) must
+> move to `Astro.locals.runtime.env` on Workers — see `CLOUDFLARE.md` item 2.
+
+## Deploy
+- **Push to `main`** (or run the **Deploy to Cloudflare Pages** workflow manually)
+  → build + `wrangler pages deploy`.
+- Set the secrets + Pages project **before** merging to main, else the deploy step
+  fails.

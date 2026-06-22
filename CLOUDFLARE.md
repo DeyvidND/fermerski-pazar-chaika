@@ -2,8 +2,9 @@
 
 Branch `feat/cloudflare-pages` moves the storefront's deploy target from the
 GHCR-image + Dokploy-container path (`@astrojs/node`) to **Cloudflare Pages**
-(`@astrojs/cloudflare`, Workers SSR). `main` is untouched and stays on the live
-Node/Dokploy path until cutover.
+(`@astrojs/cloudflare`, Workers SSR). This branch removes the old Docker/Dokploy
+files entirely. The `main` *branch* still carries the live Node/Dokploy path
+until this branch is merged.
 
 ## Done on this branch
 
@@ -11,8 +12,9 @@ Node/Dokploy path until cutover.
 - `astro.config.mjs` adapter swapped; `output: 'server'` kept; `platformProxy`
   on so `Astro.locals.runtime.env` works in `astro dev`.
 - `wrangler.toml` — Pages output dir + `nodejs_compat`.
-- `.github/workflows/deploy-cloudflare.yml` — manual/branch-only deploy (does NOT
-  fire on `main`, so the production Dokploy path is safe).
+- Removed the Dokploy deploy path: `deploy.yml`, `Dockerfile`, `docker-compose.yml`,
+  `.dockerignore`. `deploy-cloudflare.yml` is now THE deploy — fires on `main` +
+  manual dispatch. `ci.yml` (PR type-check/build) kept. `SECRETS.md` rewritten for CF.
 - **`npm run build` is green** → `dist/_worker.js` + `dist/_routes.json` emitted
   (valid Pages SSR output). The SSR code is clean: no `node:` imports.
 
@@ -54,6 +56,6 @@ Node/Dokploy path until cutover.
 
 ## Rollback
 
-`main` still builds and deploys the Node/Dokploy image. To abandon: delete this
-branch. To revert mid-branch: `git checkout main -- astro.config.mjs package.json`
-and reinstall `@astrojs/node`.
+The `main` branch still has the full Node/Dokploy path. To abandon this work:
+delete this branch. To restore the Node path on this branch: `git checkout main -- .`
+then `npm i`.

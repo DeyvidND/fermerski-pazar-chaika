@@ -8,9 +8,10 @@ public storefront API.
 
 ## Stack
 
-- **[Astro](https://astro.build/) (SSR, Node standalone adapter)** — pages are
+- **[Astro](https://astro.build/) (SSR, Cloudflare Pages adapter)** — pages are
   server-rendered for SEO and always-fresh content; small client scripts handle
-  the cart, checkout, mobile drawer, accordion and forms.
+  the cart, checkout, mobile drawer, accordion and forms. Deploys to Cloudflare
+  Pages (Workers) — see `SECRETS.md` / `CLOUDFLARE.md`.
 - No UI framework — the prototype's hand-authored CSS is reused verbatim
   (`src/styles/{theme,main,home}.css`) so the design is pixel-accurate. The
   single active theme is `data-theme="ferma"` (Пазар).
@@ -87,8 +88,8 @@ so the storefront has data to show.
 ## Build
 
 ```bash
-npm run build               # outputs dist/ (server + client)
-npm run preview             # serves the built standalone server
+npm run build               # outputs dist/ (Workers _worker.js + client)
+npm run preview             # wrangler pages dev ./dist (needs: npm i -D wrangler)
 npm run check               # astro/tsc diagnostics
 ```
 
