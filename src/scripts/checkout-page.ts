@@ -249,9 +249,7 @@ async function loadSlots() {
     const list = byDate.get(activeDate) || [];
     const buttons = list
       .map((s) => {
-        const left =
-          s.remaining === 1 ? 'последно място' : `свободни: ${s.remaining}`;
-        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}<span class="slot__left">${left}</span></button>`;
+        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`;
       })
       .join('');
     // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
