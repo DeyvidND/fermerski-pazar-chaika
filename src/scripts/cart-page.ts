@@ -190,10 +190,13 @@ function render() {
       (it) => `
       <div class="line-item" data-product data-id="${esc(it.id)}">
         ${thumb(it)}
-        <div>
-          <div style="font-family:var(--font-head);font-size:19px;font-weight:var(--h-weight)">${esc(it.name)}</div>
-          <div class="muted" style="font-size:13.5px">${esc(it.weight || '')}${it.weight ? ' · ' : ''}${money(it.price)}</div>
-          <div style="display:flex;gap:14px;align-items:center;margin-top:10px">
+        <div class="li-body">
+          <div class="li-top">
+            <div class="li-name">${esc(it.name)}</div>
+            <div class="li-price">${money(it.price * it.qty)}</div>
+          </div>
+          <div class="muted li-meta">${esc(it.weight || '')}${it.weight ? ' · ' : ''}${money(it.price)}</div>
+          <div class="li-actions">
             <div class="stepper">
               <button data-dir="down">−</button>
               <input type="number" value="${it.qty}" min="1" inputmode="numeric">
@@ -202,7 +205,6 @@ function render() {
             <button data-remove style="color:var(--muted);font-size:13.5px;text-decoration:underline">Премахни</button>
           </div>
         </div>
-        <div class="li-price" style="font-weight:700;font-size:18px">${money(it.price * it.qty)}</div>
       </div>`,
     )
     .join('');

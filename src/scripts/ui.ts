@@ -23,10 +23,12 @@ function drawer() {
   const open = () => {
     d?.classList.add('open');
     back?.classList.add('open');
+    document.body.style.overflow = 'hidden';
   };
   const shut = () => {
     d?.classList.remove('open');
     back?.classList.remove('open');
+    document.body.style.overflow = '';
   };
   document.getElementById('hamburger')?.addEventListener('click', open);
   document.getElementById('drawerClose')?.addEventListener('click', shut);
