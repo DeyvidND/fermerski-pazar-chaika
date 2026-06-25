@@ -14,6 +14,20 @@ import type {
   PublicAvailabilityWindow,
 } from './types';
 
+// --- Cloudflare runtime holder (set per-request by src/middleware.ts) ---------
+interface SwrRuntime {
+  ctx: SwrExecutionContext | null;
+  caches: SwrCacheStorage | null;
+}
+let currentRuntime: SwrRuntime | null = null;
+
+export function setSwrRuntime(rt: SwrRuntime | null): void {
+  currentRuntime = rt;
+}
+function getSwrRuntime(): SwrRuntime | null {
+  return currentRuntime;
+}
+
 // Short-lived in-process cache for SSR reads. The node-standalone server is one
 // long-lived process, so a tiny TTL memo lets repeat renders skip the backend
 // round trip, and an in-flight map coalesces concurrent identical reads into a
@@ -21,34 +35,137 @@ import type {
 // Only successful responses are cached — failures fall through so a recovered
 // backend is picked up immediately instead of serving an empty list for the TTL.
 const READ_TTL_MS = 30_000;
-const FETCH_TIMEOUT_MS = 8_000;
+const FETCH_TIMEOUT_MS = 3_000;
+const FETCH_RETRIES = 1;            // up to 1 retry → 2 attempts; ceiling ~6.15s
+const RETRY_BACKOFF_MS = 150;
+const SWR_FRESH_MS = 60_000;        // L2 fresh window
+const SWR_MAX_AGE_MS = 86_400_000;  // 24h hard cap on stale
+const CATALOG_CASCADE_TIMEOUT_MS = 3_500;
 const memo = new Map<string, { exp: number; val: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 
+// --- Cloudflare Cache API accessor -------------------------------------------
+// lib.dom types `caches` as `CacheStorage` (no `.default`), but the Workers
+// runtime exposes `caches` as a CacheStorage with a `.default` named cache.
+// We cast once here so all callers get the right shape without littering casts.
+function getGlobalCaches(): SwrCacheStorage | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return typeof caches !== 'undefined' ? (caches as unknown as SwrCacheStorage) : null;
+}
+
+// --- Cache key + envelope helpers --------------------------------------------
+
+function swrCacheKey(path: string): string {
+  return `https://swr.internal/${encodeURIComponent(PUBLIC_BASE)}${path || '/__root__'}`;
+}
+function makeCacheResponse(storedAt: number, bodyJson: string): Response {
+  return new Response(bodyJson, {
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'public, max-age=31536000',
+      'x-swr-stored': String(storedAt),
+    },
+  });
+}
+async function readCache<T>(path: string): Promise<{ storedAt: number; body: T } | null> {
+  // Use the Workers global `caches` (always available in the fetch handler,
+  // and is the same cache as locals.runtime.caches). Decoupling from the
+  // per-request holder avoids a race where a sibling request's middleware
+  // `finally` nulls `currentRuntime` mid-render.
+  const gc = getGlobalCaches();
+  if (!gc) return null;
+  try {
+    const res = await gc.default.match(swrCacheKey(path));
+    if (!res) return null;
+    const env = (await res.json()) as { storedAt: number; body: T };
+    if (typeof env?.storedAt !== 'number') return null;
+    if (Date.now() - env.storedAt > SWR_MAX_AGE_MS) return null;
+    return env;
+  } catch {
+    return null;
+  }
+}
+function writeCache<T>(rt: SwrRuntime | null, path: string, body: T): void {
+  // Use the Workers global `caches` for the actual put; `rt` is only needed
+  // for ctx.waitUntil (best-effort background extension).
+  const gc = getGlobalCaches();
+  if (!gc) return;
+  const storedAt = Date.now();
+  const json = JSON.stringify({ storedAt, body });
+  const p = gc.default.put(swrCacheKey(path), makeCacheResponse(storedAt, json)).catch(() => {});
+  if (rt?.ctx) rt.ctx.waitUntil(p);
+}
+
+// --- Fetch with retry --------------------------------------------------------
+
+async function fetchJson<T>(path: string): Promise<{ ok: true; data: T } | { ok: false }> {
+  for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
+    try {
+      const res = await fetch(`${PUBLIC_BASE}${path}`, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (!res.ok) return { ok: false };
+      const data = (await res.json()) as T;
+      return { ok: true, data };
+    } catch {
+      if (attempt < FETCH_RETRIES) {
+        await new Promise((r) => setTimeout(r, RETRY_BACKOFF_MS * (attempt + 1)));
+        continue;
+      }
+      return { ok: false };
+    }
+  }
+  return { ok: false };
+}
+
+// --- Core read primitive (never throws) --------------------------------------
+
 async function get<T>(path: string, fallback: T, ttlMs = READ_TTL_MS): Promise<T> {
-  if (ttlMs > 0) {
+  const useCache = ttlMs > 0;
+
+  if (useCache) {
     const hit = memo.get(path);
     if (hit && hit.exp > Date.now()) return hit.val as T;
     const flying = inflight.get(path);
     if (flying) return (await flying) as T;
   }
 
-  const run = (async (): Promise<T> => {
-    try {
-      const res = await fetch(`${PUBLIC_BASE}${path}`, {
-        headers: { accept: 'application/json' },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      if (!res.ok) return fallback;
-      const data = (await res.json()) as T;
-      if (ttlMs > 0) memo.set(path, { exp: Date.now() + ttlMs, val: data });
-      return data;
-    } catch {
-      return fallback;
+  const rt = getSwrRuntime();
+
+  if (!useCache) {
+    const r = await fetchJson<T>(path);
+    return r.ok ? r.data : fallback;
+  }
+
+  // Always attempt L2 (CF Cache API) — readCache uses the Workers global
+  // `caches` directly, so it is not gated on the per-request holder state.
+  const env = await readCache<T>(path);
+  if (env) {
+    const age = Date.now() - env.storedAt;
+    if (age < SWR_FRESH_MS) {
+      memo.set(path, { exp: Date.now() + ttlMs, val: env.body });
+      return env.body;
     }
+    if (rt?.ctx) {
+      rt.ctx.waitUntil(revalidate<T>(rt, path, ttlMs));
+    } else {
+      void revalidate<T>(rt, path, ttlMs);
+    }
+    memo.set(path, { exp: Date.now() + ttlMs, val: env.body });
+    return env.body;
+  }
+
+  const run = (async (): Promise<T> => {
+    const r = await fetchJson<T>(path);
+    if (r.ok) {
+      memo.set(path, { exp: Date.now() + ttlMs, val: r.data });
+      writeCache(rt, path, r.data);
+      return r.data;
+    }
+    return fallback;
   })();
 
-  if (ttlMs <= 0) return run;
   inflight.set(path, run);
   try {
     return await run;
@@ -56,6 +173,29 @@ async function get<T>(path: string, fallback: T, ttlMs = READ_TTL_MS): Promise<T
     inflight.delete(path);
   }
 }
+
+/** Background revalidation: only writes to cache on success; never overwrites
+ *  stale data with a failed fetch result. */
+async function revalidate<T>(rt: SwrRuntime | null, path: string, ttlMs: number): Promise<void> {
+  if (inflight.has(path)) return;
+  const run = (async (): Promise<T | undefined> => {
+    const r = await fetchJson<T>(path);
+    if (r.ok) {
+      memo.set(path, { exp: Date.now() + ttlMs, val: r.data });
+      writeCache(rt, path, r.data);
+      return r.data;
+    }
+    return undefined;
+  })();
+  inflight.set(path, run as Promise<unknown>);
+  try {
+    await run;
+  } finally {
+    inflight.delete(path);
+  }
+}
+
+// --- Public API --------------------------------------------------------------
 
 export const getStorefront = () =>
   get<Storefront | null>('', null);
@@ -119,7 +259,9 @@ function seedMemo(path: string, val: unknown): void {
  *  `/bootstrap`; on an older backend without it, falls back to the four individual
  *  (still cached) reads in parallel. Seeds the per-resource memo so single-resource
  *  callers (Layout, cart, checkout) on the same render reuse the same fetch. Use
- *  this on shop/farmers/product pages instead of fanning out 3-5 calls each. */
+ *  this on shop/farmers/product pages instead of fanning out 3-5 calls each.
+ *  A CATALOG_CASCADE_TIMEOUT_MS cap prevents the fallback fan-out from hanging
+ *  when the backend is flaky. */
 export async function getCatalog(): Promise<Bootstrap> {
   const boot = await getBootstrap();
   if (boot) {
@@ -129,26 +271,30 @@ export async function getCatalog(): Promise<Bootstrap> {
     seedMemo('/subcategories', boot.subcategories);
     return boot;
   }
-  const [storefront, products, farmers, subcategories] = await Promise.all([
-    getStorefront(),
-    getProducts(),
-    getFarmers(),
-    getSubcategories(),
-  ]);
-  return {
-    storefront: storefront ?? FALLBACK_STOREFRONT,
-    products,
-    farmers,
-    subcategories,
-    productOfWeek: null,
-    homeReviews: [],
-    availability: [],
+  const fallbackBundle: Bootstrap = {
+    storefront: FALLBACK_STOREFRONT,
+    products: [], farmers: [], subcategories: [],
+    productOfWeek: null, homeReviews: [], availability: [],
   };
+  const fan = (async (): Promise<Bootstrap> => {
+    const [storefront, products, farmers, subcategories] = await Promise.all([
+      getStorefront(), getProducts(), getFarmers(), getSubcategories(),
+    ]);
+    return {
+      storefront: storefront ?? FALLBACK_STOREFRONT,
+      products, farmers, subcategories,
+      productOfWeek: null, homeReviews: [], availability: [],
+    };
+  })();
+  const timeout = new Promise<Bootstrap>((resolve) =>
+    setTimeout(() => resolve(fallbackBundle), CATALOG_CASCADE_TIMEOUT_MS),
+  );
+  return Promise.race([fan, timeout]);
 }
 
 /** Sensible defaults when `GET /public/:slug` is unreachable (dev w/o backend). */
 export const FALLBACK_STOREFRONT: Storefront = {
-  name: 'Фермерски пазар „Чайка“',
+  name: 'Фермерски пазар „Чайка"',
   slug: 'ferma',
   phone: '+359 88 123 4567',
   email: 'info@fermasvezhest.bg',

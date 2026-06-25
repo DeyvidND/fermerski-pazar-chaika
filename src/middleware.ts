@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { setSwrRuntime } from './lib/api';
 
 // Security headers on every SSR response. X-Frame-Options + CSP frame-ancestors
 // block clickjacking; nosniff/Referrer-Policy/HSTS are defense-in-depth. A full
@@ -6,7 +7,28 @@ import { defineMiddleware } from 'astro:middleware';
 // fonts/maps/youtube/Stripe.js/R2 hosts the shop loads, and the high-value,
 // zero-breakage subset is frame-ancestors.
 export const onRequest = defineMiddleware(async (ctx, next) => {
-  const res = await next();
+  // Wire the Cloudflare Cache API + waitUntil into the api.ts SWR layer for
+  // this request. Cleared in `finally` so a Worker reuse across requests never
+  // leaks one tenant's runtime into another request.
+  const rt = ctx.locals.runtime;
+  // Cloudflare's CacheStorage uses its own RequestInfo generic; cast to the
+  // structural SwrCacheStorage interface defined in src/env.d.ts which uses
+  // the standard Request/string union that api.ts needs.
+  setSwrRuntime(
+    rt
+      ? {
+          ctx: rt.ctx ?? null,
+          caches: rt.caches ? (rt.caches as unknown as SwrCacheStorage) : null,
+        }
+      : null,
+  );
+
+  let res: Response;
+  try {
+    res = await next();
+  } finally {
+    setSwrRuntime(null);
+  }
 
   res.headers.set('X-Frame-Options', 'DENY');
   // frame-ancestors blocks clickjacking; object-src/base-uri are zero-breakage
