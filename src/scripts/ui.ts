@@ -103,6 +103,8 @@ function addToCart() {
         name: btn.dataset.name!,
         price: parseFloat(btn.dataset.price!),
         weight: btn.dataset.weight || '',
+        variantId: btn.dataset.variantId || undefined,
+        variantLabel: btn.dataset.variantLabel || undefined,
       },
       qty,
     );

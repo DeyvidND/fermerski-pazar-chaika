@@ -7,9 +7,17 @@ export interface CartItem {
   price: number; // euro
   weight?: string;
   qty: number;
+  /** Chosen variant (вид/грамаж). Absent = a plain single-price product. */
+  variantId?: string;
+  variantLabel?: string;
 }
 
 const KEY = 'ff_cart';
+
+/** Stable identity of a cart line. Same product in two variants = two lines. */
+export function lineKey(it: { id: string; variantId?: string }): string {
+  return it.variantId ? `${it.id}::${it.variantId}` : it.id;
+}
 
 export const Cart = {
   get(): CartItem[] {
@@ -28,22 +36,23 @@ export const Cart = {
   },
   add(item: Omit<CartItem, 'qty'>, qty: number) {
     const items = this.get();
-    const found = items.find((it) => it.id === item.id);
+    const key = lineKey(item);
+    const found = items.find((it) => lineKey(it) === key);
     if (found) found.qty += qty;
     else items.push({ ...item, qty });
     this.set(items);
   },
-  setQty(id: string, qty: number) {
+  setQty(key: string, qty: number) {
     let items = this.get();
-    if (qty <= 0) items = items.filter((it) => it.id !== id);
+    if (qty <= 0) items = items.filter((it) => lineKey(it) !== key);
     else {
-      const f = items.find((it) => it.id === id);
+      const f = items.find((it) => lineKey(it) === key);
       if (f) f.qty = qty;
     }
     this.set(items);
   },
-  remove(id: string) {
-    this.set(this.get().filter((it) => it.id !== id));
+  remove(key: string) {
+    this.set(this.get().filter((it) => lineKey(it) !== key));
   },
   subtotal(): number {
     return this.get().reduce((s, it) => s + it.price * it.qty, 0);
