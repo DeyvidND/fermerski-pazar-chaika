@@ -3,6 +3,7 @@ import Icon from './Icon.astro';
 import { money } from '../lib/money';
 import { coverCropStyle } from '../lib/cover-crop';
 import { cfImage, cfSrcset } from '../lib/img';
+import { priceDisplay, hasVariants, allVariantsSoldOut } from '../lib/pricing';
 import type { Product } from '../lib/types';
 
 interface Props {
@@ -22,15 +23,18 @@ const {
   bestSeller = false,
 } = Astro.props;
 const href = p.slug ? `/product/${p.slug}` : '/shop';
-const priceLv = (p.priceStotinki / 100).toFixed(2);
-const tag = p.featured ? '★ Популярен' : p.compareAtPriceStotinki ? 'Промо' : null;
+const hasV = hasVariants(p);
+const pd = priceDisplay(p);
+const priceLv = (pd.headlineStotinki / 100).toFixed(2);
+const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
 const metaBits = [p.weight, farmerName].filter(Boolean).join(' · ');
 const photoCount = p.images?.length ?? (p.imageUrl ? 1 : 0);
 const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape === 'tall' ? '4/5' : null;
 
-// Availability badge state
+// Availability badge state. A varianted product is sold out only when every
+// variant is sold out; the legacy per-product window applies to plain products.
 const hasWindow = remaining !== null && remaining !== undefined;
-const soldOut = hasWindow && remaining === 0;
+const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
 ---
 <article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat} data-bestseller={bestSeller ? '1' : undefined}
   style={soldOut ? 'opacity:0.72' : undefined}>
@@ -61,15 +65,16 @@ const soldOut = hasWindow && remaining === 0;
     <a href={href}><h3 class="product__name">{p.name}</h3></a>
     {metaBits && <div class="product__meta">{metaBits}</div>}
     <div class="product__price">
-      {money(p.priceStotinki)}
-      {p.compareAtPriceStotinki && (
+      {pd.fromPrefix && <span class="muted" style="font-weight:500;font-size:14px">от </span>}
+      {money(pd.headlineStotinki)}
+      {pd.compareStotinki != null && (
         <span class="muted" style="font-size:14px;font-weight:500;text-decoration:line-through;margin-left:8px">
-          {money(p.compareAtPriceStotinki)}
+          {money(pd.compareStotinki)}
         </span>
       )}
     </div>
     <div class="product__foot">
-      {stepper && !soldOut && (
+      {stepper && !soldOut && !hasV && (
         <div class="stepper" aria-label="Количество">
           <button data-dir="down" aria-label="по-малко">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>
@@ -80,12 +85,19 @@ const soldOut = hasWindow && remaining === 0;
           </button>
         </div>
       )}
-      <button class="btn btn--primary btn--sm btn--full" data-add-cart
-        data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}
-        disabled={soldOut || undefined}
-        style={soldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
-        <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Добави'}
-      </button>
+      {hasV ? (
+        <a href={href} class="btn btn--primary btn--sm btn--full"
+          style={soldOut ? 'opacity:0.5' : undefined}>
+          <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Избери вариант'}
+        </a>
+      ) : (
+        <button class="btn btn--primary btn--sm btn--full" data-add-cart
+          data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}
+          disabled={soldOut || undefined}
+          style={soldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
+          <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Добави'}
+        </button>
+      )}
     </div>
   </div>
 </article>
