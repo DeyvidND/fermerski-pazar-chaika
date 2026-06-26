@@ -124,6 +124,16 @@ export interface DeliveryMethods {
   econtAddress: boolean;
 }
 
+/** A purchasable option of a product (вид/грамаж). Server-computed; raw stock is
+ *  never exposed — only `soldOut`. `salePriceStotinki` present = promo active. */
+export interface PublicProductVariant {
+  id: string;
+  label: string;
+  priceStotinki: number;
+  salePriceStotinki?: number | null;
+  soldOut: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -147,6 +157,13 @@ export interface Product {
   compareAtPriceStotinki: number | null;
   featured: boolean;
   createdAt: string | null;
+  /** Promotion (additive). `salePriceStotinki` = headline discounted price for the
+   *  base/cheapest; `salePercent`/`saleEndsAt` are informational. Absent = no promo. */
+  salePercent?: number | null;
+  saleEndsAt?: string | null;
+  salePriceStotinki?: number | null;
+  /** Purchasable options. Empty/absent = a plain single-price product. */
+  variants?: PublicProductVariant[];
 }
 
 /** How a cover image is framed: focal point (x/y, 0..1) + zoom (1..3). Returned
@@ -213,6 +230,7 @@ export interface ReviewSummary {
 export interface OrderItemInput {
   productId: string;
   quantity: number;
+  variantId?: string;
 }
 
 export interface CreateOrderInput {
