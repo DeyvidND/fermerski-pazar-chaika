@@ -1,5 +1,5 @@
 // Renders the cart page from localStorage. Re-renders on qty change / removal.
-import { Cart, money } from '../lib/cart';
+import { Cart, lineKey, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
 import { coverCropStyle } from '../lib/cover-crop';
@@ -188,11 +188,11 @@ function render() {
   lines.innerHTML = items
     .map(
       (it) => `
-      <div class="line-item" data-product data-id="${esc(it.id)}">
+      <div class="line-item" data-product data-key="${esc(lineKey(it))}">
         ${thumb(it)}
         <div class="li-body">
           <div class="li-top">
-            <div class="li-name">${esc(it.name)}</div>
+            <div class="li-name">${esc(it.name)}${it.variantLabel ? ` <span class="muted" style="font-weight:500">· ${esc(it.variantLabel)}</span>` : ''}</div>
             <div class="li-price">${money(it.price * it.qty)}</div>
           </div>
           <div class="muted li-meta">${esc(it.weight || '')}${it.weight ? ' · ' : ''}${money(it.price)}</div>
@@ -210,13 +210,13 @@ function render() {
     .join('');
 
   lines.querySelectorAll<HTMLElement>('.line-item').forEach((row) => {
-    const id = row.dataset.id!;
+    const key = row.dataset.key!;
     row.querySelector('input')!.addEventListener('change', (e) => {
-      Cart.setQty(id, parseInt((e.target as HTMLInputElement).value, 10) || 1);
+      Cart.setQty(key, parseInt((e.target as HTMLInputElement).value, 10) || 1);
       render();
     });
     row.querySelector('[data-remove]')!.addEventListener('click', () => {
-      Cart.remove(id);
+      Cart.remove(key);
       render();
     });
   });

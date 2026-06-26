@@ -302,7 +302,11 @@ form.addEventListener('submit', async (e) => {
   }
 
   const payload: Record<string, unknown> = {
-    items: items.map((it) => ({ productId: it.id, quantity: it.qty })),
+    items: items.map((it) => ({
+      productId: it.id,
+      quantity: it.qty,
+      ...(it.variantId ? { variantId: it.variantId } : {}),
+    })),
     customerName,
     customerPhone,
     customerEmail,
