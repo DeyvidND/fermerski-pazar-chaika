@@ -28,6 +28,12 @@ export interface Storefront {
   // payments now. Absent (older backend) → COD on, card off (cash-first).
   codEnabled?: boolean;
   stripeEnabled?: boolean;
+  // Whether the farm runs BOTH Econt and Speedy live — when true the door-delivery
+  // checkout shows a carrier comparison/picker. Absent (older backend) → off.
+  comparisonActive?: boolean;
+  // How a door order picks its carrier when both run: 'customer' (the buyer picks),
+  // 'cheapest' (server ships the cheaper), or a forced 'econt'/'speedy'. Absent → 'customer'.
+  carrierPolicy?: 'customer' | 'cheapest' | 'econt' | 'speedy';
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;

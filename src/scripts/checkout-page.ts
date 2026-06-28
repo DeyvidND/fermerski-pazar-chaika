@@ -61,8 +61,135 @@ document.querySelectorAll<HTMLElement>('[data-pay]').forEach((el) =>
     document
       .querySelectorAll<HTMLElement>('[data-pay]')
       .forEach((x) => x.classList.toggle('is-active', x === el));
+    // COD adds a carrier surcharge → re-price the door comparison.
+    if (comparisonActive && method === 'econt_address') void loadCompare();
   }),
 );
+
+// ---------- carrier comparison (door delivery, both carriers live) ----------
+// When the farm runs Econt + Speedy, a до-адрес order can ship with either. The
+// farm's policy decides: 'customer' → the buyer picks; 'cheapest' → the server
+// ships the cheaper; 'econt'/'speedy' → forced. We fetch live prices from
+// /shipping/compare once a city is known and render a picker (or a read-only note).
+type Carrier = 'econt' | 'speedy';
+type CarrierPolicy = 'customer' | 'cheapest' | 'econt' | 'speedy';
+interface CarrierQuote { carrier: Carrier; priceStotinki: number | null; available: boolean }
+interface CompareResult { quotes: CarrierQuote[]; cheapest: Carrier | null; policy: CarrierPolicy; selected: Carrier | null }
+
+const comparisonActive = form.dataset.comparison === '1';
+const carrierPolicy = (form.dataset.carrierPolicy as CarrierPolicy) || 'customer';
+const CARRIER_NAME: Record<Carrier, string> = { econt: 'Еконт', speedy: 'Speedy' };
+const carrierPickerEl = document.getElementById('carrierPicker') as HTMLElement | null;
+const carrierOptionsEl = document.getElementById('carrierOptions') as HTMLElement | null;
+const carrierHintEl = document.getElementById('carrierHint') as HTMLElement | null;
+
+let compare: CompareResult | null = null;
+let compareCity = ''; // the city the current `compare` was priced for (avoids refetch)
+let chosenCarrier: Carrier | null = null; // the buyer's pick (only in 'customer' policy)
+let compareLoading = false;
+
+/** Price in stotinki for a carrier in the current compare result (null if none). */
+function carrierPrice(c: Carrier | null): number | null {
+  if (!c || !compare) return null;
+  return compare.quotes.find((q) => q.carrier === c)?.priceStotinki ?? null;
+}
+
+/** The carrier whose price drives the displayed door fee + the payload `carrier`.
+ *  'customer' → the buyer's pick (default: the server's `selected`); other policies
+ *  defer to the server's resolved `selected`. Null until a compare has loaded. */
+function effectiveCarrier(): Carrier | null {
+  if (!comparisonActive) return null;
+  if (carrierPolicy === 'customer') return chosenCarrier ?? compare?.selected ?? null;
+  return compare?.selected ?? null;
+}
+
+const eurFromStotinki = (st: number) => money(st / 100);
+
+function renderCarrierOptions() {
+  if (!carrierPickerEl || !carrierOptionsEl || !carrierHintEl) return;
+  const show = method === 'econt_address' && comparisonActive;
+  carrierPickerEl.style.display = show ? '' : 'none';
+  if (!show) return;
+
+  if (compareLoading) {
+    carrierOptionsEl.innerHTML = '<span class="muted" style="font-size:14px">Изчисляваме цените на куриерите…</span>';
+    carrierHintEl.textContent = '';
+    return;
+  }
+  if (!compare) {
+    carrierOptionsEl.innerHTML = '';
+    carrierHintEl.textContent = 'Избери адрес от предложенията, за да сравним куриерите.';
+    return;
+  }
+
+  const eff = effectiveCarrier();
+  // 'customer' policy → interactive radio-cards. Other policies → a single
+  // read-only line stating which carrier the farm ships with (+ price).
+  if (carrierPolicy === 'customer') {
+    carrierOptionsEl.innerHTML = compare.quotes
+      .map((q) => {
+        const price = q.priceStotinki != null ? `от ${eurFromStotinki(q.priceStotinki)}` : 'не е наличен';
+        const disabled = !q.available ? ' style="opacity:.5;pointer-events:none"' : '';
+        const active = q.carrier === eff ? ' is-active' : '';
+        return `<label class="radio-card${active}" data-carrier="${q.carrier}"${disabled}>
+          <span class="dot"></span>
+          <span><b>${CARRIER_NAME[q.carrier]}</b><br><span class="muted" style="font-size:14px">${price}</span></span>
+        </label>`;
+      })
+      .join('');
+    carrierOptionsEl.querySelectorAll<HTMLElement>('[data-carrier]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const c = el.dataset.carrier as Carrier;
+        if (carrierPrice(c) == null) return; // unavailable
+        chosenCarrier = c;
+        renderCarrierOptions();
+        renderSummary();
+      }),
+    );
+    carrierHintEl.textContent = 'Избери куриер — цената се обновява в обобщението.';
+  } else {
+    const label = eff ? CARRIER_NAME[eff] : '—';
+    const price = carrierPrice(eff);
+    const priceTxt = price != null ? ` · от ${eurFromStotinki(price)}` : '';
+    carrierOptionsEl.innerHTML = `<div class="radio-card is-active" style="cursor:default">
+      <span class="dot"></span>
+      <span><b>${label}</b><br><span class="muted" style="font-size:14px">${
+        carrierPolicy === 'cheapest' ? 'Избираме най-евтиния за теб' : 'Куриер за тази ферма'
+      }${priceTxt}</span></span></div>`;
+    carrierHintEl.textContent = '';
+  }
+}
+
+/** Fetch live carrier prices for the picked city (COD-aware). Memoized per city
+ *  + payment combo so re-rendering doesn't spam the endpoint. */
+async function loadCompare(): Promise<void> {
+  if (!comparisonActive || method !== 'econt_address') return;
+  const city = picked?.city?.trim();
+  if (!city) return;
+  const codStotinki = pay === 'cod' ? Math.round(Cart.subtotal() * 100) : 0;
+  const key = `${city}|${codStotinki}`;
+  if (key === compareCity && compare) return; // already priced for this city+COD
+  compareLoading = true;
+  renderCarrierOptions();
+  try {
+    const res = await fetch(`${PUBLIC_BASE}/shipping/compare`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ destinationCity: city, deliveryMode: 'address', codAmountStotinki: codStotinki }),
+    });
+    compare = res.ok ? ((await res.json()) as CompareResult) : null;
+    compareCity = compare ? key : '';
+    // Reset a stale customer pick that's no longer available in the new quote.
+    if (chosenCarrier && carrierPrice(chosenCarrier) == null) chosenCarrier = null;
+  } catch {
+    compare = null;
+    compareCity = '';
+  } finally {
+    compareLoading = false;
+    renderCarrierOptions();
+    renderSummary();
+  }
+}
 
 const addr = document.getElementById('addressFields') as HTMLElement;
 const addrInput = document.getElementById('addressInput') as HTMLInputElement | null; // full address (Places)
@@ -91,6 +218,8 @@ function initAutocompleteOnce() {
   acInited = true;
   initAddressAutocomplete(mapsKey, addrInput, (a) => {
     picked = a;
+    // A door order now has a structured city → (re)price the carriers.
+    if (comparisonActive && method === 'econt_address') void loadCompare();
   });
 }
 
@@ -105,7 +234,12 @@ function shipping(sub: number): number {
   if (method === 'pickup') return 0;
   if (FREE_OVER > 0 && sub >= FREE_OVER) return 0;
   if (method === 'econt') return SHIP_ECONT;
-  if (method === 'econt_address') return SHIP_ECONT_ADDRESS;
+  if (method === 'econt_address') {
+    // Prefer the live carrier-comparison price (the carrier that will actually
+    // ship) when both carriers run and a quote has loaded; else the flat estimate.
+    const st = carrierPrice(effectiveCarrier());
+    return st != null ? st / 100 : SHIP_ECONT_ADDRESS;
+  }
   return SHIP_ADDRESS;
 }
 
@@ -143,6 +277,10 @@ function setMethod(m: Method) {
   // customer never triggers the (uncacheable, live-capacity) /slots call.
   if (slotCard) slotCard.style.display = m === 'address' ? '' : 'none';
   if (m === 'address') void loadSlots();
+  // Carrier picker: door delivery only, and only when both carriers run. Price
+  // lazily the first time door is chosen if a city is already known.
+  renderCarrierOptions();
+  if (m === 'econt_address') void loadCompare();
   renderSummary();
 }
 
@@ -355,6 +493,13 @@ form.addEventListener('submit', async (e) => {
       payload.deliveryLng = picked.lng;
     }
     if (method === 'address' && selectedSlotId) payload.slotId = selectedSlotId;
+    // Door order + both carriers + 'customer' policy → send the buyer's chosen
+    // carrier (defaulting to the server's pre-selected/cheaper one). Other policies
+    // omit it so the server resolves authoritatively (forced carrier / cheapest).
+    if (method === 'econt_address' && comparisonActive && carrierPolicy === 'customer') {
+      const eff = effectiveCarrier();
+      if (eff) payload.carrier = eff;
+    }
   } else {
     const code = (econtOffice?.value || '').trim();
     if (!code) {
