@@ -22,7 +22,8 @@ const product = products.find((p) => p.slug === slug) ?? null;
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 
 if (!product) {
-  return Astro.redirect('/404');
+  // Render the 404 page in place (real HTTP 404, no soft-404 redirect).
+  return Astro.rewrite('/404');
 }
 
 const farmer = farmers.find((f) => f.id === product.farmerId) ?? null;

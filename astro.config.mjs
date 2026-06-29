@@ -18,4 +18,7 @@ export default defineConfig({
   }),
   server: { port: 3003 },
   devToolbar: { enabled: false },
+  // Prefetch internal links on hover/tap so navigation feels instant (better
+  // Core Web Vitals on click-through). Built-in; no extra client router/JS bundle.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
 });

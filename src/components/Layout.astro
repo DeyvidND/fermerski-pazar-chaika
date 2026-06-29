@@ -28,9 +28,12 @@ interface Props {
   /** Extra schema.org JSON-LD node(s) for this page (Product, Article, breadcrumb).
    *  The sitewide WebSite + LocalBusiness nodes are always emitted. */
   jsonLd?: unknown | unknown[];
+  /** Keep this page out of the search index (transactional / private pages, 404).
+   *  Emits <meta name="robots" content="noindex, follow">. */
+  noindex?: boolean;
 }
 
-const { title, description, bodyClass, imageOrigin, image, jsonLd } = Astro.props;
+const { title, description, bodyClass, imageOrigin, image, jsonLd, noindex } = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
@@ -74,6 +77,7 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={desc} />
+  {noindex && <meta name="robots" content="noindex, follow" />}
   <link rel="canonical" href={canonical} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={desc} />

@@ -15,7 +15,8 @@ const [sfRaw, article, allArticles] = await Promise.all([
   getArticles(),
 ]);
 
-if (!article) return Astro.redirect('/articles');
+// Unknown article slug → real HTTP 404, not a soft-404 redirect to the list.
+if (!article) return Astro.rewrite('/404');
 
 const sf = sfRaw ?? FALLBACK_STOREFRONT;
 const related = allArticles.filter((a) => a.slug !== slug).slice(0, 3);

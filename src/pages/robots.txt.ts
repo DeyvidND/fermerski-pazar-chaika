@@ -24,11 +24,11 @@ export const GET: APIRoute = () => {
   const lines = [
     'User-agent: *',
     'Allow: /',
-    // Keep transactional / private pages out of the index.
+    // Keep transactional pages out of the index (/orders is a public
+    // "how to order" explainer — intentionally left crawlable).
     'Disallow: /cart',
     'Disallow: /checkout',
     'Disallow: /confirmation',
-    'Disallow: /orders',
     '',
     ...AI_BOTS.flatMap((bot) => [`User-agent: ${bot}`, 'Disallow: /', '']),
     `Sitemap: ${SITE_URL}/sitemap.xml`,

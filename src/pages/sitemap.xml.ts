@@ -27,6 +27,7 @@ const STATIC: Entry[] = [
   { loc: '/shop', changefreq: 'daily', priority: '0.9' },
   { loc: '/farmers', changefreq: 'weekly', priority: '0.7' },
   { loc: '/articles', changefreq: 'weekly', priority: '0.6' },
+  { loc: '/orders', changefreq: 'monthly', priority: '0.5' },
   { loc: '/about', changefreq: 'monthly', priority: '0.5' },
   { loc: '/contact', changefreq: 'monthly', priority: '0.5' },
   { loc: '/faq', changefreq: 'monthly', priority: '0.4' },

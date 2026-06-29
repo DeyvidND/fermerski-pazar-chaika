@@ -1,0 +1,27 @@
+---
+// Shared "not found" body. Used by the 404 page AND by detail pages (product/
+// farmer/article) when the entity doesn't exist, so a bad URL returns a real
+// HTTP 404 instead of a soft-404 (302 → 200) that wastes crawl budget.
+interface Props {
+  title?: string;
+  text?: string;
+}
+const {
+  title = 'Тази страница я няма',
+  text = 'Страницата, която търсиш, е преместена или вече я няма. Но пазарът те чака на началната страница.',
+} = Astro.props;
+---
+<main>
+  <section class="section">
+    <div class="wrap center" style="max-width:620px">
+      <div class="ph" style="width:150px;height:150px;border-radius:50%;margin:0 auto 18px"><span class="ph__label">🫐</span></div>
+      <div class="big-404">404</div>
+      <h1 style="font-size:clamp(26px,4vw,40px);margin:6px 0 12px">{title}</h1>
+      <p class="lead">{text}</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px">
+        <a href="/" class="btn btn--primary btn--lg">Към началото</a>
+        <a href="/shop" class="btn btn--ghost btn--lg">Към магазина</a>
+      </div>
+    </div>
+  </section>
+</main>
