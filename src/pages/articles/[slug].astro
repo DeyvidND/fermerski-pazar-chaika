@@ -5,6 +5,7 @@ import { formatDateBg } from '../../lib/dates';
 import { imageOrigin, safeHref } from '../../lib/site';
 import { cfImage, cfSrcset } from '../../lib/img';
 import { bodyToHtml } from '../../lib/article-html';
+import { articleLd, breadcrumbLd } from '../../lib/jsonld';
 
 const { slug } = Astro.params;
 
@@ -19,8 +20,21 @@ if (!article) return Astro.redirect('/articles');
 const sf = sfRaw ?? FALLBACK_STOREFRONT;
 const related = allArticles.filter((a) => a.slug !== slug).slice(0, 3);
 const coverOrigin = article.coverImageUrl ? imageOrigin(article.coverImageUrl) : null;
+
+// SEO: excerpt as meta description, cover as social image, Article + breadcrumb data.
+const metaDesc =
+  article.excerpt?.replace(/\s+/g, ' ').trim().slice(0, 160) || `${article.title} — ${sf.name}.`;
+const ogImage = article.coverImageUrl ? cfImage(article.coverImageUrl, 1200) ?? null : null;
+const structuredData = [
+  articleLd(article, sf, { image: article.coverImageUrl }),
+  breadcrumbLd([
+    { name: 'Начало', path: '/' },
+    { name: 'Статии', path: '/articles' },
+    { name: article.title, path: `/articles/${encodeURIComponent(article.slug)}` },
+  ]),
+];
 ---
-<Layout title={`${article.title} · ${sf.name}`} storefront={sf} imageOrigin={coverOrigin}>
+<Layout title={`${article.title} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={coverOrigin} image={ogImage} jsonLd={structuredData}>
   <article>
     <div class="wrap" style="max-width:820px">
       <nav class="breadcrumb">

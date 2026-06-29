@@ -5,6 +5,8 @@ import Gallery from '../../components/Gallery.astro';
 import { getCatalog } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
+import { cfImage } from '../../lib/img';
+import { breadcrumbLd } from '../../lib/jsonld';
 
 const { id } = Astro.params;
 // One /bootstrap round trip (shared memo) instead of four separate reads.
@@ -26,8 +28,19 @@ const farmerImages = farmer.images?.length
 const eyebrow = [farmer.role, farmer.since ? 'от ' + farmer.since : null].filter(Boolean).join(' · ');
 const yearsWithUs = farmer.since && /^\d{4}$/.test(farmer.since) ? 2026 - Number(farmer.since) : null;
 const imgOrigin = imageOrigin(farmerImages[0]);
+
+// SEO: bio/role as meta description, photo as social image, breadcrumb data.
+const metaDesc =
+  farmer.bio?.replace(/\s+/g, ' ').trim().slice(0, 160) ||
+  `${farmer.name}${eyebrow ? ` · ${eyebrow}` : ''} — ${sf.name}.`;
+const ogImage = cfImage(farmerImages[0], 1200) ?? null;
+const structuredData = breadcrumbLd([
+  { name: 'Начало', path: '/' },
+  { name: 'Фермери', path: '/farmers' },
+  { name: farmer.name, path: `/farmer/${encodeURIComponent(farmer.id)}` },
+]);
 ---
-<Layout title={`${farmer.name} · ${sf.name}`} storefront={sf} imageOrigin={imgOrigin}>
+<Layout title={`${farmer.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData}>
   <main>
     <div class="wrap">
       <nav class="breadcrumb">

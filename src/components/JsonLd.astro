@@ -1,0 +1,16 @@
+---
+// Renders one or more schema.org nodes as <script type="application/ld+json">.
+// `is:inline` keeps Astro from bundling it; serializeLd escapes anything that
+// could break out of the script element.
+import { serializeLd } from '../lib/jsonld';
+
+interface Props {
+  data: unknown | unknown[];
+}
+
+const { data } = Astro.props;
+const items = (Array.isArray(data) ? data : [data]).filter(Boolean);
+---
+{items.map((d) => (
+  <script type="application/ld+json" is:inline set:html={serializeLd(d)} />
+))}

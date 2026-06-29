@@ -7,6 +7,8 @@ import { getCatalog } from '../../lib/api';
 import { money } from '../../lib/money';
 import { featured } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
+import { cfImage } from '../../lib/img';
+import { productLd, breadcrumbLd } from '../../lib/jsonld';
 import { hasVariants, allVariantsSoldOut, variantPriceStotinki, cheapestVariant } from '../../lib/pricing';
 
 const { slug } = Astro.params;
@@ -61,8 +63,27 @@ const productRemaining = availMap.has(product.id) ? (availMap.get(product.id) ??
 const productSoldOut = (productRemaining !== null && productRemaining === 0) || variantsSoldOut;
 const defaultVariantId = defaultVariant && !defaultVariant.soldOut ? defaultVariant.id : '';
 const defaultVariantLabel = defaultVariant && !defaultVariant.soldOut ? defaultVariant.label : '';
+
+// SEO: unique meta description, social image, and Product + breadcrumb structured data.
+const metaDesc =
+  product.description?.replace(/\s+/g, ' ').trim().slice(0, 160) ||
+  `${product.name}${metaBits ? ` · ${metaBits}` : ''} — ${sf.name}.`;
+const ogImage = cfImage(productImages[0], 1200) ?? null;
+const structuredData = [
+  productLd(product, sf, {
+    priceStotinki: baseHeadlineStotinki,
+    soldOut: productSoldOut,
+    images: productImages,
+    description: product.description,
+  }),
+  breadcrumbLd([
+    { name: 'Начало', path: '/' },
+    { name: 'Магазин', path: '/shop' },
+    { name: product.name, path: `/product/${encodeURIComponent(product.slug ?? '')}` },
+  ]),
+];
 ---
-<Layout title={`${product.name} · ${sf.name}`} storefront={sf} imageOrigin={imgOrigin}>
+<Layout title={`${product.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData}>
   <main data-product>
     <div class="wrap">
       <nav class="breadcrumb">

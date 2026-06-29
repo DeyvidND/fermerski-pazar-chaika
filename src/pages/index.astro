@@ -9,6 +9,7 @@ import CopySlot from '../components/CopySlot.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin, mapEmbedSrc } from '../lib/site';
+import { cfImage } from '../lib/img';
 import ProductOfWeek from '../components/ProductOfWeek.astro';
 
 // One round trip via /bootstrap (falls back to the four parallel reads on an older
@@ -66,8 +67,11 @@ const farmerCats = (id: string) =>
 const shopCta = showFarmers ? { href: '/farmers', label: 'Виж фермерите' } : { href: '/shop', label: 'Разгледай магазина' };
 // Warm a connection to the image host before the browser meets the first <img>.
 const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUrl, farmers[0]?.imageUrl);
+// Social share image: editable hero, else first product/farmer photo.
+const ogImage =
+  cfImage(sf.media?.['home.hero']?.url ?? products[0]?.imageUrl ?? farmers[0]?.imageUrl, 1200) ?? null;
 ---
-<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf} imageOrigin={imgOrigin}>
+<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf} imageOrigin={imgOrigin} image={ogImage}>
   <main>
     <!-- HERO -->
     <section class="hero section" data-copy-section="home.hero">

@@ -10,6 +10,8 @@ import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import { safeHref } from '../lib/site';
 import { SITE_URL } from '../lib/config';
 import { IMG_ORIGIN } from '../lib/img';
+import { websiteLd, localBusinessLd } from '../lib/jsonld';
+import JsonLd from './JsonLd.astro';
 import type { Storefront } from '../lib/types';
 
 interface Props {
@@ -20,9 +22,15 @@ interface Props {
   /** Origin of the image host (R2/CDN). Emitted as preconnect so the first
    *  photo's connection is warm before the browser reaches the <img>. */
   imageOrigin?: string | null;
+  /** Absolute image URL for og:image / Twitter card (page hero/cover). Omitted →
+   *  a text-only summary card. */
+  image?: string | null;
+  /** Extra schema.org JSON-LD node(s) for this page (Product, Article, breadcrumb).
+   *  The sitewide WebSite + LocalBusiness nodes are always emitted. */
+  jsonLd?: unknown | unknown[];
 }
 
-const { title, description, bodyClass, imageOrigin } = Astro.props;
+const { title, description, bodyClass, imageOrigin, image, jsonLd } = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
@@ -71,6 +79,14 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
   <meta property="og:description" content={desc} />
   <meta property="og:type" content="website" />
   <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content={storefront.name} />
+  <meta property="og:locale" content="bg_BG" />
+  {image && <meta property="og:image" content={image} />}
+  <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={desc} />
+  {image && <meta name="twitter:image" content={image} />}
+  <JsonLd data={[websiteLd(storefront), localBusinessLd(storefront), ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [])]} />
   <meta name="theme-color" content={themeColor} />
   <link rel="icon" href={safeHref(favicon)} type={faviconType} />
   {(IMG_ORIGIN ?? imageOrigin) && (
