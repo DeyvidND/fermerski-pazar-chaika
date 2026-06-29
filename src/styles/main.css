@@ -67,10 +67,12 @@ p { text-wrap: pretty; }
   border-radius: var(--btn-radius);
   font-weight: 600;
   font-size: 15.5px;
-  line-height: 1;
+  line-height: 1.15;
   border: 1.5px solid transparent;
   transition: transform .15s ease, background-color .2s, color .2s, box-shadow .2s, border-color .2s;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
 }
 .btn svg { width: 18px; height: 18px; }
 .btn:active { transform: translateY(1px); }
