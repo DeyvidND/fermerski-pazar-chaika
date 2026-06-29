@@ -5,13 +5,31 @@ import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
 
-interface Stashed {
+interface StashedSplit {
+  orderNumber: number | null;
+  farmerName: string | null;
+  total: number;
+}
+
+interface StashedCourier {
+  orderId: string;
+  method: 'courier';
+  split: StashedSplit[];
+  // items/total/slot absent for courier stash
+  items?: undefined;
+  total?: undefined;
+  slot?: undefined;
+}
+
+interface StashedNormal {
   orderId: string;
   items: { name: string; qty: number; price: number }[];
   total: number;
   method: 'pickup' | 'address' | 'econt';
   slot: string;
 }
+
+type Stashed = StashedNormal | StashedCourier;
 
 let recap: Stashed | null = null;
 try {
@@ -23,23 +41,43 @@ try {
 // The header keeps the static „Поръчка приета" from confirmation.astro — we no
 // longer print an order number (a sequential №N would expose the shop's order count).
 
-const items = recap?.items ?? [];
 const recapBox = document.getElementById('recap')!;
-if (items.length) {
-  recapBox.innerHTML = items
+
+if (recap?.method === 'courier' && Array.isArray(recap.split)) {
+  // Courier path: render per-farmer split lines
+  const splitLines = recap.split
     .map(
-      (it) =>
-        `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>${esc(it.name)} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`,
+      (s) =>
+        `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>Поръчка #${esc(String(s.orderNumber ?? ''))} · ${esc(s.farmerName ?? 'фермер')}</span><span>${money(s.total)} (наложен платеж)</span></div>`,
     )
     .join('');
-  document.getElementById('paid')!.textContent = money(recap!.total);
+  recapBox.innerHTML =
+    `<div class="muted" style="font-size:14px;padding-bottom:6px">Поръчката е разделена на ${recap.split.length} пратки — всяка с наложен платеж при доставка.</div>` +
+    splitLines;
+  // #paid shows the grand total for courier (sum of all splits)
+  const courierTotal = recap.split.reduce((acc, s) => acc + s.total, 0);
+  document.getElementById('paid')!.textContent = money(courierTotal);
 } else {
-  recapBox.innerHTML = '<div class="muted" style="font-size:14.5px">Детайлите са изпратени на имейла ти.</div>';
+  // Normal path: render items list
+  const items = recap?.items ?? [];
+  if (items.length) {
+    recapBox.innerHTML = items
+      .map(
+        (it) =>
+          `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>${esc(it.name)} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`,
+      )
+      .join('');
+    document.getElementById('paid')!.textContent = money((recap as StashedNormal).total);
+  } else {
+    recapBox.innerHTML = '<div class="muted" style="font-size:14.5px">Детайлите са изпратени на имейла ти.</div>';
+  }
 }
 
 // receiving block
 const recv = document.getElementById('slotNote')!;
-if (recap?.method === 'pickup') {
+if (recap?.method === 'courier') {
+  recv.innerHTML = ICONS.truck + ' Доставка с куриер · плащане при доставка';
+} else if (recap?.method === 'pickup') {
   recv.innerHTML = ICONS.truck + ' Петък · 11:00–18:00 на Чайка';
 } else if (recap?.slot) {
   recv.innerHTML = ICONS.truck + ' Доставка: ' + esc(recap.slot);
@@ -52,7 +90,9 @@ if (recap?.method === 'pickup') {
 // Each vendor self-gates on GDPR consent: Google via Consent Mode v2 (modeled
 // until granted), Meta via its consent queue (revoked until granted). `total` is
 // integer euro-cents. The stash is removed below, so a reload never re-fires.
-if (recap && items.length) {
+const isCourier = recap?.method === 'courier' && Array.isArray((recap as StashedCourier).split);
+const normalItems = isCourier ? [] : (recap?.items ?? []);
+if (recap && (isCourier || normalItems.length)) {
   const w = window as unknown as {
     __ffPurchase?: {
       ga4: string | null;
@@ -64,14 +104,18 @@ if (recap && items.length) {
     fbq?: (...args: unknown[]) => void;
   };
   const t = w.__ffPurchase;
-  const value = recap.total / 100;
+  // For courier: sum all split totals (stotinki) then convert to major units.
+  // For normal: use recap.total (stotinki) converted to major units.
+  const value = isCourier
+    ? (recap as StashedCourier).split.reduce((acc, s) => acc + s.total, 0) / 100
+    : (recap as StashedNormal).total / 100;
   if (t && typeof w.gtag === 'function') {
     if (t.ga4) {
       w.gtag('event', 'purchase', {
         transaction_id: recap.orderId,
         value,
         currency: 'EUR',
-        items: items.map((it) => ({
+        items: normalItems.map((it) => ({
           item_name: it.name,
           quantity: it.qty,
           price: it.price / 100,
