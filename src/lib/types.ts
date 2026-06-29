@@ -194,6 +194,8 @@ export interface Farmer {
   images?: string[];
   position: number;
   createdAt: string | null;
+  /** Phase 2: farmer offers nationwide courier delivery (enabled + carrier connected). */
+  courierReady?: boolean;
 }
 
 export interface Subcategory {
@@ -245,7 +247,7 @@ export interface CreateOrderInput {
   customerPhone?: string;
   customerEmail?: string;
   slotId?: string;
-  deliveryType?: 'pickup' | 'address' | 'econt' | 'econt_address';
+  deliveryType?: 'pickup' | 'address' | 'econt' | 'econt_address' | 'courier';
   deliveryAddress?: string;
   deliveryCity?: string;
   econtOffice?: string;
@@ -257,6 +259,14 @@ export interface CreateOrderInput {
 export interface CheckoutResult {
   orderId: string;
   checkoutUrl: string | null;
+  /** Present for a courier order split into one COD order per farmer. */
+  orders?: {
+    orderId: string;
+    orderNumber: number | null;
+    farmerId: string | null;
+    farmerName: string | null;
+    totalStotinki: number;
+  }[];
 }
 
 export interface ArticleMedia {
