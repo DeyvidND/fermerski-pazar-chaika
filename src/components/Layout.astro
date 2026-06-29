@@ -8,6 +8,7 @@ import TrackingScripts from './TrackingScripts.astro';
 import ConsentBanner from './ConsentBanner.astro';
 import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import { safeHref } from '../lib/site';
+import { SITE_URL } from '../lib/config';
 import { IMG_ORIGIN } from '../lib/img';
 import type { Storefront } from '../lib/types';
 
@@ -52,6 +53,11 @@ const faviconType = faviconPath.endsWith('.svg')
       ? 'image/x-icon'
       : undefined;
 const themeColor = storefront.themeColor || '#3F7D43';
+
+// Canonical URL: fixed customer domain + clean path (drops query/tracking params),
+// so filtered/edit-token variants and the Workers preview host don't fragment
+// indexing across duplicate URLs.
+const canonical = `${SITE_URL}${Astro.url.pathname}`;
 ---
 <!DOCTYPE html>
 <html lang="bg" data-theme="ferma">
@@ -60,9 +66,11 @@ const themeColor = storefront.themeColor || '#3F7D43';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={desc} />
+  <link rel="canonical" href={canonical} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={desc} />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonical} />
   <meta name="theme-color" content={themeColor} />
   <link rel="icon" href={safeHref(favicon)} type={faviconType} />
   {(IMG_ORIGIN ?? imageOrigin) && (

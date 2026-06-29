@@ -15,6 +15,12 @@ export const CDN_BASE = (import.meta.env.PUBLIC_IMG_CDN ?? 'https://cdn.fermerib
 /** Base of all storefront endpoints for the configured farm. */
 export const PUBLIC_BASE = `${API_BASE}/public/${TENANT_SLUG}`;
 
+/** Public canonical origin of THIS storefront (the customer-facing domain), used
+ *  for <link rel="canonical">, og:url and the sitemap. Fixed per site so the
+ *  Workers preview host (…workers.dev / …fermeribg.com) doesn't compete with the
+ *  real domain as duplicate content in Google. Override per client via env. */
+export const SITE_URL = (import.meta.env.PUBLIC_SITE_URL ?? 'https://farmmarket.bg').replace(/\/+$/, '');
+
 // NOTE: the browser Google Maps key (PUBLIC_GOOGLE_MAPS_KEY) is intentionally
 // NOT read here. It is consumed at REQUEST time in checkout.astro from the
 // container runtime env (Dokploy), then rendered onto the form — see that file.
