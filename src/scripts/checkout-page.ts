@@ -8,7 +8,8 @@ import { Cart, money } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
-import type { Slot } from '../lib/types';
+import type { Slot, CheckoutResult } from '../lib/types';
+import { getBootstrap } from '../lib/api';
 import { initAddressAutocomplete, type PickedAddress } from './address-autocomplete';
 import { validateName, validateEmail, validatePhone, wireField } from '../lib/validate';
 
@@ -45,7 +46,7 @@ const SHIP_ECONT_ADDRESS = num(form.dataset.shipEcontAddress, 5.9); // Econt →
 
 if (!Cart.get().length) location.replace('/cart');
 
-type Method = 'pickup' | 'address' | 'econt' | 'econt_address';
+type Method = 'pickup' | 'address' | 'econt' | 'econt_address' | 'courier';
 let method: Method = 'pickup';
 let selectedSlotId: string | null = null;
 let selectedSlotLabel = '';
@@ -55,16 +56,48 @@ let selectedSlotLabel = '';
 // are offered; otherwise this default is what gets sent.
 const stripeEnabled = form.dataset.stripe === '1';
 let pay: 'online' | 'cod' = stripeEnabled ? 'online' : 'cod';
-document.querySelectorAll<HTMLElement>('[data-pay]').forEach((el) =>
+// Remembers the buyer's pre-courier choice so we can restore it when they switch
+// away from courier (which forces COD).
+let payBeforeCourier: 'online' | 'cod' = pay;
+const payEls = Array.from(document.querySelectorAll<HTMLElement>('[data-pay]'));
+const payCardEl = payEls.find((el) => el.dataset.pay === 'online') || null;
+const payCodEl = payEls.find((el) => el.dataset.pay === 'cod') || null;
+/** Reflect the active payment choice in the radio-cards. */
+function syncPayUI() {
+  payEls.forEach((x) => x.classList.toggle('is-active', x.dataset.pay === pay));
+}
+payEls.forEach((el) =>
   el.addEventListener('click', () => {
+    // Courier is COD only — while it's selected the card option is disabled and
+    // clicking it is a no-op (the handler below force-sets COD).
+    if (method === 'courier' && el.dataset.pay === 'online') return;
     pay = el.dataset.pay as 'online' | 'cod';
-    document
-      .querySelectorAll<HTMLElement>('[data-pay]')
-      .forEach((x) => x.classList.toggle('is-active', x === el));
+    syncPayUI();
     // COD adds a carrier surcharge → re-price the door comparison.
     if (comparisonActive && method === 'econt_address') void loadCompare();
   }),
 );
+/** Courier is COD-only: lock the payment choice to COD and grey out the card
+ *  option while courier is the method; restore the buyer's prior choice on exit. */
+function applyPaymentForMethod(m: Method) {
+  if (m === 'courier') {
+    if (pay !== 'cod') payBeforeCourier = pay; // remember to restore later
+    pay = 'cod';
+    if (payCardEl) {
+      payCardEl.style.opacity = '.45';
+      payCardEl.style.pointerEvents = 'none';
+    }
+  } else {
+    if (payCardEl) {
+      payCardEl.style.opacity = '';
+      payCardEl.style.pointerEvents = '';
+    }
+    // Coming back from courier → restore what the buyer had before (only if the
+    // card option exists / Stripe is on; otherwise stay on COD).
+    if (payCardEl || payCodEl) pay = payBeforeCourier;
+  }
+  syncPayUI();
+}
 
 // ---------- carrier comparison (door delivery, both carriers live) ----------
 // When the farm runs Econt + Speedy, a до-адрес order can ship with either. The
@@ -202,7 +235,7 @@ const econtOffice = document.getElementById('econtOffice') as
   | null;
 const slotCard = document.getElementById('slotCard') as HTMLElement | null;
 
-const usesAddress = (m: Method) => m === 'address' || m === 'econt_address';
+const usesAddress = (m: Method) => m === 'address' || m === 'econt_address' || m === 'courier';
 
 // Picked address from Places Autocomplete (only when a browser Maps key is set).
 // When set, the order carries exact coords (deliveryLat/Lng) + structured
@@ -232,6 +265,10 @@ function composeAddress(): string {
 
 function shipping(sub: number): number {
   if (method === 'pickup') return 0;
+  // Courier splits the cart per farmer and the server prices each farmer's
+  // shipment at checkout — we can't quote a single fee here, so the estimate is
+  // omitted (shown as "по куриер" in the summary note).
+  if (method === 'courier') return 0;
   if (FREE_OVER > 0 && sub >= FREE_OVER) return 0;
   if (method === 'econt') return SHIP_ECONT;
   if (method === 'econt_address') {
@@ -249,6 +286,8 @@ function renderSummary() {
   const ship = shipping(sub);
   const shipNote =
     method === 'econt' || method === 'econt_address' ? ' <span class="muted">(приблизително)</span>' : '';
+  // Courier fee is per-farmer and priced by the server → don't promise "безплатна".
+  const shipText = method === 'courier' ? 'по куриер (наложен платеж)' : ship === 0 ? 'безплатна' : money(ship);
   document.getElementById('orderLines')!.innerHTML = items
     .map(
       (it) =>
@@ -256,7 +295,7 @@ function renderSummary() {
     )
     .join('');
   document.getElementById('orderTotals')!.innerHTML = `
-    <div class="summary__row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:12px"><span>Доставка${shipNote}</span><span>${ship === 0 ? 'безплатна' : money(ship)}</span></div>
+    <div class="summary__row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:12px"><span>Доставка${shipNote}</span><span>${shipText}</span></div>
     <div class="summary__row total"><span>Общо</span><span>${money(sub + ship)}</span></div>`;
 }
 
@@ -278,9 +317,13 @@ function setMethod(m: Method) {
   if (slotCard) slotCard.style.display = m === 'address' ? '' : 'none';
   if (m === 'address') void loadSlots();
   // Carrier picker: door delivery only, and only when both carriers run. Price
-  // lazily the first time door is chosen if a city is already known.
+  // lazily the first time door is chosen if a city is already known. Courier is
+  // its own door method (per-farmer split, fixed COD) — no comparison picker.
   renderCarrierOptions();
   if (m === 'econt_address') void loadCompare();
+  // Courier ships per-farmer COD — force the payment choice to наложен платеж and
+  // disable the card option; restore the buyer's choice when switching away.
+  applyPaymentForMethod(m);
   renderSummary();
 }
 
@@ -455,6 +498,28 @@ form.addEventListener('submit', async (e) => {
     payload.deliveryType = 'pickup';
     payload.deliveryAddress = MARKET;
     payload.notes = 'Вземане от пазара (Чайка)';
+  } else if (method === 'courier') {
+    // Courier: each farmer ships their own products COD. Needs the recipient's
+    // door address + structured city (same source as econt_address); no slot,
+    // no Econt office, no carrier picker. Backend splits the cart per farmer.
+    const street = composeAddress();
+    if (!(addrInput?.value || '').trim()) {
+      toast?.('Въведи адрес за доставка.');
+      addrInput?.focus();
+      return;
+    }
+    if (!picked?.city) {
+      toast?.('Избери адрес от предложенията, за да определим града за куриера.');
+      addrInput?.focus();
+      return;
+    }
+    Object.assign(payload, {
+      deliveryType: 'courier',
+      paymentMethod: 'cod',
+      deliveryAddress: street,
+      deliveryCity: picked.city,
+    });
+    if (picked.postal) payload.deliveryPostal = picked.postal;
   } else if (method === 'address' || method === 'econt_address') {
     const street = (addrInput?.value || '').trim();
     if (!street) {
@@ -528,7 +593,28 @@ form.addEventListener('submit', async (e) => {
       btn.textContent = 'Завърши поръчката';
       return;
     }
-    const out = (await res.json()) as { orderId: string; checkoutUrl: string | null };
+    const data = (await res.json()) as CheckoutResult;
+    // Courier → the backend split the cart into one COD order per farmer. Stash the
+    // per-farmer breakdown for the confirmation page, clear the cart, and skip the
+    // single-order / Stripe paths below (courier is COD only, no checkoutUrl).
+    if (data.orders && data.orders.length) {
+      sessionStorage.setItem(
+        'ff_last_order',
+        JSON.stringify({
+          orderId: data.orderId,
+          method: 'courier',
+          split: data.orders.map((o) => ({
+            orderNumber: o.orderNumber,
+            farmerName: o.farmerName,
+            total: o.totalStotinki,
+          })),
+        }),
+      );
+      Cart.set([]);
+      window.location.href = `/confirmation?order=${data.orderId}`;
+      return;
+    }
+    const out = data;
     const sub = Cart.subtotal();
     sessionStorage.setItem(
       'ff_last_order',
@@ -569,6 +655,45 @@ form.addEventListener('submit', async (e) => {
     btn.textContent = 'Завърши поръчката';
   }
 });
+
+/* ---------- courier eligibility (Phase 2) ---------- */
+// Courier is offered only when EVERY farmer represented in the cart is
+// courierReady. We need the product→farmer map (cart lines carry only the
+// productId) + the farmer flags, both from the cached /bootstrap payload.
+async function computeCourierEligible(): Promise<boolean> {
+  const cart = Cart.get();
+  if (!cart.length) return false;
+  try {
+    const boot = await getBootstrap();
+    if (!boot) return false;
+    const { products, farmers } = boot;
+    const productById = new Map(products.map((p) => [p.id, p]));
+    const farmerById = new Map(farmers.map((f) => [f.id, f]));
+    const cartFarmerIds = new Set<string>();
+    for (const line of cart) {
+      const fid = productById.get(line.id)?.farmerId;
+      if (!fid) return false; // unknown product / no farmer → can't courier-split
+      cartFarmerIds.add(fid);
+    }
+    return [...cartFarmerIds].every((fid) => farmerById.get(fid)?.courierReady === true);
+  } catch {
+    return false; // bootstrap unavailable → don't offer courier
+  }
+}
+
+// Reveal the courier option when eligible; defensive — never throws out of init.
+async function initCourier(): Promise<void> {
+  const courierEl = document.querySelector<HTMLElement>('[data-courier]');
+  if (!courierEl) return;
+  let eligible = false;
+  try {
+    eligible = await computeCourierEligible();
+  } catch {
+    eligible = false;
+  }
+  courierEl.hidden = !eligible;
+}
+void initCourier();
 
 // Default to the first method the farm actually offers (pickup may be hidden).
 // setMethod lazily fires loadSlots() itself when that default is address delivery.
