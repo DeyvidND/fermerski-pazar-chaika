@@ -48,6 +48,10 @@ if (!Cart.get().length) location.replace('/cart');
 
 type Method = 'pickup' | 'address' | 'econt' | 'econt_address' | 'courier';
 let method: Method = 'pickup';
+// True once a pickup-only product (courierDisabled) is found in the cart — set by
+// initCourierDisabledGate() on load. Such products can't go on a courier waybill,
+// so Econt/courier methods are hidden and the submit guard refuses them.
+let courierDisabledBlocked = false;
 let selectedSlotId: string | null = null;
 let selectedSlotLabel = '';
 
@@ -473,6 +477,14 @@ form.addEventListener('submit', async (e) => {
   const customerEmail = String(data.get('customerEmail') || '').trim();
   const toast = (window as any).FFtoast as (m: string) => void;
 
+  // Pickup-only backstop: a courierDisabled product can't ship on a waybill. The
+  // method cards are already hidden, but guard the POST too (the server rejects it
+  // anyway — this just gives a friendly message instead of a 400).
+  if (courierDisabledBlocked && (method === 'econt' || method === 'econt_address' || method === 'courier')) {
+    toast?.('Някои продукти не се изпращат с куриер. Избери местна доставка или вземане от пазара.');
+    return;
+  }
+
   // Validate contact fields first — run every check (so all errors show at once),
   // then focus the first invalid input.
   const results = contactChecks.map((c) => c.check());
@@ -695,7 +707,74 @@ async function initCourier(): Promise<void> {
 }
 void initCourier();
 
+/* ---------- pickup-only gate (courierDisabled products) ---------- */
+// Some products (perishable/fragile) are flagged `courierDisabled` and must never
+// be couriered. Cart lines carry only the productId, so resolve the flag through
+// the cached /bootstrap product map (same source computeCourierEligible uses).
+async function cartHasCourierDisabled(): Promise<boolean> {
+  const cart = Cart.get();
+  if (!cart.length) return false;
+  try {
+    const boot = await getBootstrap();
+    if (!boot) return false;
+    const byId = new Map(boot.products.map((p) => [p.id, p]));
+    return cart.some((line) => byId.get(line.id)?.courierDisabled === true);
+  } catch {
+    return false; // bootstrap unavailable → don't block (server still backstops)
+  }
+}
+
+// When the cart holds a pickup-only product, hide every carrier (waybill) method —
+// Еконт office + door (courier is already locked) — drop a note, and bounce the
+// selection to a waybill-free method (local delivery / pickup). Defensive: never
+// throws out of init.
+async function initCourierDisabledGate(): Promise<void> {
+  try {
+    courierDisabledBlocked = await cartHasCourierDisabled();
+  } catch {
+    courierDisabledBlocked = false;
+  }
+  if (!courierDisabledBlocked) return;
+
+  const carrierMethods = ['econt', 'econt_address'];
+  let hidAny = false;
+  for (const m of carrierMethods) {
+    const el = document.querySelector<HTMLElement>(`[data-method="${m}"]`);
+    if (el) {
+      el.style.display = 'none';
+      hidAny = true;
+    }
+  }
+  // Also drop the locked courier teaser so it doesn't add noise.
+  const lockedCourier = document.querySelector<HTMLElement>('[data-courier-locked]');
+  if (lockedCourier) lockedCourier.style.display = 'none';
+
+  if (!hidAny) return; // farm offered no Еконт anyway → nothing to explain
+
+  const container = document.getElementById('deliveryMethod');
+  if (container && !document.getElementById('courierDisabledNote')) {
+    const note = document.createElement('div');
+    note.id = 'courierDisabledNote';
+    note.style.cssText =
+      'padding:10px 12px;border-radius:10px;background:#fdf1e3;color:#9a5b13;font-size:13.5px;line-height:1.45';
+    note.textContent =
+      'В количката има продукт, който не се изпраща с куриер (чуплив или бързо разваляем). Куриерската доставка е скрита — избери местна доставка или вземане от пазара.';
+    container.prepend(note);
+  }
+
+  // If a now-hidden carrier method is selected, switch to a visible one.
+  if (method === 'econt' || method === 'econt_address' || method === 'courier') {
+    const visible = Array.from(document.querySelectorAll<HTMLElement>('[data-method]')).find(
+      (el) => el.style.display !== 'none',
+    );
+    if (visible?.dataset.method) setMethod(visible.dataset.method as Method);
+  }
+}
+
 // Default to the first method the farm actually offers (pickup may be hidden).
 // setMethod lazily fires loadSlots() itself when that default is address delivery.
 const firstMethodEl = document.querySelector('[data-method]') as HTMLElement | null;
 setMethod((firstMethodEl?.dataset.method as Method) ?? 'pickup');
+
+// Run after the default method is set so the bounce (if any) lands last.
+void initCourierDisabledGate();

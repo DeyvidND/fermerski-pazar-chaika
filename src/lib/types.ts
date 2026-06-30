@@ -162,6 +162,9 @@ export interface Product {
   bundleItems: string[] | null;
   compareAtPriceStotinki: number | null;
   featured: boolean;
+  /** Pickup-only: never shipped by courier (perishable/fragile). The checkout
+   *  hides courier/Еконт delivery when any cart product has this set. */
+  courierDisabled?: boolean;
   createdAt: string | null;
   /** Promotion (additive). `salePriceStotinki` = headline discounted price for the
    *  base/cheapest; `salePercent`/`saleEndsAt` are informational. Absent = no promo. */

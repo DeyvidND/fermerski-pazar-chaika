@@ -159,6 +159,17 @@ const structuredData = [
               )}
             </div>
           )}
+          {/* Pickup-only marker — never shipped by courier (perishable/fragile). */}
+          {product.courierDisabled && (
+            <div style="margin-bottom:14px">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:#fdf1e3;color:#9a5b13;font-size:13px;font-weight:700">
+                Само на място · без куриер
+              </span>
+              <div class="muted" style="font-size:13px;margin-top:6px">
+                Този продукт е чуплив или бързо разваляем — не се изпраща с куриер. Може само вземане от пазара или местна доставка до адрес.
+              </div>
+            </div>
+          )}
           <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px">
             {!productSoldOut && (
               <div class="stepper" aria-label="Количество">

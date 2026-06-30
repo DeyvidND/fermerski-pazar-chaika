@@ -73,6 +73,11 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
         </span>
       )}
     </div>
+    {p.courierDisabled && (
+      <div class="courier-off" title="Този продукт не се изпраща с куриер — само вземане от място или местна доставка">
+        Само на място · без куриер
+      </div>
+    )}
     <div class="product__foot">
       {stepper && !soldOut && !hasV && (
         <div class="stepper" aria-label="Количество">
@@ -125,5 +130,18 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   .stock-badge--sold-out {
     background: #c0392b;
     color: #fff;
+  }
+
+  /* Pickup-only marker — product never goes on a courier waybill. */
+  .courier-off {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fdf1e3;
+    color: #9a5b13;
   }
 </style>
