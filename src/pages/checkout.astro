@@ -16,6 +16,13 @@ const showPaymentChoice = stripeEnabled && codEnabled;
 // Per-method on/off flags — show only the methods the farm switched on.
 const methods = sf.methods ?? { ownSlots: true, pickup: true, econtOffice: false, econtAddress: false };
 
+// TEMP (2026-06-30): куриерът е счупен + няма Maps ключ за адресния autocomplete.
+// Заключваме всичко освен ЛИЧНАТА (местна) доставка до адрес, за да не приема
+// поръчки, които не можем да изпълним. Куриер → показва се заключен с „временно
+// не работи"; вземане на място → само информация, не checkout опция; Еконт → скрит.
+// Връщане към нормално: сложи флага на false (и/или го махни).
+const ONLY_LOCAL_DELIVERY = true;
+
 // Delivery pricing from the farm's config (cents). The client script reads the
 // data-* on the form; these strings drive the method-card copy.
 const d = sf.delivery;
@@ -79,34 +86,36 @@ const mapsKey = String(
             <div class="card" style="padding:24px;box-shadow:none">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на получаване</h3>
               <div class="stack" style="gap:12px" id="deliveryMethod">
-                {methods.pickup && (
-                  <label class="radio-card" data-method="pickup">
-                    <span class="dot"></span>
-                    <span><b>Вземане от пазара · Чайка</b><br><span class="muted" style="font-size:14px">В петък 11:00–18:00 · без такса · плащаш на място</span></span>
-                  </label>
-                )}
-                {delivery && methods.ownSlots && (
+                {((delivery && methods.ownSlots) || ONLY_LOCAL_DELIVERY) && (
                   <label class="radio-card" data-method="address">
                     <span class="dot"></span>
-                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · {addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span><br><span class="muted" style="font-size:13px">само за Варна, Добрич и околностите — или вземане на място от пазара</span></span>
+                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · {addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span><br><span class="muted" style="font-size:13px">само за Варна, Добрич и околностите</span></span>
                   </label>
                 )}
-                {econt && econtAuto && methods.econtOffice && (
+                {!ONLY_LOCAL_DELIVERY && econt && econtAuto && methods.econtOffice && (
                   <label class="radio-card" data-method="econt">
                     <span class="dot"></span>
                     <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €</span></span>
                   </label>
                 )}
-                {econt && methods.econtAddress && (
+                {!ONLY_LOCAL_DELIVERY && econt && methods.econtAddress && (
                   <label class="radio-card" data-method="econt_address">
                     <span class="dot"></span>
                     <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €</span></span>
                   </label>
                 )}
-                <label class="radio-card" data-method="courier" data-courier hidden>
+                <!-- Куриер: временно заключен (виж ONLY_LOCAL_DELIVERY горе). Показва се
+                     като информация, но НЕ е избираем — без data-method, без клик. -->
+                <div class="radio-card" data-courier-locked aria-disabled="true" style="opacity:.55;pointer-events:none;cursor:not-allowed">
                   <span class="dot"></span>
-                  <span><b>Куриер · до цялата страна</b><br><span class="muted" style="font-size:14px">Всеки фермер праща своите продукти · плащаш при доставка (наложен платеж)</span></span>
-                </label>
+                  <span><b>Куриер · до цялата страна</b> <span style="font-size:13px;font-weight:600;color:#b3261e">· временно не работи</span><br><span class="muted" style="font-size:14px">Доставката с куриер е временно изключена. Работим по нея — скоро ще е активна.</span></span>
+                </div>
+              </div>
+
+              <!-- Вземане от пазара: само информация, НЕ е checkout опция. -->
+              <div style="margin-top:14px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--primary-050)">
+                <div style="font-weight:700;margin-bottom:2px">Или ела на пазара · Чайка, Варна</div>
+                <span class="muted" style="font-size:14px">Всеки петък 11:00–18:00 · без такса · плащаш на място. Това е само информация — за онлайн поръчка избери „Местна доставка до адрес“ горе.</span>
               </div>
 
               <!-- delivery address (local delivery + Econt-to-address). One field
