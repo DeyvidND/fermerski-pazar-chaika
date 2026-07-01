@@ -10,6 +10,7 @@ interface Props {
   product: Product;
   stepper?: boolean;
   farmerName?: string | null;
+  farmerCourierReady?: boolean;
   cat?: string; // grouping id, used by the catalog filter tabs
   remaining?: number | null; // active availability window remaining stock (undefined = no window)
   bestSeller?: boolean; // member of the „Най-продавани" set → shown under that chip
@@ -18,10 +19,18 @@ const {
   product: p,
   stepper = false,
   farmerName = null,
+  farmerCourierReady = false,
   cat = '',
   remaining = null,
   bestSeller = false,
 } = Astro.props;
+
+// Courier delivery badge logic:
+// - green "Доставка с куриер" when farmer has carrier AND product not blocked
+// - amber "Само на място" when farmer has carrier but product is blocked
+// - nothing when farmer has no carrier (courier not applicable)
+const courierAvailable = farmerCourierReady && !(p.courierDisabled ?? false);
+const pickupOnly = farmerCourierReady && (p.courierDisabled ?? false);
 const href = p.slug ? `/product/${p.slug}` : '/shop';
 const hasV = hasVariants(p);
 const pd = priceDisplay(p);
@@ -37,6 +46,7 @@ const hasWindow = remaining !== null && remaining !== undefined;
 const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
 ---
 <article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat} data-bestseller={bestSeller ? '1' : undefined}
+  data-courier={courierAvailable ? '1' : undefined}
   style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
@@ -73,9 +83,14 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
         </span>
       )}
     </div>
-    {p.courierDisabled && (
-      <div class="courier-off" title="Този продукт не се изпраща с куриер — само вземане от място или местна доставка">
-        Само на място · без куриер
+    {courierAvailable && (
+      <div class="courier-on" title="Може да се изпрати с куриер (Еконт или Спиди)">
+        📦 Доставка с куриер
+      </div>
+    )}
+    {pickupOnly && (
+      <div class="courier-off" title="Само вземане от място или местна доставка — не се изпраща с куриер">
+        Само на място
       </div>
     )}
     <div class="product__foot">
@@ -132,7 +147,19 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
     color: #fff;
   }
 
-  /* Pickup-only marker — product never goes on a courier waybill. */
+  /* Courier availability badges */
+  .courier-on {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
   .courier-off {
     display: inline-flex;
     align-self: flex-start;

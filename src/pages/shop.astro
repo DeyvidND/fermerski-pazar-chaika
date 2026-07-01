@@ -19,6 +19,9 @@ const activeIds = new Set(active.map((p) => p.id));
 const bestSellerSet = new Set((boot.bestSellerIds ?? []).filter((id) => activeIds.has(id)));
 const showBestChip = bestSellersOn && bestSellerSet.size > 0;
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
+const farmerCourierReady = (id: string | null) => farmers.find((f) => f.id === id)?.courierReady ?? false;
+// Show the courier chip only if at least one active product can ship by courier.
+const showCourierChip = active.some((p) => farmerCourierReady(p.farmerId) && !(p.courierDisabled ?? false));
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 ---
@@ -42,13 +45,20 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
             <button class="chip is-active" data-tab="all">Всички</button>
             {showBestChip && <button class="chip" data-tab="best-sellers">Най-продавани</button>}
             {cats.map((c) => <button class="chip" data-tab={c.id}>{c.name}</button>)}
+            {showCourierChip && (
+              <button class="chip" id="courierChip" data-courier-filter style="border-color:#4C8A54;color:#4C8A54">
+                📦 С куриер
+              </button>
+            )}
           </div>
         )}
 
         <div class="grid grid--4" id="catalogGrid" data-tab-panels>
           {seeded
             ? active.map((p) => (
-                <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)} cat={catIdOf(p, sf.multiSubcat)}
+                <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)}
+                  farmerCourierReady={farmerCourierReady(p.farmerId)}
+                  cat={catIdOf(p, sf.multiSubcat)}
                   remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null}
                   bestSeller={bestSellerSet.has(p.id)} />
               ))
@@ -63,6 +73,24 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
     if (hash) {
       const chip = document.querySelector<HTMLElement>(`#catChips [data-tab="${CSS.escape(hash)}"]`);
       chip?.click();
+    }
+
+    // Courier filter chip — toggles visibility of non-courier products.
+    const courierChip = document.getElementById('courierChip');
+    const grid = document.getElementById('catalogGrid');
+    if (courierChip && grid) {
+      let courierOnly = false;
+      courierChip.addEventListener('click', () => {
+        courierOnly = !courierOnly;
+        courierChip.classList.toggle('is-active', courierOnly);
+        grid.querySelectorAll<HTMLElement>('[data-product]').forEach((card) => {
+          if (courierOnly && !card.dataset.courier) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+          }
+        });
+      });
     }
   </script>
 </Layout>
