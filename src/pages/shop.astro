@@ -4,6 +4,7 @@ import CopySlot from '../components/CopySlot.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
+import { ONLY_LOCAL_DELIVERY } from '../lib/config';
 
 const boot = await getCatalog();
 const { storefront: sf, products, farmers, subcategories: subcats } = boot;
@@ -19,7 +20,10 @@ const activeIds = new Set(active.map((p) => p.id));
 const bestSellerSet = new Set((boot.bestSellerIds ?? []).filter((id) => activeIds.has(id)));
 const showBestChip = bestSellersOn && bestSellerSet.size > 0;
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
-const farmerCourierReady = (id: string | null) => farmers.find((f) => f.id === id)?.courierReady ?? false;
+// Gated on ONLY_LOCAL_DELIVERY (../lib/config) — courier is checkout-locked
+// storefront-wide right now, so no badge/chip may promise it either.
+const farmerCourierReady = (id: string | null) =>
+  !ONLY_LOCAL_DELIVERY && (farmers.find((f) => f.id === id)?.courierReady ?? false);
 // Show the courier chip only if at least one active product can ship by courier.
 const showCourierChip = active.some((p) => farmerCourierReady(p.farmerId) && !(p.courierDisabled ?? false));
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).

@@ -709,31 +709,39 @@ void initCourier();
 
 /* ---------- pickup-only gate (courierDisabled products) ---------- */
 // Some products (perishable/fragile) are flagged `courierDisabled` and must never
-// be couriered. Cart lines carry only the productId, so resolve the flag through
-// the cached /bootstrap product map (same source computeCourierEligible uses).
-async function cartHasCourierDisabled(): Promise<boolean> {
+// be couriered. Cart lines carry only the productId, so resolve the flag (and name,
+// for the on-screen note) through the cached /bootstrap product map (same source
+// computeCourierEligible uses).
+async function cartCourierDisabledNames(): Promise<string[]> {
   const cart = Cart.get();
-  if (!cart.length) return false;
+  if (!cart.length) return [];
   try {
     const boot = await getBootstrap();
-    if (!boot) return false;
+    if (!boot) return [];
     const byId = new Map(boot.products.map((p) => [p.id, p]));
-    return cart.some((line) => byId.get(line.id)?.courierDisabled === true);
+    const names: string[] = [];
+    for (const line of cart) {
+      const p = byId.get(line.id);
+      if (p?.courierDisabled === true) names.push(p.name);
+    }
+    return names;
   } catch {
-    return false; // bootstrap unavailable → don't block (server still backstops)
+    return []; // bootstrap unavailable → don't block (server still backstops)
   }
 }
 
 // When the cart holds a pickup-only product, hide every carrier (waybill) method —
-// Еконт office + door (courier is already locked) — drop a note, and bounce the
-// selection to a waybill-free method (local delivery / pickup). Defensive: never
-// throws out of init.
+// Еконт office + door (courier is already locked) — drop a note naming the
+// product(s), and bounce the selection to a waybill-free method (local delivery /
+// pickup). Defensive: never throws out of init.
 async function initCourierDisabledGate(): Promise<void> {
+  let blockedNames: string[] = [];
   try {
-    courierDisabledBlocked = await cartHasCourierDisabled();
+    blockedNames = await cartCourierDisabledNames();
   } catch {
-    courierDisabledBlocked = false;
+    blockedNames = [];
   }
+  courierDisabledBlocked = blockedNames.length > 0;
   if (!courierDisabledBlocked) return;
 
   const carrierMethods = ['econt', 'econt_address'];
@@ -757,8 +765,11 @@ async function initCourierDisabledGate(): Promise<void> {
     note.id = 'courierDisabledNote';
     note.style.cssText =
       'padding:10px 12px;border-radius:10px;background:#fdf1e3;color:#9a5b13;font-size:13.5px;line-height:1.45';
-    note.textContent =
-      'В количката има продукт, който не се изпраща с куриер (чуплив или бързо разваляем). Куриерската доставка е скрита — избери местна доставка или вземане от пазара.';
+    const single = blockedNames.length === 1;
+    const subject = single
+      ? `„${blockedNames[0]}“ не се изпраща с куриер (чуплив или бързо разваляем)`
+      : `Тези продукти не се изпращат с куриер (чупливи или бързо разваляеми): ${blockedNames.join(', ')}`;
+    note.textContent = `${subject}. Куриерската доставка е скрита — избери местна доставка или вземане от пазара.`;
     container.prepend(note);
   }
 

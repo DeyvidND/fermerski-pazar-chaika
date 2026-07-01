@@ -10,6 +10,7 @@ import { imageOrigin } from '../../lib/site';
 import { cfImage } from '../../lib/img';
 import { productLd, breadcrumbLd } from '../../lib/jsonld';
 import { hasVariants, allVariantsSoldOut, variantPriceStotinki, cheapestVariant } from '../../lib/pricing';
+import { ONLY_LOCAL_DELIVERY } from '../../lib/config';
 
 const { slug } = Astro.params;
 // One /bootstrap round trip (shared memo). The backend's single-product endpoint
@@ -159,8 +160,11 @@ const structuredData = [
               )}
             </div>
           )}
-          {/* Pickup-only marker — never shipped by courier (perishable/fragile). */}
-          {product.courierDisabled && (
+          {/* Pickup-only marker — never shipped by courier (perishable/fragile). Only
+              meaningful (and only shown) when the farmer actually offers courier at
+              all and it isn't checkout-locked (ONLY_LOCAL_DELIVERY, ../../lib/config) —
+              otherwise "not couriered" is a non-statement. */}
+          {!ONLY_LOCAL_DELIVERY && farmer?.courierReady && product.courierDisabled && (
             <div style="margin-bottom:14px">
               <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:#fdf1e3;color:#9a5b13;font-size:13px;font-weight:700">
                 Само на място · без куриер

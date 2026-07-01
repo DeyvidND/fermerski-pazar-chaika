@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/Layout.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
+import { ONLY_LOCAL_DELIVERY } from '../lib/config';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
@@ -16,12 +17,10 @@ const showPaymentChoice = stripeEnabled && codEnabled;
 // Per-method on/off flags — show only the methods the farm switched on.
 const methods = sf.methods ?? { ownSlots: true, pickup: true, econtOffice: false, econtAddress: false };
 
-// TEMP (2026-06-30): куриерът е счупен + няма Maps ключ за адресния autocomplete.
-// Заключваме всичко освен ЛИЧНАТА (местна) доставка до адрес, за да не приема
-// поръчки, които не можем да изпълним. Куриер → показва се заключен с „временно
-// не работи"; вземане на място → само информация, не checkout опция; Еконт → скрит.
-// Връщане към нормално: сложи флага на false (и/или го махни).
-const ONLY_LOCAL_DELIVERY = true;
+// ONLY_LOCAL_DELIVERY (see ../lib/config): заключваме всичко освен ЛИЧНАТА (местна)
+// доставка до адрес, за да не приема поръчки, които не можем да изпълним. Куриер →
+// показва се заключен с „временно не работи"; вземане на място → само информация,
+// не checkout опция; Еконт → скрит.
 
 // Delivery pricing from the farm's config (cents). The client script reads the
 // data-* on the form; these strings drive the method-card copy.

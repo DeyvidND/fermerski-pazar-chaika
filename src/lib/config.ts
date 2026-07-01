@@ -31,3 +31,12 @@ export const SITE_URL = (import.meta.env.PUBLIC_SITE_URL ?? 'https://farmmarket.
  *  manage products, farmers, toggles and delivery. Footer links to its /login. */
 export const ADMIN_URL = (import.meta.env.PUBLIC_ADMIN_URL ?? 'http://localhost:3005').replace(/\/+$/, '');
 export const ADMIN_LOGIN_URL = `${ADMIN_URL}/login`;
+
+/** TEMP (2026-06-30): courier carrier delivery (Еконт/Спиди) is broken storefront-
+ *  wide + there's no Maps key for the checkout address autocomplete, so it's
+ *  disabled everywhere until fixed. Single source of truth: checkout.astro locks
+ *  the courier method behind this, and every courier badge/filter chip
+ *  (ProductCard, shop.astro, product/[slug].astro) must gate on it too — otherwise
+ *  a product card can promise courier shipping that checkout won't actually offer.
+ *  Flip to false (and/or remove) once courier is back. */
+export const ONLY_LOCAL_DELIVERY = true;
