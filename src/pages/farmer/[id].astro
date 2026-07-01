@@ -10,13 +10,19 @@ import { breadcrumbLd } from '../../lib/jsonld';
 
 const { id } = Astro.params;
 // One /bootstrap round trip (shared memo) instead of four separate reads.
-const { storefront: sf, farmers, products, subcategories: subcats } = await getCatalog();
+const boot = await getCatalog();
+const { storefront: sf, farmers, products, subcategories: subcats } = boot;
 const farmer = farmers.find((f) => f.id === id) ?? null;
 
 if (!farmer) {
   // Unknown farmer id → real HTTP 404, not a soft-404 redirect to the list.
   return Astro.rewrite('/404');
 }
+
+// Per-product availability map: productId → remaining. Without this, product
+// cards here never showed "в наличност"/"изчерпан" — the only page that didn't,
+// unlike shop.astro and product/[slug].astro.
+const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 
 const cats = categoriesFrom(products, subcats, sf.multiSubcat);
 const subsections = farmerSubsections(farmer.id, products, cats, sf.multiSubcat);
@@ -98,7 +104,7 @@ const structuredData = breadcrumbLd([
             <a href={`/shop#${encodeURIComponent(s.cat.id)}`} class="btn btn--soft btn--sm">Виж всички в „{s.cat.name}“</a>
           </div>
           <div class="grid grid--4">
-            {s.products.map((p) => <ProductCard product={p} stepper cat={s.cat.id} />)}
+            {s.products.map((p) => <ProductCard product={p} stepper cat={s.cat.id} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </section>
       ))}

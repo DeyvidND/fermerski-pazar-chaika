@@ -9,7 +9,7 @@ import { featured } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
 import { cfImage } from '../../lib/img';
 import { productLd, breadcrumbLd } from '../../lib/jsonld';
-import { hasVariants, allVariantsSoldOut, variantPriceStotinki, cheapestVariant } from '../../lib/pricing';
+import { hasVariants, allVariantsSoldOut, variantPriceStotinki, cheapestVariant, discountPercent } from '../../lib/pricing';
 import { ONLY_LOCAL_DELIVERY } from '../../lib/config';
 
 const { slug } = Astro.params;
@@ -28,6 +28,7 @@ if (!product) {
 }
 
 const farmer = farmers.find((f) => f.id === product.farmerId) ?? null;
+const farmerNameOf = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
 const catName = sf.multiSubcat
   ? subcats.find((s) => s.id === product.subcategoryId)?.name ?? null
   : product.category && product.category !== 'bundle'
@@ -58,6 +59,7 @@ const baseCompareStotinki = defaultVariant
   : (product.salePriceStotinki != null ? product.priceStotinki : product.compareAtPriceStotinki);
 const priceLv = (baseHeadlineStotinki / 100).toFixed(2);
 const tag = product.featured ? '★ Популярен' : baseCompareStotinki != null ? 'Промо' : null;
+const baseDiscount = discountPercent({ headlineStotinki: baseHeadlineStotinki, compareStotinki: baseCompareStotinki, fromPrefix: false });
 
 // Availability for this specific product (legacy per-product window applies to
 // plain products; varianted products use per-variant soldOut).
@@ -109,6 +111,11 @@ const structuredData = [
                 {money(baseCompareStotinki)}
               </span>
             )}
+            {baseDiscount != null && (
+              <span style="font-size:14px;font-weight:700;color:#fff;background:#c0392b;border-radius:999px;padding:3px 10px;margin-left:10px;vertical-align:middle">
+                -{baseDiscount}%
+              </span>
+            )}
           </div>
           {product.description && <p class="lead" style="font-size:17px">{product.description}</p>}
           {!product.description && (
@@ -132,6 +139,10 @@ const structuredData = [
               <div style="display:flex;flex-wrap:wrap;gap:8px">
                 {product.variants!.map((v) => {
                   const eff = v.salePriceStotinki ?? v.priceStotinki;
+                  const vDiscount =
+                    v.salePriceStotinki != null
+                      ? discountPercent({ headlineStotinki: eff, compareStotinki: v.priceStotinki, fromPrefix: false })
+                      : null;
                   return (
                     <button type="button" class="variant-opt" data-variant-opt
                       data-variant-id={v.id}
@@ -139,6 +150,7 @@ const structuredData = [
                       data-price-lv={(eff / 100).toFixed(2)}
                       data-headline={money(eff)}
                       data-compare={v.salePriceStotinki != null ? money(v.priceStotinki) : ''}
+                      data-discount={vDiscount ?? ''}
                       disabled={v.soldOut || undefined}
                       style={v.soldOut
                         ? 'opacity:0.45;cursor:not-allowed;text-decoration:line-through'
@@ -206,7 +218,7 @@ const structuredData = [
         <div class="wrap">
           <h2 style="font-size:28px;margin-bottom:22px">Други от пазара</h2>
           <div class="grid grid--4">
-            {related.map((p) => <ProductCard product={p} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
+            {related.map((p) => <ProductCard product={p} farmerName={farmerNameOf(p.farmerId)} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </div>
       </section>
@@ -231,10 +243,14 @@ const structuredData = [
       if (priceEl) {
         const headline = btn.dataset.headline || '';
         const compare = btn.dataset.compare || '';
+        const discount = btn.dataset.discount || '';
         priceEl.innerHTML =
           headline +
           (compare
             ? ` <span class="muted" style="font-size:20px;font-weight:500;text-decoration:line-through;margin-left:10px">${compare}</span>`
+            : '') +
+          (discount
+            ? ` <span style="font-size:14px;font-weight:700;color:#fff;background:#c0392b;border-radius:999px;padding:3px 10px;margin-left:10px;vertical-align:middle">-${discount}%</span>`
             : '');
       }
     }

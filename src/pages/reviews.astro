@@ -32,7 +32,7 @@ const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
                   <span style={`opacity:${i < Math.round(summary.average) ? 1 : 0.25}`}><Icon name="star" /></span>
                 ))}</div>
               </div>
-              <div style="font-size:14.5px;color:var(--muted);max-width:18ch">от {summary.count} {summary.count === 1 ? 'оценка' : 'оценки'}<br>на клиенти на пазара</div>
+              <div style="font-size:14.5px;color:var(--muted);max-width:18ch">от {summary.count} {summary.count === 1 ? 'оценка' : 'оценки'}<br>на клиенти</div>
             </div>
           )}
         </div>

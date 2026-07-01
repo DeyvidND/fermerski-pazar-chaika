@@ -3,7 +3,7 @@ import Icon from './Icon.astro';
 import { money } from '../lib/money';
 import { coverCropStyle } from '../lib/cover-crop';
 import { cfImage, cfSrcset } from '../lib/img';
-import { priceDisplay, hasVariants, allVariantsSoldOut } from '../lib/pricing';
+import { priceDisplay, discountPercent, hasVariants, allVariantsSoldOut } from '../lib/pricing';
 import type { Product } from '../lib/types';
 
 interface Props {
@@ -34,6 +34,7 @@ const pickupOnly = farmerCourierReady && (p.courierDisabled ?? false);
 const href = p.slug ? `/product/${p.slug}` : '/shop';
 const hasV = hasVariants(p);
 const pd = priceDisplay(p);
+const discount = discountPercent(pd);
 const priceLv = (pd.headlineStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
 const metaBits = [p.weight, farmerName].filter(Boolean).join(' · ');
@@ -80,6 +81,11 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
       {pd.compareStotinki != null && (
         <span class="muted" style="font-size:14px;font-weight:500;text-decoration:line-through;margin-left:8px">
           {money(pd.compareStotinki)}
+        </span>
+      )}
+      {discount != null && (
+        <span style="font-size:12px;font-weight:700;color:#fff;background:#c0392b;border-radius:999px;padding:2px 8px;margin-left:6px">
+          -{discount}%
         </span>
       )}
     </div>

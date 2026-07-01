@@ -21,8 +21,8 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
           <div class="split" style="gap:24px;align-items:flex-start">
             <div>
               <h4 style="text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--muted);margin-bottom:8px">Получаване</h4>
-              <div style="font-weight:600">Фермерски пазар · Чайка</div>
-              <div class="muted">бул. „Ал. Стамболийски“, Варна</div>
+              <div style="font-weight:600" id="receiveTitle">Фермерски пазар · Чайка</div>
+              <div class="muted" id="receiveAddr">бул. „Ал. Стамболийски“, Варна</div>
               <div class="note-fresh" style="margin-top:12px" id="slotNote">Петък · 11:00–18:00</div>
             </div>
             <div>
@@ -31,7 +31,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
             </div>
           </div>
           <hr class="divider" style="margin:20px 0" />
-          <div class="summary__row total" style="border:0;padding:0"><span>Платено</span><span id="paid">—</span></div>
+          <div class="summary__row total" style="border:0;padding:0"><span id="paidLabel">Платено</span><span id="paid">—</span></div>
         </div>
 
         <div class="grid grid--3" style="margin-top:28px">

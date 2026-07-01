@@ -27,6 +27,7 @@ interface StashedNormal {
   total: number;
   method: 'pickup' | 'address' | 'econt';
   slot: string;
+  paymentMethod?: 'online' | 'cod';
 }
 
 type Stashed = StashedNormal | StashedCourier;
@@ -54,9 +55,11 @@ if (recap?.method === 'courier' && Array.isArray(recap.split)) {
   recapBox.innerHTML =
     `<div class="muted" style="font-size:14px;padding-bottom:6px">Поръчката е разделена на ${recap.split.length} пратки — всяка с наложен платеж при доставка.</div>` +
     splitLines;
-  // #paid shows the grand total for courier (sum of all splits)
+  // #paid shows the grand total for courier (sum of all splits) — courier is
+  // always COD (each farmer collects on delivery), never pre-paid online.
   const courierTotal = recap.split.reduce((acc, s) => acc + s.total, 0);
   document.getElementById('paid')!.textContent = money(courierTotal);
+  document.getElementById('paidLabel')!.textContent = 'За плащане при доставка';
 } else {
   // Normal path: render items list
   const items = recap?.items ?? [];
@@ -68,21 +71,40 @@ if (recap?.method === 'courier' && Array.isArray(recap.split)) {
       )
       .join('');
     document.getElementById('paid')!.textContent = money((recap as StashedNormal).total);
+    // "Платено" only holds for the online/Stripe path — наложен платеж (COD)
+    // hasn't actually been paid yet, it's collected on delivery/pickup.
+    document.getElementById('paidLabel')!.textContent =
+      (recap as StashedNormal).paymentMethod === 'cod' ? 'За плащане при доставка' : 'Платено';
   } else {
     recapBox.innerHTML = '<div class="muted" style="font-size:14.5px">Детайлите са изпратени на имейла ти.</div>';
   }
 }
 
-// receiving block
+// receiving block — title + address must agree with the actual method, not just
+// the timing note below them (a courier/home-delivery order previously kept the
+// static "Фермерски пазар · Чайка" market address from the template, contradicting
+// the correct method-specific note right under it).
+const recvTitle = document.getElementById('receiveTitle')!;
+const recvAddr = document.getElementById('receiveAddr')!;
 const recv = document.getElementById('slotNote')!;
 if (recap?.method === 'courier') {
-  recv.innerHTML = ICONS.truck + ' Доставка с куриер · плащане при доставка';
+  recvTitle.textContent = 'Доставка с куриер';
+  recvAddr.textContent = 'Всеки фермер изпраща своите продукти отделно.';
+  recv.innerHTML = ICONS.truck + ' Плащане при доставка';
 } else if (recap?.method === 'pickup') {
+  recvTitle.textContent = 'Фермерски пазар · Чайка';
+  recvAddr.textContent = 'бул. „Ал. Стамболийски“, Варна';
   recv.innerHTML = ICONS.truck + ' Петък · 11:00–18:00 на Чайка';
-} else if (recap?.slot) {
-  recv.innerHTML = ICONS.truck + ' Доставка: ' + esc(recap.slot);
+} else if (recap?.method === 'address' || recap?.method === 'econt') {
+  recvTitle.textContent = recap.method === 'econt' ? 'Доставка с Еконт' : 'Доставка до твоя адрес';
+  recvAddr.textContent = 'Ще се свържем по телефон, ако се наложи да уточним нещо.';
+  recv.innerHTML = recap.slot
+    ? ICONS.truck + ' Доставка: ' + esc(recap.slot)
+    : ICONS.truck + ' Петък · 11:00–20:00 ч.';
 } else {
-  recv.innerHTML = ICONS.truck + ' Петък · 11:00–20:00 ч.';
+  recvTitle.textContent = 'Поръчката е приета';
+  recvAddr.textContent = 'Детайлите са изпратени на имейла ти.';
+  recv.innerHTML = '';
 }
 
 // Fire the purchase conversion for whatever ad/analytics vendors the farm

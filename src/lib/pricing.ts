@@ -59,3 +59,14 @@ export function priceDisplay(p: Product): PriceDisplay {
   }
   return { headlineStotinki: p.priceStotinki, compareStotinki: null, fromPrefix: false };
 }
+
+/** Rounded % off vs. the struck-through compare price, or null when there's
+ *  nothing to compare — computed from the two shown stotinki amounts (not the
+ *  separate `salePercent` field, which isn't populated for every promo path:
+ *  variant sales and compareAtPriceStotinki bundles never set it). Lets the
+ *  customer see the savings instead of just two raw prices. */
+export function discountPercent(pd: PriceDisplay): number | null {
+  if (pd.compareStotinki == null || pd.compareStotinki <= 0) return null;
+  const off = Math.round((1 - pd.headlineStotinki / pd.compareStotinki) * 100);
+  return off > 0 ? off : null;
+}
