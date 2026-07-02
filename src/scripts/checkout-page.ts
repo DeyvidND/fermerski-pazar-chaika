@@ -13,6 +13,12 @@ import { getBootstrap } from '../lib/api';
 import { initAddressAutocomplete, type PickedAddress } from './address-autocomplete';
 import { validateName, validateEmail, validatePhone, wireField } from '../lib/validate';
 
+try {
+  window.ffTrack?.('checkout_start');
+} catch {
+  /* analytics must never break checkout */
+}
+
 const form = document.getElementById('checkoutForm') as HTMLFormElement | null;
 if (!form) throw new Error('no checkout form');
 const deliveryEnabled = form.dataset.delivery === '1';

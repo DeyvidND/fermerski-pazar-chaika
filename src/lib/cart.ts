@@ -41,6 +41,12 @@ export const Cart = {
     if (found) found.qty += qty;
     else items.push({ ...item, qty });
     this.set(items);
+    // analytics: fire-and-forget; guarded so a missing tracker is harmless
+    try {
+      window.ffTrack?.('add_to_cart', { productId: item.id, value: Math.round(item.price * qty * 100) });
+    } catch {
+      /* analytics must never break the cart */
+    }
   },
   setQty(key: string, qty: number) {
     let items = this.get();

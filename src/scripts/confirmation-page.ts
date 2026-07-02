@@ -160,5 +160,19 @@ if (recap && (isCourier || normalItems.length)) {
   }
 }
 
+// analytics: purchase conversion. `recap.split[].total` is already stotinki
+// (totalStotinki, stashed as-is by checkout-page.ts); the normal path's
+// `recap.total` is euros (sub + shipping), so it needs *100 to reach stotinki.
+try {
+  if (recap) {
+    const valueStotinki = isCourier
+      ? (recap as StashedCourier).split.reduce((acc, s) => acc + s.total, 0)
+      : Math.round(((recap as StashedNormal).total ?? 0) * 100);
+    window.ffTrack?.('purchase', { orderId: recap.orderId, value: valueStotinki });
+  }
+} catch {
+  /* analytics must never break the confirmation page */
+}
+
 Cart.set([]);
 sessionStorage.removeItem('ff_last_order');

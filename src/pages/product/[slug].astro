@@ -267,6 +267,19 @@ const structuredData = [
   }
 </script>
 
+<script>
+  // Plain, unconditional script (not wrapped in {cond && ...}) — Astro hoists
+  // conditionally-*rendered* scripts regardless of the condition, which has
+  // previously caused silent no-fires (see Layout.astro's edit-overlay note).
+  import { ffTrack } from '../../lib/track';
+  const productId = document.querySelector<HTMLElement>('[data-add-cart]')?.dataset.id;
+  try {
+    ffTrack('product_view', productId ? { productId } : {});
+  } catch {
+    /* analytics must never break the product page */
+  }
+</script>
+
 <style>
   .variant-opt {
     padding: 8px 16px;
