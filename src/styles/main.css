@@ -341,14 +341,12 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 .icon-btn:hover { background: var(--primary-050); color: var(--primary); }
 .icon-btn svg { width: 22px; height: 22px; }
-/* Cart keeps the icon meaning but adds the word, same reasoning as .hamburger
-   below — widen past the fixed 44px icon-only box so it isn't guesswork. */
-.cart-btn { display: flex; align-items: center; width: auto; padding: 0 12px; gap: 6px; }
-/* Same 44px square the badge/icon pairing always used when cart was an
-   icon-only button — shrinking this (and pushing the badge outside with a
-   negative offset) is what put the badge on top of the cart glyph's rim. */
+/* Cart stays icon-only at every width — a text label here was the thing that
+   kept forcing cart+menu to wrap onto their own row once the brand name got
+   long (see .nav's flex-wrap comment below). Icon + badge says enough. */
+.cart-btn { display: flex; align-items: center; width: 44px; padding: 0; gap: 0; }
 .cart-btn__icon { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
-.cart-btn__label { font-size: 13px; font-weight: 700; }
+.cart-btn__label { display: none; }
 .cart-count {
   position: absolute; top: 4px; right: 4px; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: 999px; background: var(--accent); color: #2a2110;
@@ -390,13 +388,12 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
   .nav__links { display: none; }
   .hamburger { display: flex; align-items: center; }
 }
-/* Between this and the icon-only fallback below, the brand name + cart/menu
-   labels no longer both fit on one row — drop to icon-only FIRST so the row
-   stays put; letting `.nav`'s flex-wrap kick in instead (labels still shown)
-   pushed cart/menu onto their own awkward second row. */
+/* Below this, brand name + "Меню" no longer reliably fit one row together —
+   drop to icon-only so `.nav`'s flex-wrap (below) is never needed for a normal
+   farm name; it stays only as a last-resort safety net for extreme names. */
 @media (max-width: 700px) {
-  .cart-btn__label, .hamburger__label { display: none; }
-  .cart-btn, .hamburger { width: 44px; padding: 0; gap: 0; }
+  .hamburger__label { display: none; }
+  .hamburger { width: 44px; padding: 0; gap: 0; }
 }
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }
