@@ -1,12 +1,12 @@
 // First-party, cookieless analytics beacon → FarmFlow /public/:slug/track.
 // Best-effort: never throws, never blocks. Uses sendBeacon when available so it
-// survives page unload. Browser must hit the CF-tunneled host (see config.ts
-// BROWSER_BASE note) — origin-api's firewall blocks real visitor IPs.
-import { TENANT_SLUG } from './config';
+// survives page unload. Cookieless ⇒ intentionally NOT gated by ConsentBanner/
+// ffGrantConsent (no cross-site identifier, no Set-Cookie — unlike GA4/Meta/TikTok).
+// PUBLIC_BASE already resolves to the CF-tunneled host in the browser (see
+// config.ts BROWSER_BASE note) — origin-api's firewall blocks real visitor IPs.
+import { PUBLIC_BASE } from './config';
 
-const RAW_BASE = (import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:3000').replace(/\/+$/, '');
-const BROWSER_BASE = (import.meta.env.DEV ? RAW_BASE : 'https://api.fermeribg.com').replace(/\/+$/, '');
-const TRACK_URL = `${BROWSER_BASE}/public/${TENANT_SLUG}/track`;
+const TRACK_URL = `${PUBLIC_BASE}/track`;
 
 export type TrackType =
   | 'page_view' | 'product_view' | 'add_to_cart' | 'checkout_start' | 'purchase';
