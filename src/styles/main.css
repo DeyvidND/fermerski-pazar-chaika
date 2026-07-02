@@ -339,12 +339,13 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 /* Cart keeps the icon meaning but adds the word, same reasoning as .hamburger
    below — widen past the fixed 44px icon-only box so it isn't guesswork. */
 .cart-btn { display: flex; align-items: center; width: auto; padding: 0 12px; gap: 6px; }
-/* Fixed size (bigger than the 22px svg) so the badge below has room to float
-   at the corner instead of covering the icon glyph. */
-.cart-btn__icon { position: relative; width: 26px; height: 26px; display: grid; place-items: center; }
+/* Same 44px square the badge/icon pairing always used when cart was an
+   icon-only button — shrinking this (and pushing the badge outside with a
+   negative offset) is what put the badge on top of the cart glyph's rim. */
+.cart-btn__icon { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
 .cart-btn__label { font-size: 13px; font-weight: 700; }
 .cart-count {
-  position: absolute; top: -6px; right: -6px; min-width: 19px; height: 19px; padding: 0 5px;
+  position: absolute; top: 4px; right: 4px; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: 999px; background: var(--accent); color: #2a2110;
   font-size: 11px; font-weight: 800; display: grid; place-items: center; line-height: 1;
 }
@@ -391,6 +392,11 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
     font-size: 17px; line-height: 1.1; white-space: normal; overflow: visible;
     text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
+  /* The cart/hamburger text labels eat ~120px the brand name needs on a phone
+     — back to icon-only here so a long farm name doesn't get squeezed into an
+     unreadable 3-line wrap that collides with the cart badge. */
+  .cart-btn__label, .hamburger__label { display: none; }
+  .cart-btn, .hamburger { width: 44px; padding: 0; gap: 0; }
 }
 
 /* =========================================================
