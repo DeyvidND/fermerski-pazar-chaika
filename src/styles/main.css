@@ -336,6 +336,22 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 .icon-btn:hover { background: var(--primary-050); color: var(--primary); }
 .icon-btn svg { width: 22px; height: 22px; }
+.a11y-toggle { font-weight: 800; font-size: 15px; cursor: pointer; }
+.a11y-toggle[aria-pressed="true"] { background: var(--primary-050); color: var(--primary); }
+
+/* ---- „Едър текст" accessible mode ----
+   One flag (localStorage, applied pre-paint in Layout.astro) raises every small
+   secondary text on the site. Targets both the shared `.muted` class and the
+   handful of inline font-size styles used across pages — !important is needed
+   to beat inline styles, which is the point of this override. */
+[data-a11y-large="1"] .muted { font-size: 15px !important; }
+[data-a11y-large="1"] [style*="font-size:9"],
+[data-a11y-large="1"] [style*="font-size:10"],
+[data-a11y-large="1"] [style*="font-size:11"],
+[data-a11y-large="1"] [style*="font-size:12"],
+[data-a11y-large="1"] [style*="font-size:13"] {
+  font-size: 15px !important;
+}
 .cart-count {
   position: absolute; top: 4px; right: 4px; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: 999px; background: var(--accent); color: #2a2110;
@@ -345,6 +361,10 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .cart-count.is-zero { display: none; }
 
 .hamburger { display: none; }
+/* Hamburger keeps the icon meaning but adds the word so a non-digital user
+   isn't guessing what the icon means — widen past the fixed 44px icon-only box. */
+.hamburger { width: auto; padding: 0 12px; gap: 6px; }
+.hamburger__label { font-size: 13px; font-weight: 700; }
 
 /* mobile nav drawer */
 .drawer-backdrop {
@@ -371,7 +391,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 
 @media (max-width: 1100px) {
   .nav__links { display: none; }
-  .hamburger { display: grid; }
+  .hamburger { display: flex; align-items: center; }
 }
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }

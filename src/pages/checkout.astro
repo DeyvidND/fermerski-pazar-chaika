@@ -76,7 +76,7 @@ const mapsKey = String(
                 <div class="field"><label>Име и фамилия</label><input class="input" name="customerName" placeholder="Иван Иванов" required /></div>
                 <div class="field-row">
                   <div class="field"><label>Телефон</label><input class="input" name="customerPhone" type="tel" placeholder="+359 88 ..." required /></div>
-                  <div class="field"><label>Имейл</label><input class="input" name="customerEmail" type="email" placeholder="ime@example.bg" required /></div>
+                  <div class="field"><label>Имейл <span class="muted" style="font-weight:400">(по желание — за потвърждение)</span></label><input class="input" name="customerEmail" type="email" placeholder="ime@example.bg" /></div>
                 </div>
               </div>
             </div>
@@ -103,12 +103,14 @@ const mapsKey = String(
                     <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €</span></span>
                   </label>
                 )}
-                <!-- Куриер: временно заключен (виж ONLY_LOCAL_DELIVERY горе). Показва се
-                     като информация, но НЕ е избираем — без data-method, без клик. -->
-                <div class="radio-card" data-courier-locked aria-disabled="true" style="opacity:.55;pointer-events:none;cursor:not-allowed">
-                  <span class="dot"></span>
-                  <span><b>Куриер · до цялата страна</b> <span style="font-size:13px;font-weight:600;color:#b3261e">· временно не работи</span><br><span class="muted" style="font-size:14px">Доставката с куриер е временно изключена. Работим по нея — скоро ще е активна.</span></span>
-                </div>
+              </div>
+
+              <!-- Куриер: временно изключен (виж ONLY_LOCAL_DELIVERY горе). Плоска
+                   информационна бележка, НЕ радио-карта — иначе изглежда като
+                   избираема, но „развалена“ опция и обърква купувача. -->
+              <div data-courier-locked style="margin-top:14px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--surface-2)">
+                <div style="font-weight:700;margin-bottom:2px">Куриер до цялата страна — временно не работи</div>
+                <span class="muted" style="font-size:14px">Работим по него. За сега е достъпна само местната доставка (виж горе) или вземане от пазара (виж долу).</span>
               </div>
 
               <!-- Вземане от пазара: само информация, НЕ е checkout опция. -->
@@ -127,7 +129,7 @@ const mapsKey = String(
                 <div class="field">
                   <label>Адрес *</label>
                   <input class="input" id="addressInput" placeholder="Започни да пишеш улица и град…" autocomplete="off" />
-                  <span class="muted" id="addrHint" style="font-size:13px;display:block;margin-top:6px">Избери адрес от предложенията за точна доставка.</span>
+                  <span class="muted" id="addrHint" style="font-size:14px;display:block;margin-top:6px">Избери от предложенията или просто напиши адреса — ще го намерим.</span>
                 </div>
                 <div class="field" style="margin-top:10px">
                   <label>Блок, вход, етаж, апартамент <span class="muted">(по желание)</span></label>
@@ -202,11 +204,13 @@ const mapsKey = String(
             <h3 style="font-size:22px;margin-bottom:14px">Твоята поръчка</h3>
             <div id="orderLines"></div>
             <div id="orderTotals"></div>
-            <label style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5;margin-top:16px;cursor:pointer">
-              <input type="checkbox" required style="margin-top:2px;flex:none;width:16px;height:16px" />
+            <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin-top:16px;padding:8px 2px;cursor:pointer">
+              <input type="checkbox" required style="margin-top:1px;flex:none;width:20px;height:20px" />
               <span>Прочетох и приемам <a href="/terms" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Общите условия</a> и <a href="/privacy" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Политиката за поверителност</a>.</span>
             </label>
-            <button class="btn btn--primary btn--full btn--lg" type="submit" id="placeOrder" style="margin-top:14px">Поръчка със задължение за плащане</button>
+            <button class="btn btn--primary btn--full btn--lg" type="submit" id="placeOrder" style="margin-top:14px;line-height:1.3">
+              Поръчай сега<br /><span style="font-size:12px;font-weight:500;opacity:.85">поръчка със задължение за плащане</span>
+            </button>
           </aside>
         </form>
       </div>

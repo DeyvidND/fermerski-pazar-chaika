@@ -618,7 +618,7 @@ form.addEventListener('submit', async (e) => {
       const msg = (body?.message?.message ?? body?.message) || 'Поръчката не можа да бъде приета.';
       toast?.(Array.isArray(msg) ? msg[0] : String(msg));
       btn.disabled = false;
-      btn.textContent = 'Завърши поръчката';
+      btn.textContent = 'Поръчай сега';
       return;
     }
     const data = (await res.json()) as CheckoutResult;
@@ -669,7 +669,7 @@ form.addEventListener('submit', async (e) => {
     if (out.checkoutUrl && !httpsCheckout) {
       toast?.('Грешка при плащането. Опитай отново.');
       btn.disabled = false;
-      btn.textContent = 'Завърши поръчката';
+      btn.textContent = 'Поръчай сега';
       return;
     }
     if (httpsCheckout) {
@@ -681,7 +681,7 @@ form.addEventListener('submit', async (e) => {
   } catch {
     toast?.('Няма връзка със сървъра. Опитай отново.');
     btn.disabled = false;
-    btn.textContent = 'Завърши поръчката';
+    btn.textContent = 'Поръчай сега';
   }
 });
 

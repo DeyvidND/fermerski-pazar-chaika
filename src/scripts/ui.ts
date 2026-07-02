@@ -17,6 +17,33 @@ function promo() {
   });
 }
 
+/** „Едър текст" — one toggle that raises small secondary text app-wide, for
+ *  older/low-vision buyers. Pure client preference (localStorage), applied via
+ *  a data attribute so a single CSS block (main.css) covers every page. */
+function a11yToggle() {
+  const KEY = 'ff_a11y_large';
+  const btns = document.querySelectorAll<HTMLElement>('[data-a11y-toggle]');
+  if (!btns.length) return;
+  const sync = () => {
+    const on = document.documentElement.hasAttribute('data-a11y-large');
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(on)));
+  };
+  sync();
+  btns.forEach((b) =>
+    b.addEventListener('click', () => {
+      const on = document.documentElement.hasAttribute('data-a11y-large');
+      if (on) {
+        document.documentElement.removeAttribute('data-a11y-large');
+        localStorage.setItem(KEY, '0');
+      } else {
+        document.documentElement.setAttribute('data-a11y-large', '1');
+        localStorage.setItem(KEY, '1');
+      }
+      sync();
+    }),
+  );
+}
+
 function drawer() {
   const d = document.getElementById('drawer');
   const back = document.getElementById('drawerBackdrop');
@@ -159,6 +186,7 @@ function tabs() {
 
 function init() {
   promo();
+  a11yToggle();
   drawer();
   updateCount();
   steppers();

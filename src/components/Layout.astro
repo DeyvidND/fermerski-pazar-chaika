@@ -73,6 +73,14 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
 <!DOCTYPE html>
 <html lang="bg" data-theme="ferma">
 <head>
+  {/* Apply the „Едър текст" preference before first paint (no flash of small
+      text) — a pure display preference, so a plain localStorage flag is enough;
+      it doesn't need to sync across devices. */}
+  <script is:inline>
+    try {
+      if (localStorage.getItem('ff_a11y_large') === '1') document.documentElement.setAttribute('data-a11y-large', '1');
+    } catch {}
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>

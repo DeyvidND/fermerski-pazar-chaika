@@ -13,10 +13,11 @@ export function validateName(raw: string): string | null {
   return null;
 }
 
-/** Email: a single @, a dot in the domain, no spaces. */
+/** Email: optional (older buyers often have none) — a single @, a dot in the
+ *  domain, no spaces, only checked when the buyer typed something. */
 export function validateEmail(raw: string): string | null {
   const v = raw.trim();
-  if (!v) return 'Въведи имейл адрес.';
+  if (!v) return null;
   if (v.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
     return 'Въведи валиден имейл адрес.';
   return null;
