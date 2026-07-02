@@ -5,6 +5,15 @@ const RAW_BASE = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:3000';
 export const API_BASE = RAW_BASE.replace(/\/+$/, '');
 export const TENANT_SLUG = import.meta.env.PUBLIC_TENANT_SLUG ?? 'ferma-petrovi';
 
+/** Client-side fetches (cart/checkout/form scripts, run in the shopper's browser)
+ *  can't reach `origin-api.fermeribg.com` — its firewall only lets Cloudflare's own
+ *  egress IPs through (Worker SSR subrequests), not real visitor IPs; see
+ *  infra/hetzner/README.md "Direct non-tunnel API origin". Browser code must go
+ *  through the public CF-tunneled host instead. Hardcoded platform-wide (same
+ *  reasoning as CDN_BASE below) — no per-site env var to keep in sync. In local dev
+ *  PUBLIC_API_BASE already points at localhost, so reuse that instead of prod. */
+const BROWSER_BASE = (import.meta.env.DEV ? RAW_BASE : 'https://api.fermeribg.com').replace(/\/+$/, '');
+
 /** Image CDN base for Cloudflare Transformations. Platform-wide: every tenant's
  *  objects live in one R2 bucket fronted by this domain, so the same value serves
  *  all client-factory sites — hence it's the hardcoded default rather than a per-site
@@ -12,8 +21,10 @@ export const TENANT_SLUG = import.meta.env.PUBLIC_TENANT_SLUG ?? 'ferma-petrovi'
  *  against a stub-R2 API). See src/lib/img.ts. */
 export const CDN_BASE = (import.meta.env.PUBLIC_IMG_CDN ?? 'https://cdn.fermeribg.com').replace(/\/+$/, '');
 
-/** Base of all storefront endpoints for the configured farm. */
-export const PUBLIC_BASE = `${API_BASE}/public/${TENANT_SLUG}`;
+/** Base of all storefront endpoints for the configured farm. This module is
+ *  evaluated separately in the SSR bundle and the client bundle, so the runtime
+ *  check below picks the reachable host for wherever the code actually runs. */
+export const PUBLIC_BASE = `${typeof window === 'undefined' ? API_BASE : BROWSER_BASE}/public/${TENANT_SLUG}`;
 
 /** Public canonical origin of THIS storefront (the customer-facing domain), used
  *  for <link rel="canonical">, og:url and the sitemap. Fixed per site so the
