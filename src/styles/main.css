@@ -341,17 +341,33 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 
 /* ---- „Едър текст" accessible mode ----
    One flag (localStorage, applied pre-paint in Layout.astro) raises every small
-   secondary text on the site. Targets both the shared `.muted` class and the
-   handful of inline font-size styles used across pages — !important is needed
-   to beat inline styles, which is the point of this override. */
-[data-a11y-large="1"] .muted { font-size: 15px !important; }
+   secondary text on the site. Targets the shared `.muted` class, the small
+   inline font-size styles used across pages, and the handful of component
+   classes that sit below the 17px body size — !important beats inline styles,
+   which is the point of this override. Target is 19px: clearly ABOVE the 17px
+   body base, so the mode reads as a real change, not a 1-2px nudge. */
+[data-a11y-large="1"] .muted,
 [data-a11y-large="1"] [style*="font-size:9"],
 [data-a11y-large="1"] [style*="font-size:10"],
 [data-a11y-large="1"] [style*="font-size:11"],
 [data-a11y-large="1"] [style*="font-size:12"],
-[data-a11y-large="1"] [style*="font-size:13"] {
-  font-size: 15px !important;
+[data-a11y-large="1"] [style*="font-size:13"],
+[data-a11y-large="1"] [style*="font-size:14"],
+[data-a11y-large="1"] .btn--sm,
+[data-a11y-large="1"] .nav__links a,
+[data-a11y-large="1"] .footer-links a,
+[data-a11y-large="1"] .footer-contact,
+[data-a11y-large="1"] .site-footer h4,
+[data-a11y-large="1"] .farmer-card__person,
+[data-a11y-large="1"] .farmer-card__blurb,
+[data-a11y-large="1"] .category-card__desc,
+[data-a11y-large="1"] .subsection__head p,
+[data-a11y-large="1"] .steps .step,
+[data-a11y-large="1"] .summary__row,
+[data-a11y-large="1"] .review-card .who b {
+  font-size: 19px !important;
 }
+[data-a11y-large="1"] body { line-height: 1.7; }
 .cart-count {
   position: absolute; top: 4px; right: 4px; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: 999px; background: var(--accent); color: #2a2110;
