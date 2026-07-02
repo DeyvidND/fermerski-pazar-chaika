@@ -301,7 +301,10 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.nav { display: flex; align-items: center; gap: 16px; min-height: 72px; padding-block: 10px; }
+/* flex-wrap: some phones (notably Facebook's in-app browser) misreport a wider
+   layout viewport than the real screen, so the <=480px icon-only fallback below
+   doesn't always fire — wrap instead of overflowing the row horizontally. */
+.nav { display: flex; flex-wrap: wrap; row-gap: 6px; align-items: center; gap: 16px; min-height: 72px; padding-block: 10px; }
 .brand { display: flex; align-items: center; gap: 11px; margin-right: auto; min-width: 0; }
 .brand > span { min-width: 0; }
 .brand__mark {
@@ -329,7 +332,9 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .nav__links a.active { color: var(--primary); font-weight: 700; background: var(--primary-050); }
 [data-theme="klasik"] .nav__links a { text-transform: uppercase; letter-spacing: .1em; font-size: 11.5px; font-weight: 600; }
 
-.nav__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+/* margin-left:auto so this stays right-aligned even when it wraps onto its own
+   row under the brand (brand's own margin-right:auto only affects a single line). */
+.nav__actions { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }
 .icon-btn {
   position: relative; width: 44px; height: 44px; border-radius: var(--btn-radius);
   display: grid; place-items: center; color: var(--ink); transition: background .15s;
