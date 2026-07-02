@@ -283,3 +283,15 @@ export const SLOTS: Record<string, Slot> = Object.fromEntries(
 export const SECTION_OF: Record<string, string> = Object.fromEntries(
   MANIFEST.pages.flatMap((p) => p.sections.flatMap((s) => s.slots.map((sl) => [sl.key, s.id] as const))),
 );
+
+/** Resolve a text slot's current value outside JSX (e.g. Layout.astro's meta
+ *  description) with the same precedence CopySlot uses: tenant override →
+ *  manifest default → fallback. Keeps things like the og:description in sync
+ *  with whatever the owner actually edited, instead of a second hand-written
+ *  string that silently drifts from the real page copy. */
+export function resolveSlot(copy: Record<string, string> | null | undefined, slot: string, fallback = ''): string {
+  const def = SLOTS[slot];
+  const manifestDefault = def && def.kind === 'text' ? def.default : '';
+  const raw = copy?.[slot];
+  return typeof raw === 'string' && raw.trim() ? raw : manifestDefault || fallback;
+}

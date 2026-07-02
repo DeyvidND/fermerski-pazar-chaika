@@ -5,7 +5,7 @@
  * else the registry default. Emits data-editable-slot so the admin preview can
  * locate it. Bare text node unless multiline (composes inside <h1>/<h2>/<p>).
  */
-import { SLOTS } from '../lib/editable-manifest';
+import { SLOTS, resolveSlot } from '../lib/editable-manifest';
 // `fallback`: a dynamic default for slots whose real default isn't a fixed string
 // in the manifest (e.g. the brand name = storefront.name, or the footer about =
 // contactTagline). Precedence: tenant override → manifest default → fallback prop.
@@ -13,10 +13,8 @@ interface Props { slot: string; copy?: Record<string, string> | null; fallback?:
 const { slot, copy, fallback } = Astro.props;
 const def = SLOTS[slot];
 if (!def || def.kind !== 'text') console.warn('[CopySlot] unknown text slot:', slot);
-const manifestDefault = def && def.kind === 'text' ? def.default : '';
 const multiline = !!(def && def.kind === 'text' && def.multiline);
-const raw = copy?.[slot];
-const text = typeof raw === 'string' && raw.trim() ? raw : (manifestDefault || fallback || '');
+const text = resolveSlot(copy, slot, fallback);
 ---
 {multiline
   ? <span style="white-space:pre-line" data-editable-slot={slot}>{text}</span>

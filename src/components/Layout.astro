@@ -12,6 +12,7 @@ import { SITE_URL } from '../lib/config';
 import { IMG_ORIGIN } from '../lib/img';
 import { websiteLd, localBusinessLd } from '../lib/jsonld';
 import JsonLd from './JsonLd.astro';
+import { resolveSlot } from '../lib/editable-manifest';
 import type { Storefront } from '../lib/types';
 
 interface Props {
@@ -50,9 +51,11 @@ if (storefront.productOfWeekPlacement === 'bar') {
   if (p) potwBar = { name: p.name, href: p.slug ? `/product/${p.slug}` : '/shop' };
 }
 
-const desc =
-  description ??
-  'Фермерски пазар Чайка, Варна — местни стопани на едно място. Пазарувай на живо всеки петък или поръчай онлайн с доставка до дома.';
+// Falls back to the actual homepage hero copy (owner-editable via the admin
+// panel's «Промени сайта») instead of a second hand-written string that
+// silently drifts out of sync with it — that's what link-preview cards
+// (Telegram/FB/Viber) end up showing for months after the page copy changes.
+const desc = description ?? resolveSlot(storefront.copy, 'home.hero.lead');
 
 const favicon = storefront.faviconUrl || '/favicon.svg';
 const faviconPath = favicon.split(/[?#]/)[0].toLowerCase();
