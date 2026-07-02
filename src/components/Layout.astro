@@ -148,6 +148,10 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
       import('../scripts/edit-overlay.ts');
     }
   </script>
+  <script>
+    import { ffTrack } from '../lib/track';
+    ffTrack('page_view');
+  </script>
 </body>
 </html>
 
