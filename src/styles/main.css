@@ -753,6 +753,13 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .farmer-hero__meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 22px; }
 .farmer-hero__meta .n { font-family: var(--font-head); font-size: 22px; font-weight: var(--h-weight); color: var(--primary); }
 .farmer-hero__meta .l { font-size: 13px; color: var(--muted); }
+/* Farmer's own phone/email — plain links (not buttons), so they read as
+   contact info next to the meta stats rather than competing with the
+   "Виж продуктите" CTA below. */
+.farmer-contact { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 18px; }
+.farmer-contact a { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-weight: 600; font-size: 15px; }
+.farmer-contact a:hover { color: var(--primary); }
+.farmer-contact svg { width: 18px; height: 18px; flex: none; color: var(--primary); }
 
 /* subsection block (a category of one farmer's products) */
 .subsection { padding-top: clamp(28px, 4vw, 48px); }

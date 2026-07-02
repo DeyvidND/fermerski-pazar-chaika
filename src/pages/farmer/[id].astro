@@ -2,6 +2,7 @@
 import Layout from '../../components/Layout.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
+import Icon from '../../components/Icon.astro';
 import { getCatalog } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
 import { imageOrigin, telHref } from '../../lib/site';
@@ -69,12 +70,16 @@ const structuredData = breadcrumbLd([
               <div><div class="n">{subsections.length}</div><div class="l">категории</div></div>
               {yearsWithUs && <div><div class="n">{yearsWithUs}+</div><div class="l">години с нас</div></div>}
             </div>
+            {(farmer.phone || farmer.email) && (
+              <div class="farmer-contact">
+                {farmer.phone && <a href={telHref(farmer.phone)}><Icon name="phone" />{farmer.phone}</a>}
+                {farmer.email && <a href={`mailto:${farmer.email}`}><Icon name="mail" />{farmer.email}</a>}
+              </div>
+            )}
             <div class="cta-row">
               {subsections.length > 0 && (
                 <a href={`#${encodeURIComponent(subsections[0].cat.id)}`} class="btn btn--primary">Виж продуктите</a>
               )}
-              {farmer.phone && <a href={telHref(farmer.phone)} class="btn btn--ghost">{farmer.phone}</a>}
-              {farmer.email && <a href={`mailto:${farmer.email}`} class="btn btn--ghost">{farmer.email}</a>}
             </div>
           </div>
         </div>
