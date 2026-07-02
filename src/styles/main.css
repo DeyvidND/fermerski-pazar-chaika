@@ -339,10 +339,12 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 /* Cart keeps the icon meaning but adds the word, same reasoning as .hamburger
    below — widen past the fixed 44px icon-only box so it isn't guesswork. */
 .cart-btn { display: flex; align-items: center; width: auto; padding: 0 12px; gap: 6px; }
-.cart-btn__icon { position: relative; display: grid; place-items: center; }
+/* Fixed size (bigger than the 22px svg) so the badge below has room to float
+   at the corner instead of covering the icon glyph. */
+.cart-btn__icon { position: relative; width: 26px; height: 26px; display: grid; place-items: center; }
 .cart-btn__label { font-size: 13px; font-weight: 700; }
 .cart-count {
-  position: absolute; top: 4px; right: 4px; min-width: 19px; height: 19px; padding: 0 5px;
+  position: absolute; top: -6px; right: -6px; min-width: 19px; height: 19px; padding: 0 5px;
   border-radius: 999px; background: var(--accent); color: #2a2110;
   font-size: 11px; font-weight: 800; display: grid; place-items: center; line-height: 1;
 }
