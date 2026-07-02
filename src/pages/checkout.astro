@@ -30,6 +30,9 @@ const lvNum = (st: number) => (st / 100).toString();
 const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €` : '';
 const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €` : 'безплатна';
 
+const ownSlots = sf.ownSlots;
+const ownSlotsSchedule = ownSlots?.schedule ? `${ownSlots.schedule} · ` : '';
+
 const pickup = sf.pickup;
 // Bulgarian grammatical gender varies by weekday ("Всеки понеделник" vs "Всяка
 // сряда") — spell out each phrase rather than trying to conjugate generically.
@@ -104,7 +107,7 @@ const mapsKey = String(
                 {((delivery && methods.ownSlots) || ONLY_LOCAL_DELIVERY) && (
                   <label class="radio-card" data-method="address">
                     <span class="dot"></span>
-                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · петък 11:00–20:00 · {addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span><br><span class="muted" style="font-size:13px">само за Варна, Добрич и околностите</span></span>
+                    <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · {ownSlotsSchedule}{addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span><br><span class="muted" style="font-size:13px">само за Варна, Добрич и околностите</span></span>
                   </label>
                 )}
                 {!ONLY_LOCAL_DELIVERY && econt && econtAuto && methods.econtOffice && (

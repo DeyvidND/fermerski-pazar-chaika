@@ -320,6 +320,7 @@ export const FALLBACK_STOREFRONT: Storefront = {
     timeFrom: '11:00',
     timeTo: '18:00',
   },
+  ownSlots: { active: true, schedule: 'всеки петък · 11:00–20:00' },
   media: {},
   contact: { address: null, hours: null, tagline: null, phone: null, email: null, social: [], custom: [], mapLat: null, mapLng: null },
   faviconUrl: null,

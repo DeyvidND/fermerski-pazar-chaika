@@ -41,6 +41,7 @@ export interface Storefront {
   // switched on. Optional (older backend) → callers fall back to sensible defaults.
   methods?: DeliveryMethods;
   pickup?: PickupInfo;
+  ownSlots?: OwnSlotsInfo;
   // Tenant-uploaded photos for the static decorative slots, keyed by catalog slot
   // id (e.g. "home.hero"). Optional: older backends omit it. Empty/missing slot →
   // the MediaSlot wrapper renders its `.ph` mock.
@@ -142,6 +143,15 @@ export interface PickupInfo {
   weekday: number | null;
   timeFrom: string | null;
   timeTo: string | null;
+}
+
+/** Own self-delivery (local courier) recurring schedule, pre-formatted server-side
+ *  from the farm's `SlotRule`. Optional (older backend) → checkout drops the
+ *  day/time line rather than showing a stale hardcoded one. `schedule` null means
+ *  no fixed day/time to show (rule off, or weekdays mode with no days picked). */
+export interface OwnSlotsInfo {
+  active: boolean;
+  schedule: string | null;
 }
 
 /** A purchasable option of a product (вид/грамаж). Server-computed; raw stock is
