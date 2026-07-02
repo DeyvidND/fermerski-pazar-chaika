@@ -338,7 +338,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .icon-btn svg { width: 22px; height: 22px; }
 /* Cart keeps the icon meaning but adds the word, same reasoning as .hamburger
    below — widen past the fixed 44px icon-only box so it isn't guesswork. */
-.cart-btn { width: auto; padding: 0 12px; gap: 6px; }
+.cart-btn { display: flex; align-items: center; width: auto; padding: 0 12px; gap: 6px; }
 .cart-btn__icon { position: relative; display: grid; place-items: center; }
 .cart-btn__label { font-size: 13px; font-weight: 700; }
 .cart-count {
