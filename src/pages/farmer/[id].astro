@@ -4,7 +4,7 @@ import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
 import { getCatalog } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
-import { imageOrigin } from '../../lib/site';
+import { imageOrigin, telHref } from '../../lib/site';
 import { cfImage } from '../../lib/img';
 import { breadcrumbLd } from '../../lib/jsonld';
 
@@ -73,7 +73,8 @@ const structuredData = breadcrumbLd([
               {subsections.length > 0 && (
                 <a href={`#${encodeURIComponent(subsections[0].cat.id)}`} class="btn btn--primary">Виж продуктите</a>
               )}
-              <a href="/contact" class="btn btn--ghost">Свържи се с фермера</a>
+              {farmer.phone && <a href={telHref(farmer.phone)} class="btn btn--ghost">{farmer.phone}</a>}
+              {farmer.email && <a href={`mailto:${farmer.email}`} class="btn btn--ghost">{farmer.email}</a>}
             </div>
           </div>
         </div>

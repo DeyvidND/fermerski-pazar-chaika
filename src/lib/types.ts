@@ -190,6 +190,7 @@ export interface Farmer {
   role: string | null;
   bio: string | null;
   phone: string | null;
+  email: string | null;
   since: string | null;
   tint: string | null;
   imageUrl: string | null;
