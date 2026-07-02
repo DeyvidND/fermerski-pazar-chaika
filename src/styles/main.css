@@ -390,6 +390,14 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
   .nav__links { display: none; }
   .hamburger { display: flex; align-items: center; }
 }
+/* Between this and the icon-only fallback below, the brand name + cart/menu
+   labels no longer both fit on one row — drop to icon-only FIRST so the row
+   stays put; letting `.nav`'s flex-wrap kick in instead (labels still shown)
+   pushed cart/menu onto their own awkward second row. */
+@media (max-width: 700px) {
+  .cart-btn__label, .hamburger__label { display: none; }
+  .cart-btn, .hamburger { width: 44px; padding: 0; gap: 0; }
+}
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }
   /* Phones: show the whole name by wrapping to two lines instead of ellipsis. */
@@ -397,11 +405,6 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
     font-size: 17px; line-height: 1.1; white-space: normal; overflow: visible;
     text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
-  /* The cart/hamburger text labels eat ~120px the brand name needs on a phone
-     — back to icon-only here so a long farm name doesn't get squeezed into an
-     unreadable 3-line wrap that collides with the cart badge. */
-  .cart-btn__label, .hamburger__label { display: none; }
-  .cart-btn, .hamburger { width: 44px; padding: 0; gap: 0; }
 }
 
 /* =========================================================
