@@ -32,9 +32,9 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
         ))}
       </div>
       <div class="nav__actions">
-        <button class="icon-btn a11y-toggle" data-a11y-toggle aria-pressed="false" aria-label="Едър текст" title="Едър текст">Аа</button>
-        <a href="/cart" class="icon-btn" aria-label="Количка">
-          <Icon name="cart" /><span class="cart-count is-zero">0</span>
+        <a href="/cart" class="icon-btn cart-btn" aria-label="Количка">
+          <span class="cart-btn__icon"><Icon name="cart" /><span class="cart-count is-zero">0</span></span>
+          <span class="cart-btn__label">Количка</span>
         </a>
         <button class="icon-btn hamburger" id="hamburger" aria-label="Меню"><Icon name="menu" /><span class="hamburger__label">Меню</span></button>
       </div>
@@ -56,9 +56,6 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
     <a href={l.href} class={isActive(path, l.href) ? 'active' : ''}>{l.label}</a>
   ))}
   <a href="/cart" style="display:flex;align-items:center;gap:10px"><Icon name="cart" /> Количка</a>
-  <button class="a11y-toggle" data-a11y-toggle aria-pressed="false" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:14px 12px;border-radius:var(--btn-radius);font-size:17px;font-weight:600;border-bottom:1px solid var(--line)">
-    <span style="font-weight:800">Аа</span> Едър текст
-  </button>
   {phone && (
     <div style="margin-top:auto;padding-top:18px;color:var(--muted);font-size:14px">
       <a href={telHref(phone)}>{phone}</a>
