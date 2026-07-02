@@ -110,10 +110,21 @@ if (recap?.method === 'courier') {
 // Fire the purchase conversion for whatever ad/analytics vendors the farm
 // configured (targets injected by TrackingScripts.astro as window.__ffPurchase).
 // Each vendor self-gates on GDPR consent: Google via Consent Mode v2 (modeled
-// until granted), Meta via its consent queue (revoked until granted). `total` is
-// integer euro-cents. The stash is removed below, so a reload never re-fires.
+// until granted), Meta via its consent queue (revoked until granted). The stash
+// is removed below, so a reload never re-fires.
 const isCourier = recap?.method === 'courier' && Array.isArray((recap as StashedCourier).split);
 const normalItems = isCourier ? [] : (recap?.items ?? []);
+
+// Single source of truth for the purchase value in euros, shared by every
+// tracking beacon below — courier splits are stashed in stotinki (totalStotinki
+// from checkout-page.ts) so they need /100; the normal-path total is already
+// euros (Cart.subtotal() + shipping, both euro floats — see lib/cart.ts).
+function purchaseValueEuros(r: Stashed, courier: boolean): number {
+  return courier
+    ? (r as StashedCourier).split.reduce((acc, s) => acc + s.total, 0) / 100
+    : (r as StashedNormal).total;
+}
+
 if (recap && (isCourier || normalItems.length)) {
   const w = window as unknown as {
     __ffPurchase?: {
@@ -126,11 +137,7 @@ if (recap && (isCourier || normalItems.length)) {
     fbq?: (...args: unknown[]) => void;
   };
   const t = w.__ffPurchase;
-  // For courier: sum all split totals (stotinki) then convert to major units.
-  // For normal: use recap.total (stotinki) converted to major units.
-  const value = isCourier
-    ? (recap as StashedCourier).split.reduce((acc, s) => acc + s.total, 0) / 100
-    : (recap as StashedNormal).total / 100;
+  const value = purchaseValueEuros(recap, isCourier);
   if (t && typeof w.gtag === 'function') {
     if (t.ga4) {
       w.gtag('event', 'purchase', {
@@ -140,7 +147,7 @@ if (recap && (isCourier || normalItems.length)) {
         items: normalItems.map((it) => ({
           item_name: it.name,
           quantity: it.qty,
-          price: it.price / 100,
+          price: it.price,
         })),
       });
     }
@@ -160,14 +167,11 @@ if (recap && (isCourier || normalItems.length)) {
   }
 }
 
-// analytics: purchase conversion. `recap.split[].total` is already stotinki
-// (totalStotinki, stashed as-is by checkout-page.ts); the normal path's
-// `recap.total` is euros (sub + shipping), so it needs *100 to reach stotinki.
+// analytics: purchase conversion. ffTrack expects stotinki, so convert the
+// shared euro value up rather than re-deriving it from recap.
 try {
   if (recap) {
-    const valueStotinki = isCourier
-      ? (recap as StashedCourier).split.reduce((acc, s) => acc + s.total, 0)
-      : Math.round(((recap as StashedNormal).total ?? 0) * 100);
+    const valueStotinki = Math.round(purchaseValueEuros(recap, isCourier) * 100);
     window.ffTrack?.('purchase', { orderId: recap.orderId, value: valueStotinki });
   }
 } catch {
