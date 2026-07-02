@@ -13,8 +13,6 @@ import { getBootstrap } from '../lib/api';
 import { initAddressAutocomplete, type PickedAddress } from './address-autocomplete';
 import { validateName, validateEmail, validatePhone, wireField } from '../lib/validate';
 
-const MARKET = 'Вземане от пазара · Чайка, Варна';
-
 const form = document.getElementById('checkoutForm') as HTMLFormElement | null;
 if (!form) throw new Error('no checkout form');
 const deliveryEnabled = form.dataset.delivery === '1';
@@ -43,6 +41,11 @@ const FREE_OVER = num(form.dataset.freeOver, 40); // 0 = no free-over rule
 const SHIP_ADDRESS = num(form.dataset.shipAddress, 4.9); // local self-delivery
 const SHIP_ECONT = num(form.dataset.shipEcont, 3.5); // Econt → office
 const SHIP_ECONT_ADDRESS = num(form.dataset.shipEcontAddress, 5.9); // Econt → door
+
+// Real pickup label/address from the farm's config, server-rendered as data-*
+// (see checkout.astro). Falls back to the label itself if no address is set.
+const PICKUP_LABEL = form.dataset.pickupLabel || 'Вземане от място';
+const PICKUP_ADDRESS = form.dataset.pickupAddress || PICKUP_LABEL;
 
 if (!Cart.get().length) location.replace('/cart');
 
@@ -524,8 +527,8 @@ form.addEventListener('submit', async (e) => {
 
   if (method === 'pickup') {
     payload.deliveryType = 'pickup';
-    payload.deliveryAddress = MARKET;
-    payload.notes = 'Вземане от пазара (Чайка)';
+    payload.deliveryAddress = PICKUP_ADDRESS;
+    payload.notes = PICKUP_LABEL;
   } else if (method === 'courier') {
     // Courier: each farmer ships their own products COD. Needs the recipient's
     // door address + structured city (same source as econt_address); no slot,

@@ -40,6 +40,7 @@ export interface Storefront {
   // Per-method on/off flags — the storefront shows only the methods the farm
   // switched on. Optional (older backend) → callers fall back to sensible defaults.
   methods?: DeliveryMethods;
+  pickup?: PickupInfo;
   // Tenant-uploaded photos for the static decorative slots, keyed by catalog slot
   // id (e.g. "home.hero"). Optional: older backends omit it. Empty/missing slot →
   // the MediaSlot wrapper renders its `.ph` mock.
@@ -128,6 +129,19 @@ export interface DeliveryMethods {
   pickup: boolean;
   econtOffice: boolean;
   econtAddress: boolean;
+}
+
+/** Pickup/market info (label, address, hours, optional fixed weekday+time
+ *  schedule). Optional (older backend) → checkout falls back to a generic label
+ *  and no schedule line. */
+export interface PickupInfo {
+  label: string;
+  address: string | null;
+  hours: string | null;
+  /** 0=Sun..6=Sat, or null when the farm hasn't set a fixed schedule. */
+  weekday: number | null;
+  timeFrom: string | null;
+  timeTo: string | null;
 }
 
 /** A purchasable option of a product (вид/грамаж). Server-computed; raw stock is
