@@ -6,7 +6,7 @@ import CopySlot from '../components/CopySlot.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 ---
-<Layout title={`Поръчки · ${sf.name}`} storefront={sf}>
+<Layout title={`Поръчки · ${sf.name}`} storefront={sf} pageLabel="Поръчки">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Поръчки</span></nav>

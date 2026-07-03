@@ -20,6 +20,11 @@ export type TrackType =
 
 export interface TrackData {
   path?: string;
+  /** Human label for this page (e.g. "Продукт", "Фермери") — set by the page
+   *  itself via <Layout pageLabel="...">. Lets the panel's "Топ страници"
+   *  group/label pages without FarmFlow hardcoding this storefront's route
+   *  shape server-side. */
+  pageLabel?: string;
   referrer?: string;
   productId?: string;
   orderId?: string;
@@ -31,6 +36,7 @@ export function ffTrack(type: TrackType, data: TrackData = {}): void {
     const body = JSON.stringify({
       type,
       path: data.path ?? location.pathname,
+      pageLabel: data.pageLabel,
       referrer: data.referrer ?? document.referrer ?? '',
       productId: data.productId,
       orderId: data.orderId,

@@ -7,7 +7,7 @@ import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const showFarmers = sf.multiFarmer;
 ---
-<Layout title={`За нас · ${sf.name}`} storefront={sf}>
+<Layout title={`За нас · ${sf.name}`} storefront={sf} pageLabel="За нас">
   <main>
     <section class="section" data-copy-section="about.hero">
       <div class="wrap split">

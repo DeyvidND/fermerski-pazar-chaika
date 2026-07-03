@@ -6,7 +6,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const name = sf.name;
 const UPDATED = '23.06.2026 г.';
 ---
-<Layout title={`Политика за бисквитки · ${name}`} storefront={sf}>
+<Layout title={`Политика за бисквитки · ${name}`} storefront={sf} pageLabel="Бисквитки">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Бисквитки</span></nav>

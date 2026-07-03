@@ -9,7 +9,7 @@ const sf = sfRaw ?? FALLBACK_STOREFRONT;
 const hasReviews = summary.count > 0;
 const avg = hasReviews ? summary.average.toFixed(1).replace('.', ',') : '—';
 ---
-<Layout title={`Отзиви · ${sf.name}`} storefront={sf}>
+<Layout title={`Отзиви · ${sf.name}`} storefront={sf} pageLabel="Отзиви">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Отзиви</span></nav>

@@ -32,9 +32,14 @@ interface Props {
   /** Keep this page out of the search index (transactional / private pages, 404).
    *  Emits <meta name="robots" content="noindex, follow">. */
   noindex?: boolean;
+  /** Human label for the page_view analytics beacon (e.g. "Продукт", "Фермери")
+   *  — shows up in the farmer's "Топ страници" panel instead of a raw URL.
+   *  Omit for pages that shouldn't count toward that list (404 etc.) — the
+   *  backend then falls back to a best-effort path guess. */
+  pageLabel?: string;
 }
 
-const { title, description, bodyClass, imageOrigin, image, jsonLd, noindex } = Astro.props;
+const { title, description, bodyClass, imageOrigin, image, jsonLd, noindex, pageLabel } = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
@@ -120,7 +125,7 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
   </noscript>
   <TrackingScripts storefront={storefront} />
 </head>
-<body class={bodyClass}>
+<body class={bodyClass} data-page-label={pageLabel}>
   {potwBar && (
     <a class="potw-bar" href={potwBar.href}>
       <span class="potw-bar__inner">
@@ -150,7 +155,12 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
   </script>
   <script>
     import { ffTrack } from '../lib/track';
-    ffTrack('page_view');
+    // Read from the DOM rather than closing over an Astro frontmatter var: this
+    // script is hoisted/bundled once and shared across every page (see the
+    // ui.ts hoisting note above), so it can't have a per-page value baked in —
+    // document.body.dataset is always populated by the time any script runs.
+    const pageLabel = document.body.dataset.pageLabel || undefined;
+    ffTrack('page_view', pageLabel ? { pageLabel } : {});
   </script>
 </body>
 </html>

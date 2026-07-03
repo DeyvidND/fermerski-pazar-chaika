@@ -11,7 +11,7 @@ const address = contactAddress(sf);
 const contactInfo = [email, phone, address].filter(Boolean).join(' · ');
 const UPDATED = '23.06.2026 г.';
 ---
-<Layout title={`Общи условия · ${name}`} storefront={sf}>
+<Layout title={`Общи условия · ${name}`} storefront={sf} pageLabel="Условия">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Общи условия</span></nav>

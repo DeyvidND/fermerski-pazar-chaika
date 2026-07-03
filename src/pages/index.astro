@@ -71,7 +71,7 @@ const imgOrigin = imageOrigin(sf.media?.['home.hero']?.url, products[0]?.imageUr
 const ogImage =
   cfImage(sf.media?.['home.hero']?.url ?? products[0]?.imageUrl ?? farmers[0]?.imageUrl, 1200) ?? null;
 ---
-<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf} imageOrigin={imgOrigin} image={ogImage}>
+<Layout title={`${sf.name} · Фермерски пазар Чайка, Варна`} storefront={sf} imageOrigin={imgOrigin} image={ogImage} pageLabel="Начало">
   <main>
     <!-- HERO -->
     <section class="hero section" data-copy-section="home.hero">

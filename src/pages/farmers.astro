@@ -14,7 +14,7 @@ const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).le
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
 ---
-<Layout title={`Фермери · ${sf.name}`} storefront={sf}>
+<Layout title={`Фермери · ${sf.name}`} storefront={sf} pageLabel="Фермери">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Фермери</span></nav>

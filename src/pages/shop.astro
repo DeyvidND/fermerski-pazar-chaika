@@ -29,7 +29,7 @@ const showCourierChip = active.some((p) => farmerCourierReady(p.farmerId) && !(p
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 ---
-<Layout title={`Магазин · ${sf.name}`} storefront={sf}>
+<Layout title={`Магазин · ${sf.name}`} storefront={sf} pageLabel="Магазин">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Магазин</span></nav>

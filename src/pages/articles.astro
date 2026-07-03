@@ -11,7 +11,7 @@ const sf = sfRaw ?? FALLBACK_STOREFRONT;
 const featured = articles[0] ?? null;
 const rest = articles.slice(1);
 ---
-<Layout title={`Статии · ${sf.name}`} storefront={sf}>
+<Layout title={`Статии · ${sf.name}`} storefront={sf} pageLabel="Статии">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Статии</span></nav>

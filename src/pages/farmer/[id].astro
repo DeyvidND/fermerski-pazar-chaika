@@ -48,7 +48,7 @@ const structuredData = breadcrumbLd([
   { name: farmer.name, path: `/farmer/${encodeURIComponent(farmer.id)}` },
 ]);
 ---
-<Layout title={`${farmer.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData}>
+<Layout title={`${farmer.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData} pageLabel="Профил на фермер">
   <main>
     <div class="wrap">
       <nav class="breadcrumb">

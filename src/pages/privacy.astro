@@ -10,7 +10,7 @@ const phone = contactPhone(sf);
 const contactInfo = [email, phone].filter(Boolean).join(' · ') || 'контактите, посочени в сайта';
 const UPDATED = '23.06.2026 г.';
 ---
-<Layout title={`Политика за поверителност · ${name}`} storefront={sf}>
+<Layout title={`Политика за поверителност · ${name}`} storefront={sf} pageLabel="Поверителност">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Поверителност</span></nav>

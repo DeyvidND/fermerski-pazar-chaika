@@ -4,7 +4,7 @@ import Icon from '../components/Icon.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 ---
-<Layout title={`Поръчката е приета · ${sf.name}`} storefront={sf} noindex>
+<Layout title={`Поръчката е приета · ${sf.name}`} storefront={sf} noindex pageLabel="Потвърждение на поръчка">
   <main>
     <section class="section">
       <div class="wrap" style="max-width:760px">

@@ -3,7 +3,7 @@ import Layout from '../components/Layout.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 ---
-<Layout title={`Количка · ${sf.name}`} storefront={sf} noindex>
+<Layout title={`Количка · ${sf.name}`} storefront={sf} noindex pageLabel="Количка">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Количка</span></nav>
