@@ -372,7 +372,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
   background: var(--bg); z-index: 61; transform: translateX(100%);
   transition: transform .3s cubic-bezier(.4,0,.2,1); padding: 22px;
   display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y;
   box-shadow: var(--shadow-lg);
 }
 .drawer.open { transform: translateX(0); }
@@ -387,6 +387,12 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 @media (max-width: 1100px) {
   .nav__links { display: none; }
   .hamburger { display: flex; align-items: center; }
+  /* With nav__links hidden, brand + nav__actions are the only two items on the
+     row. Give brand a zero flex-basis so flexbox's line-wrapping decision uses
+     that (tiny) hypothetical size instead of the name's full content width —
+     otherwise the row wraps onto two lines (name above, cart+menu below)
+     before the name ever gets a chance to shrink/ellipsize. */
+  .brand { flex: 1 1 0%; margin-right: 0; }
 }
 /* Below this, brand name + "Меню" no longer reliably fit one row together —
    drop to icon-only so `.nav`'s flex-wrap (below) is never needed for a normal
@@ -397,11 +403,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }
-  /* Phones: show the whole name by wrapping to two lines instead of ellipsis. */
-  .brand__name {
-    font-size: 17px; line-height: 1.1; white-space: normal; overflow: visible;
-    text-overflow: clip; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  }
+  .brand__name { font-size: 17px; }
 }
 
 /* =========================================================
