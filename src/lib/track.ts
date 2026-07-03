@@ -31,13 +31,29 @@ export interface TrackData {
   value?: number; // stotinki
 }
 
+/** Same-host document.referrer means internal page-to-page navigation, not a
+ *  real traffic source — sending it as-is makes the storefront's own domain
+ *  show up as its own top "source" (confirmed live 2026-07-03). Domain-
+ *  agnostic: compares against location.host, never a hardcoded domain/slug,
+ *  so it works for any storefront on any custom domain. Unparseable/empty
+ *  referrer is treated as "no referrer" (direct). */
+function externalReferrer(explicit?: string): string {
+  const ref = explicit ?? document.referrer ?? '';
+  if (!ref) return '';
+  try {
+    return new URL(ref).host === location.host ? '' : ref;
+  } catch {
+    return '';
+  }
+}
+
 export function ffTrack(type: TrackType, data: TrackData = {}): void {
   try {
     const body = JSON.stringify({
       type,
       path: data.path ?? location.pathname,
       pageLabel: data.pageLabel,
-      referrer: data.referrer ?? document.referrer ?? '',
+      referrer: externalReferrer(data.referrer),
       productId: data.productId,
       orderId: data.orderId,
       value: data.value,
