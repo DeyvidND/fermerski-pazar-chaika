@@ -1,9 +1,16 @@
 // First-party, cookieless analytics beacon → FarmFlow /public/:slug/track.
-// Best-effort: never throws, never blocks. Uses sendBeacon when available so it
-// survives page unload. Cookieless ⇒ intentionally NOT gated by ConsentBanner/
-// ffGrantConsent (no cross-site identifier, no Set-Cookie — unlike GA4/Meta/TikTok).
+// Best-effort: never throws, never blocks. Cookieless ⇒ intentionally NOT gated
+// by ConsentBanner/ffGrantConsent (no cross-site identifier, no Set-Cookie —
+// unlike GA4/Meta/TikTok).
 // PUBLIC_BASE already resolves to the CF-tunneled host in the browser (see
 // config.ts BROWSER_BASE note) — origin-api's firewall blocks real visitor IPs.
+//
+// Deliberately NOT using navigator.sendBeacon: it sends the request in `no-cors`
+// mode, and Cloudflare's edge in front of api.fermeribg.com 503s every no-cors
+// POST to this path (confirmed live 2026-07-03 — cors-mode fetch() to the exact
+// same endpoint succeeds every time, no-cors fetch()/sendBeacon fails every
+// time). `fetch(..., { keepalive: true })` gets the same "survives page unload"
+// guarantee while staying in `cors` mode, which the edge actually allows through.
 import { PUBLIC_BASE } from './config';
 
 const TRACK_URL = `${PUBLIC_BASE}/track`;
@@ -29,11 +36,7 @@ export function ffTrack(type: TrackType, data: TrackData = {}): void {
       orderId: data.orderId,
       value: data.value,
     });
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(TRACK_URL, new Blob([body], { type: 'application/json' }));
-    } else {
-      fetch(TRACK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
-    }
+    fetch(TRACK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
   } catch {
     /* analytics must never break the storefront */
   }
