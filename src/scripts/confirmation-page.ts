@@ -167,16 +167,5 @@ if (recap && (isCourier || normalItems.length)) {
   }
 }
 
-// analytics: purchase conversion. ffTrack expects stotinki, so convert the
-// shared euro value up rather than re-deriving it from recap.
-try {
-  if (recap) {
-    const valueStotinki = Math.round(purchaseValueEuros(recap, isCourier) * 100);
-    window.ffTrack?.('purchase', { orderId: recap.orderId, value: valueStotinki });
-  }
-} catch {
-  /* analytics must never break the confirmation page */
-}
-
 Cart.set([]);
 sessionStorage.removeItem('ff_last_order');
