@@ -652,8 +652,11 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .newsletter form { display: flex; gap: 10px; }
 /* dark text on the white field — the input lives inside `.newsletter` (color:#fff),
    so without this it inherits white and the typed text + caret are invisible. */
-.newsletter input { flex: 1; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 16px; color: var(--ink); caret-color: var(--ink); background: #fff; }
-@media (max-width: 720px) { .newsletter { grid-template-columns: 1fr; } .newsletter form { flex-direction: column; } }
+.newsletter input { flex: 1; min-width: 0; width: 100%; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 16px; color: var(--ink); caret-color: var(--ink); background: #fff; }
+/* minmax(0,1fr) + min-width:0 so the column can shrink below the text input's
+   intrinsic (~220px) width — plain 1fr keeps an `auto` min and the field
+   overflowed the card on phones under ~330px. */
+@media (max-width: 720px) { .newsletter { grid-template-columns: minmax(0, 1fr); } .newsletter form { flex-direction: column; min-width: 0; } }
 
 /* ---------- two-up / about ---------- */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
