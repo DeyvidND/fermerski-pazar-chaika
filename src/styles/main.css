@@ -287,7 +287,8 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .input, .textarea, .select {
   width: 100%; padding: 13px 15px;
   background: var(--surface); border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-sm); font-size: 15.5px; color: var(--ink);
+  /* 16px min — iOS Safari zooms the page when focusing a control under 16px. */
+  border-radius: var(--radius-sm); font-size: 16px; color: var(--ink);
   transition: border-color .18s, box-shadow .18s;
 }
 .input:focus, .textarea:focus, .select:focus {
@@ -651,7 +652,7 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .newsletter form { display: flex; gap: 10px; }
 /* dark text on the white field — the input lives inside `.newsletter` (color:#fff),
    so without this it inherits white and the typed text + caret are invisible. */
-.newsletter input { flex: 1; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 15.5px; color: var(--ink); caret-color: var(--ink); background: #fff; }
+.newsletter input { flex: 1; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 16px; color: var(--ink); caret-color: var(--ink); background: #fff; }
 @media (max-width: 720px) { .newsletter { grid-template-columns: 1fr; } .newsletter form { flex-direction: column; } }
 
 /* ---------- two-up / about ---------- */
@@ -777,12 +778,26 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   justify-content: space-between; gap: 14px; flex-wrap: wrap;
 }
 .farmer-card__count { font-size: 13px; color: var(--muted); font-weight: 600; }
-/* 2-up on phones: the foot is too narrow for count + a nowrap button side by
-   side, so stack them and let the button fill the card width. */
+/* 2-up on phones the column is only ~155px wide, so a full-height card (photo +
+   big name + repeated role + 3-line bio + a full-width button) ran ~520px tall —
+   two farmers filled the whole screen. Trim aggressively: drop the role line
+   (the eyebrow already shows it), shrink the name, clamp the bio to 2 lines and
+   keep the foot on one row with an auto-width button. ~25% shorter. */
 @media (max-width: 600px) {
-  .farmer-card__body { padding: 16px 16px 18px; }
-  .farmer-card__foot { flex-direction: column; align-items: stretch; gap: 10px; }
-  .farmer-card__foot .btn { width: 100%; padding-inline: 8px; font-size: 13px; }
+  .farmer-card__body { padding: 12px 13px 14px; gap: 4px; }
+  .farmer-card__name { font-size: 20px; margin-top: 4px; }
+  [data-theme="klasik"] .farmer-card__name { font-size: 22px; }
+  .farmer-card__person { display: none; }
+  .farmer-card__blurb { font-size: 14px; margin-top: 4px; }
+  .farmer-card__blurb.is-clamped { -webkit-line-clamp: 2; line-clamp: 2; }
+  .farmer-card__foot {
+    flex-direction: row; align-items: center; gap: 8px;
+    flex-wrap: wrap; padding-top: 12px;
+  }
+  .farmer-card__count { font-size: 12px; }
+  .farmer-card__foot .btn {
+    width: auto; padding: 8px 10px; font-size: 12.5px; white-space: nowrap;
+  }
 }
 
 /* single farmer hero */
