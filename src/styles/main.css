@@ -791,8 +791,11 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   .farmer-card__name { font-size: 20px; margin-top: 4px; }
   [data-theme="klasik"] .farmer-card__name { font-size: 22px; }
   .farmer-card__person { display: none; }
-  .farmer-card__blurb { font-size: 14px; margin-top: 4px; }
-  .farmer-card__blurb.is-clamped { -webkit-line-clamp: 2; line-clamp: 2; }
+  /* Bio + „Прочети още" just eat vertical space in a 2-up phone card — the
+     name, count and „Виж продуктите" button carry the card on their own.
+     Compound selector needed to outrank base `.farmer-card__blurb.is-clamped`. */
+  .farmer-card__blurb,
+  .farmer-card__blurb.is-clamped { display: none; }
   .farmer-card__foot {
     flex-direction: column; align-items: stretch; gap: 8px; padding-top: 12px;
   }
@@ -803,6 +806,12 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   .farmer-card__foot .btn {
     width: 100%; padding: 9px 10px; font-size: 12.5px; justify-content: center;
   }
+  /* „Прочети още" is redundant on phone — the card, name and „Виж продуктите"
+     button all already open the same farmer page. Dropping it saves a whole
+     line and the card reads tighter. */
+  .farmer-card__more { display: none; }
+  /* Shorter photo (16:10 vs 3:2) so a 2-up card isn't dominated by the image. */
+  .farmer-card__photo { aspect-ratio: 16 / 10; }
 }
 
 /* single farmer hero */
@@ -848,6 +857,15 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .category-card__count {
   display: block; margin-top: 12px;
   font-size: 12.5px; font-weight: 700; color: var(--muted);
+}
+/* 2-up on phones the desc ("Продукти от тази категория…") just padded the card
+   to no purpose — the photo + name + count already say what it is. Drop it,
+   shrink the name (long titles wrapped 3 lines) and tighten the body. */
+@media (max-width: 600px) {
+  .category-card__body { padding: 12px 13px 14px; }
+  .category-card__name { font-size: 16px; line-height: 1.2; }
+  .category-card__desc { display: none; }
+  .category-card__count { margin-top: 8px; }
 }
 
 /* =========================================================
