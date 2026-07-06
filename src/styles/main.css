@@ -791,12 +791,14 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   .farmer-card__blurb { font-size: 14px; margin-top: 4px; }
   .farmer-card__blurb.is-clamped { -webkit-line-clamp: 2; line-clamp: 2; }
   .farmer-card__foot {
-    flex-direction: row; align-items: center; gap: 8px;
-    flex-wrap: wrap; padding-top: 12px;
+    flex-direction: column; align-items: stretch; gap: 8px; padding-top: 12px;
   }
   .farmer-card__count { font-size: 12px; }
+  /* Full-width, centered, wrap-allowed (base .btn is white-space:normal). An
+     auto-width nowrap button overflowed the ~155–175px column and got clipped
+     by the card's overflow:hidden — full width can never exceed the column. */
   .farmer-card__foot .btn {
-    width: auto; padding: 8px 10px; font-size: 12.5px; white-space: nowrap;
+    width: 100%; padding: 9px 10px; font-size: 12.5px; justify-content: center;
   }
 }
 
