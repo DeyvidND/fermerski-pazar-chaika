@@ -435,7 +435,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }
-  .brand__name { font-size: 17px; }
+  .brand__name { font-size: 15px; }
 }
 
 /* =========================================================
