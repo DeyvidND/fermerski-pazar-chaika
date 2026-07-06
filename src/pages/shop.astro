@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import CopySlot from '../components/CopySlot.astro';
 import ProductCard from '../components/ProductCard.astro';
+import SearchBar from '../components/SearchBar.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
 import { ONLY_LOCAL_DELIVERY } from '../lib/config';
@@ -43,9 +44,15 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           <p><CopySlot slot="shop.head.text" copy={sf.copy} /></p>
         </div>
 
+        {seeded && (
+          <div style="margin-top:26px">
+            <SearchBar id="shopSearch" placeholder="Търси продукт или фермер…" />
+          </div>
+        )}
+
         {(cats.length > 0 || showBestChip) && (
-          <div class="chips-row" data-tabs data-tabs-target="#catalogGrid"
-               style="display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 22px" id="catChips">
+          <div class="chips-row"
+               style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 8px" id="catChips">
             <button class="chip is-active" data-tab="all">Всички</button>
             {showBestChip && <button class="chip" data-tab="best-sellers">Най-продавани</button>}
             {cats.map((c) => <button class="chip" data-tab={c.id}>{c.name}</button>)}
@@ -57,7 +64,9 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           </div>
         )}
 
-        <div class="grid grid--4" id="catalogGrid" data-tab-panels>
+        {seeded && <p class="result-count" id="shopCount" style="margin:8px 0 18px" hidden></p>}
+
+        <div class="grid grid--4" id="catalogGrid">
           {seeded
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)}
@@ -68,33 +77,81 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
               ))
             : <p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0">Все още няма продукти.</p>}
         </div>
+        {seeded && (
+          <p id="shopEmpty" style="text-align:center;color:var(--muted);padding:40px 0" hidden></p>
+        )}
       </div>
     </section>
   </main>
   <script>
+    // Unified catalog filter: category chip + „С куриер" + text search all
+    // compose (AND) through one apply() so they never fight over `display`.
+    import { wireSearch } from '../scripts/search';
+
+    const chips = document.getElementById('catChips');
+    const grid = document.getElementById('catalogGrid');
+    const countEl = document.getElementById('shopCount');
+    const emptyEl = document.getElementById('shopEmpty');
+    const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-product]')) : [];
+
+    const state = { cat: 'all', courierOnly: false, q: '' };
+
+    function apply() {
+      let visible = 0;
+      for (const card of cards) {
+        const matchCat =
+          state.cat === 'all' ||
+          card.dataset.cat === state.cat ||
+          (state.cat === 'best-sellers' && card.dataset.bestseller === '1');
+        const matchCourier = !state.courierOnly || card.dataset.courier === '1';
+        const matchText = state.q === '' || (card.dataset.name || '').includes(state.q);
+        const show = matchCat && matchCourier && matchText;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      }
+      const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly;
+      if (countEl) {
+        countEl.hidden = !filtering;
+        countEl.textContent = visible === 1 ? '1 резултат' : `${visible} резултата`;
+      }
+      if (emptyEl) {
+        emptyEl.hidden = visible !== 0;
+        emptyEl.textContent = state.q
+          ? `Няма намерени продукти за „${state.q}“`
+          : 'Няма продукти за този филтър';
+      }
+    }
+
+    // Category chips (delegated). Courier chip has no data-tab, so it's ignored here.
+    chips?.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
+      if (!chip) return;
+      chips.querySelectorAll<HTMLElement>('[data-tab]').forEach((c) =>
+        c.classList.toggle('is-active', c === chip),
+      );
+      state.cat = chip.dataset.tab || 'all';
+      apply();
+    });
+
+    // „С куриер" chip — independent toggle, composes with category + text.
+    const courierChip = document.getElementById('courierChip');
+    courierChip?.addEventListener('click', () => {
+      state.courierOnly = !state.courierOnly;
+      courierChip.classList.toggle('is-active', state.courierOnly);
+      apply();
+    });
+
+    // Text search.
+    wireSearch('shopSearch', (q) => {
+      state.q = q;
+      apply();
+    });
+
     // Deep link: /shop#<categoryId> activates that category chip on load.
     const hash = decodeURIComponent(location.hash.replace('#', ''));
     if (hash) {
-      const chip = document.querySelector<HTMLElement>(`#catChips [data-tab="${CSS.escape(hash)}"]`);
+      const chip = chips?.querySelector<HTMLElement>(`[data-tab="${CSS.escape(hash)}"]`);
       chip?.click();
-    }
-
-    // Courier filter chip — toggles visibility of non-courier products.
-    const courierChip = document.getElementById('courierChip');
-    const grid = document.getElementById('catalogGrid');
-    if (courierChip && grid) {
-      let courierOnly = false;
-      courierChip.addEventListener('click', () => {
-        courierOnly = !courierOnly;
-        courierChip.classList.toggle('is-active', courierOnly);
-        grid.querySelectorAll<HTMLElement>('[data-product]').forEach((card) => {
-          if (courierOnly && !card.dataset.courier) {
-            card.style.display = 'none';
-          } else {
-            card.style.display = '';
-          }
-        });
-      });
     }
   </script>
 </Layout>
