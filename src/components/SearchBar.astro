@@ -1,0 +1,26 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  id: string;
+  placeholder: string;
+  sticky?: boolean;
+}
+const { id, placeholder, sticky = false } = Astro.props;
+---
+<div class="searchbar" data-sticky={sticky ? '' : undefined}>
+  <Icon name="search" class="searchbar__ic" />
+  <input
+    id={id}
+    class="searchbar__input"
+    type="search"
+    inputmode="search"
+    autocomplete="off"
+    enterkeyhint="search"
+    placeholder={placeholder}
+    aria-label={placeholder}
+  />
+  <button type="button" class="searchbar__clear" aria-label="Изчисти" hidden>
+    <Icon name="x" class="searchbar__clear-ic" />
+  </button>
+</div>

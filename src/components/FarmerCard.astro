@@ -15,7 +15,8 @@ const eyebrow = [f.role, f.since ? 'от ' + f.since : null].filter(Boolean).joi
 // „Прочети още" link shows whenever the bio is long enough to likely be cut.
 const longBio = (f.bio?.length ?? 0) > 50;
 ---
-<article class="card farmer-card">
+<article class="card farmer-card" data-farmer
+  data-name={[f.name, f.role].filter(Boolean).join(' ').toLocaleLowerCase('bg')}>
   <a href={`/farmer/${f.id}`} class="ph farmer-card__photo">
     {f.imageUrl ? (
       <img src={cfImage(f.imageUrl, 800)} srcset={cfSrcset(f.imageUrl, [400, 800])}

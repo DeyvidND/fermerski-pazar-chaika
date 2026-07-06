@@ -113,6 +113,38 @@ p { text-wrap: pretty; }
 }
 [data-theme="klasik"] .chip { text-transform: uppercase; letter-spacing: .12em; font-size: 11.5px; }
 
+/* Live search bar (SearchBar.astro) — mobile-first pill. Full width on phones;
+   capped on desktop so it doesn't sprawl. Reuses the input focus-ring language. */
+.searchbar {
+  display: flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 8px 0 15px;
+  background: var(--surface); border: 1.5px solid var(--line-strong);
+  border-radius: 999px; transition: border-color .18s, box-shadow .18s;
+}
+.searchbar:focus-within {
+  border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-050);
+}
+.searchbar__ic { display: inline-flex; flex: none; color: var(--primary); }
+.searchbar__ic svg { width: 20px; height: 20px; display: block; }
+.searchbar__input {
+  flex: 1; min-width: 0; height: 100%;
+  border: 0; background: transparent; font-size: 16px; color: var(--ink);
+}
+.searchbar__input:focus { outline: none; }
+.searchbar__input::placeholder { color: var(--muted); }
+.searchbar__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.searchbar__clear {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--surface-2); color: var(--muted); transition: background .15s, color .15s;
+}
+.searchbar__clear:hover { background: var(--line); color: var(--ink); }
+.searchbar__clear[hidden] { display: none; }
+.searchbar__clear svg { width: 16px; height: 16px; display: block; }
+@media (min-width: 701px) { .searchbar { max-width: 460px; } }
+
+.result-count { color: var(--muted); font-size: 13px; }
+
 .tag {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 11px; border-radius: var(--chip-radius);
@@ -255,7 +287,8 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .input, .textarea, .select {
   width: 100%; padding: 13px 15px;
   background: var(--surface); border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-sm); font-size: 15.5px; color: var(--ink);
+  /* 16px min — iOS Safari zooms the page when focusing a control under 16px. */
+  border-radius: var(--radius-sm); font-size: 16px; color: var(--ink);
   transition: border-color .18s, box-shadow .18s;
 }
 .input:focus, .textarea:focus, .select:focus {
@@ -403,7 +436,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 @media (max-width: 480px) {
   .brand__tag { display: none !important; }
-  .brand__name { font-size: 17px; }
+  .brand__name { font-size: 15px; }
 }
 
 /* =========================================================
@@ -619,7 +652,7 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .newsletter form { display: flex; gap: 10px; }
 /* dark text on the white field — the input lives inside `.newsletter` (color:#fff),
    so without this it inherits white and the typed text + caret are invisible. */
-.newsletter input { flex: 1; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 15.5px; color: var(--ink); caret-color: var(--ink); background: #fff; }
+.newsletter input { flex: 1; padding: 15px 18px; border-radius: var(--btn-radius); border: 0; font-size: 16px; color: var(--ink); caret-color: var(--ink); background: #fff; }
 @media (max-width: 720px) { .newsletter { grid-template-columns: 1fr; } .newsletter form { flex-direction: column; } }
 
 /* ---------- two-up / about ---------- */
@@ -745,12 +778,26 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
   justify-content: space-between; gap: 14px; flex-wrap: wrap;
 }
 .farmer-card__count { font-size: 13px; color: var(--muted); font-weight: 600; }
-/* 2-up on phones: the foot is too narrow for count + a nowrap button side by
-   side, so stack them and let the button fill the card width. */
+/* 2-up on phones the column is only ~155px wide, so a full-height card (photo +
+   big name + repeated role + 3-line bio + a full-width button) ran ~520px tall —
+   two farmers filled the whole screen. Trim aggressively: drop the role line
+   (the eyebrow already shows it), shrink the name, clamp the bio to 2 lines and
+   keep the foot on one row with an auto-width button. ~25% shorter. */
 @media (max-width: 600px) {
-  .farmer-card__body { padding: 16px 16px 18px; }
-  .farmer-card__foot { flex-direction: column; align-items: stretch; gap: 10px; }
-  .farmer-card__foot .btn { width: 100%; padding-inline: 8px; font-size: 13px; }
+  .farmer-card__body { padding: 12px 13px 14px; gap: 4px; }
+  .farmer-card__name { font-size: 20px; margin-top: 4px; }
+  [data-theme="klasik"] .farmer-card__name { font-size: 22px; }
+  .farmer-card__person { display: none; }
+  .farmer-card__blurb { font-size: 14px; margin-top: 4px; }
+  .farmer-card__blurb.is-clamped { -webkit-line-clamp: 2; line-clamp: 2; }
+  .farmer-card__foot {
+    flex-direction: row; align-items: center; gap: 8px;
+    flex-wrap: wrap; padding-top: 12px;
+  }
+  .farmer-card__count { font-size: 12px; }
+  .farmer-card__foot .btn {
+    width: auto; padding: 8px 10px; font-size: 12.5px; white-space: nowrap;
+  }
 }
 
 /* single farmer hero */

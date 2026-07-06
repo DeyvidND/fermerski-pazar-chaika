@@ -48,6 +48,7 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
 ---
 <article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat} data-bestseller={bestSeller ? '1' : undefined}
   data-courier={courierAvailable ? '1' : undefined}
+  data-name={[p.name, farmerName].filter(Boolean).join(' ').toLocaleLowerCase('bg')}
   style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
