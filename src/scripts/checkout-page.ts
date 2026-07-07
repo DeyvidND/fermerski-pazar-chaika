@@ -561,7 +561,7 @@ form.addEventListener('submit', async (e) => {
   // no slots today, slotsAvailable stays false and the order is allowed through —
   // that path already explains "we'll follow up to arrange it".)
   if (method === 'address' && slotsAvailable && !selectedSlotId) {
-    toast?.('Избери ден и час за доставка.');
+    toast?.('Избери ден за доставка.');
     slotCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
