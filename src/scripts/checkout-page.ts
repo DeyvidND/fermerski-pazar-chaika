@@ -577,6 +577,19 @@ form.addEventListener('submit', async (e) => {
         return;
       }
     }
+    // Confused buyers put the real street in the block/entrance field instead of
+    // Адрес (it's the field right underneath, and both look like "extra address
+    // info"). That field is deliveryNote — NEVER geocoded on purpose — so the
+    // order ships with no usable address. Catch the giveaway: a street keyword
+    // (ул./бул./ж.к.) in there means the street belongs one field up.
+    if (method === 'address') {
+      const detail = (addrDetails?.value || '').trim();
+      if (detail && /ул\.?|улица|бул\.?|булевард|ж\.?\s?к\.?|жк/i.test(detail)) {
+        toast?.('Улицата пиши в полето „Адрес“ по-горе — тук е само за блок/вход/етаж.');
+        addrDetails?.focus();
+        return;
+      }
+    }
     // Econt routes a door label by structured city, which we only have from a
     // picked Google address. Local farm delivery has no such need — a hand-typed
     // address is geocoded by the backend.
