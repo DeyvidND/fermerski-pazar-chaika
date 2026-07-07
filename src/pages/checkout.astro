@@ -90,19 +90,19 @@ const mapsKey = String(
           <div class="stack" style="gap:26px">
 
             <!-- contact -->
-            <div class="card" style="padding:24px;box-shadow:none">
+            <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Контакти</h3>
               <div class="stack" style="gap:14px">
-                <div class="field"><label>Име и фамилия</label><input class="input" name="customerName" placeholder="Иван Иванов" required /></div>
+                <div class="field"><label>Име и фамилия</label><input class="input" name="customerName" autocomplete="name" placeholder="Иван Иванов" required /></div>
                 <div class="field-row">
-                  <div class="field"><label>Телефон</label><input class="input" name="customerPhone" type="tel" placeholder="+359 88 ..." required /></div>
-                  <div class="field"><label>Имейл <span class="muted" style="font-weight:400">(по желание — за потвърждение)</span></label><input class="input" name="customerEmail" type="email" placeholder="ime@example.bg" /></div>
+                  <div class="field"><label>Телефон</label><input class="input" name="customerPhone" type="tel" autocomplete="tel" placeholder="+359 88 ..." required /></div>
+                  <div class="field"><label>Имейл <span class="muted" style="font-weight:400">(по желание — за потвърждение)</span></label><input class="input" name="customerEmail" type="email" autocomplete="email" placeholder="ime@example.bg" /></div>
                 </div>
               </div>
             </div>
 
             <!-- delivery method -->
-            <div class="card" style="padding:24px;box-shadow:none">
+            <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на получаване</h3>
               <div class="stack" style="gap:12px" id="deliveryMethod">
                 {((delivery && methods.ownSlots) || ONLY_LOCAL_DELIVERY) && (
@@ -189,7 +189,7 @@ const mapsKey = String(
 
             {delivery && (
               <!-- delivery slot -->
-              <div class="card" id="slotCard" style="padding:24px;box-shadow:none;display:none">
+              <div class="card co-card" id="slotCard" style="display:none">
                 <h3 style="font-size:20px;margin-bottom:6px">Кога да доставим?</h3>
                 <p class="muted" style="font-size:14px;margin-bottom:4px">Първо избери ден, после свободен час. Показваме само часовете със свободни места.</p>
                 <div class="slot-step"><span class="n">1</span>Избери ден</div>
@@ -201,7 +201,7 @@ const mapsKey = String(
             )}
 
             <!-- payment method (mirrors the admin panel: card when Stripe, наложен платеж when enabled) -->
-            <div class="card" style="padding:24px;box-shadow:none">
+            <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на плащане</h3>
               {showPaymentChoice ? (
                 <div class="stack" style="gap:12px" id="paymentMethod">
@@ -230,7 +230,7 @@ const mapsKey = String(
             <h3 style="font-size:22px;margin-bottom:14px">Твоята поръчка</h3>
             <div id="orderLines"></div>
             <div id="orderTotals"></div>
-            <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin-top:16px;padding:8px 2px;cursor:pointer">
+            <label id="termsCheck" style="display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin-top:16px;padding:8px 2px;cursor:pointer">
               <input type="checkbox" required style="margin-top:1px;flex:none;width:20px;height:20px" />
               <span>Прочетох и приемам <a href="/terms" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Общите условия</a> и <a href="/privacy" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Политиката за поверителност</a>.</span>
             </label>
@@ -238,6 +238,14 @@ const mapsKey = String(
               Поръчай сега<br /><span style="font-size:12px;font-weight:500;opacity:.85">поръчка със задължение за плащане</span>
             </button>
           </aside>
+
+          <!-- Mobile sticky submit bar (≤880px, see main.css .co-mobilebar) — proxies
+               the real submit button so every guard/validation/Stripe path stays the
+               single source of truth; only visually surfaces the total + CTA. -->
+          <div class="co-mobilebar" id="mobileOrderBar">
+            <div class="co-mobilebar__total"><span class="muted">Общо</span><b id="mobileBarTotal">—</b></div>
+            <button type="button" class="btn btn--primary btn--lg" id="mobileOrderBtn">Поръчай</button>
+          </div>
         </form>
       </div>
     </section>

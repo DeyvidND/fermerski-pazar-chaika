@@ -26,6 +26,15 @@ const deliveryEnabled = form.dataset.delivery === '1';
 // so our inline Bulgarian messages are the single source of truth.
 form.noValidate = true;
 
+// Mobile sticky submit bar (see main.css .co-mobilebar) — the order summary and
+// submit button land dead-last once the checkout grid collapses to one column, so
+// this proxies the real submit button rather than duplicating any guard logic.
+document.body.classList.add('has-mobilebar');
+const mobileBarBtn = document.getElementById('mobileOrderBtn') as HTMLButtonElement | null;
+const mobileBarTotal = document.getElementById('mobileBarTotal');
+const placeOrderBtn = document.getElementById('placeOrder') as HTMLButtonElement | null;
+mobileBarBtn?.addEventListener('click', () => placeOrderBtn?.click());
+
 // Contact fields — validated inline on blur/submit (see ../lib/validate).
 const nameInput = form.elements.namedItem('customerName') as HTMLInputElement | null;
 const phoneInput = form.elements.namedItem('customerPhone') as HTMLInputElement | null;
@@ -321,6 +330,9 @@ function renderSummary() {
   document.getElementById('orderTotals')!.innerHTML = `
     <div class="summary__row" style="border-top:1px solid var(--line);margin-top:6px;padding-top:12px"><span>Доставка${shipNote}</span><span>${shipText}</span></div>
     <div class="summary__row total"><span>Общо</span><span>${money(sub + ship)}</span></div>`;
+  // Euro-only, plain text — money() emits an HTML €+лв. span meant for innerHTML,
+  // too wide for the fixed mobile bar at 320-375px.
+  if (mobileBarTotal) mobileBarTotal.textContent = (sub + ship).toFixed(2).replace('.', ',') + ' €';
 }
 
 function setMethod(m: Method) {
@@ -653,6 +665,10 @@ form.addEventListener('submit', async (e) => {
   const btn = document.getElementById('placeOrder') as HTMLButtonElement;
   btn.disabled = true;
   btn.textContent = 'Изпращане...';
+  if (mobileBarBtn) {
+    mobileBarBtn.disabled = true;
+    mobileBarBtn.textContent = 'Изпращане...';
+  }
   try {
     const res = await fetch(`${PUBLIC_BASE}/checkout`, {
       method: 'POST',
@@ -665,6 +681,10 @@ form.addEventListener('submit', async (e) => {
       toast?.(Array.isArray(msg) ? msg[0] : String(msg));
       btn.disabled = false;
       btn.textContent = 'Поръчай сега';
+      if (mobileBarBtn) {
+        mobileBarBtn.disabled = false;
+        mobileBarBtn.textContent = 'Поръчай';
+      }
       return;
     }
     const data = (await res.json()) as CheckoutResult;
@@ -716,6 +736,10 @@ form.addEventListener('submit', async (e) => {
       toast?.('Грешка при плащането. Опитай отново.');
       btn.disabled = false;
       btn.textContent = 'Поръчай сега';
+      if (mobileBarBtn) {
+        mobileBarBtn.disabled = false;
+        mobileBarBtn.textContent = 'Поръчай';
+      }
       return;
     }
     if (httpsCheckout) {
@@ -728,6 +752,10 @@ form.addEventListener('submit', async (e) => {
     toast?.('Няма връзка със сървъра. Опитай отново.');
     btn.disabled = false;
     btn.textContent = 'Поръчай сега';
+    if (mobileBarBtn) {
+      mobileBarBtn.disabled = false;
+      mobileBarBtn.textContent = 'Поръчай';
+    }
   }
 });
 
@@ -852,3 +880,16 @@ setMethod((firstMethodEl?.dataset.method as Method) ?? 'pickup');
 
 // Run after the default method is set so the bounce (if any) lands last.
 void initCourierDisabledGate();
+
+// Soft keyboard open → hide the fixed mobile submit bar (main.css body.kb-open)
+// so it never floats over the field the buyer is typing into; a shrunk visual
+// viewport is the standard signal a mobile on-screen keyboard is showing.
+const vv = window.visualViewport;
+if (vv) {
+  const onViewportResize = () => {
+    const kbOpen = window.innerHeight - vv.height > 150;
+    document.body.classList.toggle('kb-open', kbOpen);
+  };
+  vv.addEventListener('resize', onViewportResize);
+  onViewportResize();
+}

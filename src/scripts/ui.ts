@@ -56,7 +56,7 @@ function toast(msg: string) {
     t = document.createElement('div');
     t.id = 'ff-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:14px 22px;border-radius:999px;font-weight:600;font-size:15px;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:90vw';
+      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:14px 22px;border-radius:14px;font-weight:600;font-size:15px;line-height:1.4;text-align:left;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:min(92vw,440px)';
     document.body.appendChild(t);
   }
   t.innerHTML = ICONS.check + '<span>' + esc(msg) + '</span>';
