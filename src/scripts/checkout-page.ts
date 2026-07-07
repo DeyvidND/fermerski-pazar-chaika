@@ -564,6 +564,19 @@ form.addEventListener('submit', async (e) => {
       addrInput?.focus();
       return;
     }
+    // Hand-typed local-delivery address with no Google pick: guard against a bare
+    // city ("Варна"). The courier needs a street + number to find the door, so
+    // require at least one digit (house/block number) and two words. When the
+    // buyer picked a Google suggestion we trust it and skip this check.
+    if (method === 'address' && !picked) {
+      const hasNumber = /\d/.test(street);
+      const words = street.split(/[\s,]+/).filter(Boolean).length;
+      if (!hasNumber || words < 2) {
+        toast?.('Напиши улица и номер, не само града (напр. „ул. Дунав 5, Варна“).');
+        addrInput?.focus();
+        return;
+      }
+    }
     // Econt routes a door label by structured city, which we only have from a
     // picked Google address. Local farm delivery has no such need — a hand-typed
     // address is geocoded by the backend.
