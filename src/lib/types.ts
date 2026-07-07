@@ -247,7 +247,8 @@ export interface Slot {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
   endTime: string; // HH:MM
-  remaining: number;
+  // Free spots left on a multi-capacity slot; null/absent for normal 1-order slots.
+  remaining?: number | null;
   // Optional farmer note shown to the customer (e.g. "ще се обадя преди доставка").
   customerNote?: string | null;
 }

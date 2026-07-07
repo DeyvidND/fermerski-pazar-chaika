@@ -511,7 +511,13 @@ async function loadSlots() {
     const list = byDate.get(activeDate) || [];
     const buttons = list
       .map((s) => {
-        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}</button>`;
+        // Multi-capacity slot: show how many spots are left ("остават 2 места").
+        // Single-order slots send remaining=null, so nothing extra is shown.
+        const left =
+          s.remaining != null && s.remaining > 0
+            ? `<span class="slot-left" style="display:block;font-size:11px;opacity:.7;margin-top:2px">остават ${s.remaining} ${s.remaining === 1 ? 'място' : 'места'}</span>`
+            : '';
+        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}${left}</button>`;
       })
       .join('');
     // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
