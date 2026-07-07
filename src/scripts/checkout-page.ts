@@ -565,13 +565,15 @@ form.addEventListener('submit', async (e) => {
       return;
     }
     // Hand-typed local-delivery address with no Google pick: guard against a bare
-    // city ("Варна"). The courier needs a street + number to find the door, so
-    // require at least one digit (house/block number) and two words. When the
-    // buyer picked a Google suggestion we trust it and skip this check.
+    // city ("Варна") or a lone number ("5"). The courier needs a street name +
+    // number to find the door, so require BOTH a digit (house/block number) and a
+    // name (≥3 letters left after stripping digits/punctuation — so "ул.Дунав5"
+    // typed without spaces still passes). When the buyer picked a Google
+    // suggestion we trust it and skip this check.
     if (method === 'address' && !picked) {
       const hasNumber = /\d/.test(street);
-      const words = street.split(/[\s,]+/).filter(Boolean).length;
-      if (!hasNumber || words < 2) {
+      const hasName = street.replace(/[\s\d.,№#/\\-]/g, '').length >= 3;
+      if (!hasNumber || !hasName) {
         toast?.('Напиши улица и номер, не само града (напр. „ул. Дунав 5, Варна“).');
         addrInput?.focus();
         return;
