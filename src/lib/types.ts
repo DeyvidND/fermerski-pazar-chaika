@@ -34,6 +34,10 @@ export interface Storefront {
   // How a door order picks its carrier when both run: 'customer' (the buyer picks),
   // 'cheapest' (server ships the cheaper), or a forced 'econt'/'speedy'. Absent → 'customer'.
   carrierPolicy?: 'customer' | 'cheapest' | 'econt' | 'speedy';
+  // Whether Speedy live pricing/fulfillment is configured for this farm (and the
+  // deliveries package is on). Door delivery is offered when Econt-address is on OR
+  // this is true — mirrors the backend courierDoorEnabled(). Absent → off.
+  speedyConfigured?: boolean;
   // Read-only delivery pricing from the farm's config (cents). The server is
   // authoritative at checkout; these are for display. freeThreshold 0 = no free.
   delivery: DeliveryPricing;

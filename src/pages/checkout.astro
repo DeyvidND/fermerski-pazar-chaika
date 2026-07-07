@@ -7,6 +7,7 @@ const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
 const econtAuto = sf.econtMode === 'auto';
+const speedyConfigured = sf.speedyConfigured ?? false;
 
 // Payment options, mirroring the admin panel. Card (online) shows only when the
 // farm has Stripe; наложен платеж (COD) only when enabled. Show the radio choice
@@ -17,6 +18,10 @@ const showPaymentChoice = stripeEnabled && codEnabled;
 
 // Per-method on/off flags — show only the methods the farm switched on.
 const methods = sf.methods ?? { ownSlots: true, pickup: true, econtOffice: false, econtAddress: false };
+// Door (до адрес) delivery is offered when Econt-address is on OR Speedy is
+// configured — mirrors the backend courierDoorEnabled()/assertMethodAllowed
+// so a Speedy-only farm (Econt off) still gets the storefront card.
+const doorDelivery = (econt && methods.econtAddress) || speedyConfigured;
 
 // ONLY_LOCAL_DELIVERY (see ../lib/config): заключваме всичко освен ЛИЧНАТА (местна)
 // доставка до адрес, за да не приема поръчки, които не можем да изпълним. Куриер →
@@ -117,10 +122,10 @@ const mapsKey = String(
                     <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €{bgnText(d.econtFeeStotinki / 100)}</span></span>
                   </label>
                 )}
-                {!ONLY_LOCAL_DELIVERY && econt && methods.econtAddress && (
+                {!ONLY_LOCAL_DELIVERY && doorDelivery && (
                   <label class="radio-card" data-method="econt_address">
                     <span class="dot"></span>
-                    <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €{bgnText(d.econtAddressFeeStotinki / 100)}</span></span>
+                    <span><b>Доставка до адрес</b><br><span class="muted" style="font-size:14px">Даваш адрес · куриерът доставя до теб · от {eur(d.econtAddressFeeStotinki)} €{bgnText(d.econtAddressFeeStotinki / 100)}</span></span>
                   </label>
                 )}
                 {methods.pickup && (

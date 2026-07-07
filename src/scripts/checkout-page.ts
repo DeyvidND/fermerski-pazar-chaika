@@ -139,7 +139,7 @@ const carrierOptionsEl = document.getElementById('carrierOptions') as HTMLElemen
 const carrierHintEl = document.getElementById('carrierHint') as HTMLElement | null;
 
 let compare: CompareResult | null = null;
-let compareCity = ''; // the city the current `compare` was priced for (avoids refetch)
+let compareKey = ''; // the city/address + COD combo the current `compare` was priced for (avoids refetch)
 let chosenCarrier: Carrier | null = null; // the buyer's pick (only in 'customer' policy)
 let compareLoading = false;
 
@@ -215,30 +215,48 @@ function renderCarrierOptions() {
   }
 }
 
-/** Fetch live carrier prices for the picked city (COD-aware). Memoized per city
+/** Fetch live carrier prices for the destination (COD-aware). Prefers a Google
+ *  pick's structured city; falls back to the hand-typed address text (the backend
+ *  geocodes it — same as the July-7 order-creation fix) when there's no pick, so
+ *  a typed-only address still gets a live carrier picker under 'customer' policy
+ *  instead of silently losing the buyer's carrier choice. Memoized per destination
  *  + payment combo so re-rendering doesn't spam the endpoint. */
 async function loadCompare(): Promise<void> {
   if (!comparisonActive || method !== 'econt_address') return;
   const city = picked?.city?.trim();
-  if (!city) return;
+  const typed = (addrInput?.value || '').trim();
   const codStotinki = pay === 'cod' ? Math.round(Cart.subtotal() * 100) : 0;
-  const key = `${city}|${codStotinki}`;
-  if (key === compareCity && compare) return; // already priced for this city+COD
+
+  let body: Record<string, unknown>;
+  let key: string;
+  if (city) {
+    body = { destinationCity: city, deliveryMode: 'address', codAmountStotinki: codStotinki };
+    key = `city:${city}|${codStotinki}`;
+  } else if (typed && looksLikeStreetAddress(typed)) {
+    body = { destinationAddress: typed, deliveryMode: 'address', codAmountStotinki: codStotinki };
+    key = `addr:${typed.toLowerCase()}|${codStotinki}`;
+  } else {
+    return; // no pick and not a real street line yet — don't fire
+  }
+  if (key === compareKey && compare) return; // already priced for this destination+COD
   compareLoading = true;
   renderCarrierOptions();
   try {
     const res = await fetch(`${PUBLIC_BASE}/shipping/compare`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ destinationCity: city, deliveryMode: 'address', codAmountStotinki: codStotinki }),
+      body: JSON.stringify(body),
     });
-    compare = res.ok ? ((await res.json()) as CompareResult) : null;
-    compareCity = compare ? key : '';
+    const parsed = res.ok ? ((await res.json()) as CompareResult) : null;
+    // An empty-quotes response (garbage input / geocode miss / non-comparison farm)
+    // reads as "no compare" so the picker keeps its "избери адрес…" hint.
+    compare = parsed && parsed.quotes.length ? parsed : null;
+    compareKey = compare ? key : '';
     // Reset a stale customer pick that's no longer available in the new quote.
     if (chosenCarrier && carrierPrice(chosenCarrier) == null) chosenCarrier = null;
   } catch {
     compare = null;
-    compareCity = '';
+    compareKey = '';
   } finally {
     compareLoading = false;
     renderCarrierOptions();
@@ -273,10 +291,31 @@ function initAutocompleteOnce() {
   acInited = true;
   initAddressAutocomplete(mapsKey, addrInput, (a) => {
     picked = a;
-    // A door order now has a structured city → (re)price the carriers.
-    if (comparisonActive && method === 'econt_address') void loadCompare();
+    // A real pick → structured city known, (re)price immediately. A hand-edit
+    // (a === null, the lib clears `picked` on manual typing) is handled by the
+    // debounced typed-address listener below instead of firing on every keystroke.
+    if (a && comparisonActive && method === 'econt_address') void loadCompare();
   });
 }
+
+// Typed-address carrier compare (no Google pick): debounced so a hand-typed door
+// address still gets a live carrier price/picker under 'customer' policy instead of
+// silently losing the buyer's carrier choice (see loadCompare). Mirrors the existing
+// Econt-office-city debounce pattern below. Fires only once the text looks like a
+// real street line (looksLikeStreetAddress) — cheap client-side gate before the
+// request even reaches the backend's own geocode shape-gate + 30/min throttle.
+let compareAddrTimer: ReturnType<typeof setTimeout> | null = null;
+addrInput?.addEventListener('input', () => {
+  if (!comparisonActive) return;
+  if (compareAddrTimer) clearTimeout(compareAddrTimer);
+  compareAddrTimer = setTimeout(() => {
+    if (picked) return; // a Google pick owns pricing for this address
+    if (method !== 'econt_address') return;
+    const typed = (addrInput?.value || '').trim();
+    if (!looksLikeStreetAddress(typed)) return;
+    void loadCompare();
+  }, 350);
+});
 
 // Final delivery address string: the (picked or typed) address plus the optional
 // block/entrance/floor/flat detail the courier needs (Places never returns it).
