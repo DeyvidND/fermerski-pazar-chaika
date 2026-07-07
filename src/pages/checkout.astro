@@ -2,6 +2,7 @@
 import Layout from '../components/Layout.astro';
 import { getStorefront, FALLBACK_STOREFRONT } from '../lib/api';
 import { ONLY_LOCAL_DELIVERY } from '../lib/config';
+import { bgnText } from '../lib/currency';
 const sf = (await getStorefront()) ?? FALLBACK_STOREFRONT;
 const delivery = sf.deliveryEnabled;
 const econt = sf.econtEnabled;
@@ -27,8 +28,8 @@ const methods = sf.methods ?? { ownSlots: true, pickup: true, econtOffice: false
 const d = sf.delivery;
 const eur = (st: number) => (st / 100).toFixed(2).replace('.', ',');
 const lvNum = (st: number) => (st / 100).toString();
-const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €` : '';
-const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €` : 'безплатна';
+const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €${bgnText(d.freeThresholdStotinki / 100)}` : '';
+const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €${bgnText(d.addressFeeStotinki / 100)}` : 'безплатна';
 
 const ownSlots = sf.ownSlots;
 const ownSlotsSchedule = ownSlots?.schedule ? `${ownSlots.schedule} · ` : '';
@@ -113,13 +114,13 @@ const mapsKey = String(
                 {!ONLY_LOCAL_DELIVERY && econt && econtAuto && methods.econtOffice && (
                   <label class="radio-card" data-method="econt">
                     <span class="dot"></span>
-                    <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €</span></span>
+                    <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €{bgnText(d.econtFeeStotinki / 100)}</span></span>
                   </label>
                 )}
                 {!ONLY_LOCAL_DELIVERY && econt && methods.econtAddress && (
                   <label class="radio-card" data-method="econt_address">
                     <span class="dot"></span>
-                    <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €</span></span>
+                    <span><b>Доставка с Еконт</b><br><span class="muted" style="font-size:14px">Даваш адрес · Еконт носи до най-близкия офис до теб · от {eur(d.econtAddressFeeStotinki)} €{bgnText(d.econtAddressFeeStotinki / 100)}</span></span>
                   </label>
                 )}
                 {methods.pickup && (

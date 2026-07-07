@@ -166,7 +166,7 @@ export const MANIFEST: EditableManifest = {
           { kind: 'text', key: 'orders.delivery.text', label: 'Доставка · текст', multiline: true, default: 'Поръчай онлайн и получи свежите продукти удобно вкъщи в петък между 11:00 и 20:00 ч.' },
           { kind: 'text', key: 'orders.delivery.fact1', label: 'Доставка · ред 1 (часове)', default: 'Доставка в петък · 11:00–20:00 ч.' },
           { kind: 'text', key: 'orders.delivery.fact2', label: 'Доставка · ред 2 (район)', default: 'Варна и близките квартали' },
-          { kind: 'text', key: 'orders.delivery.fact3', label: 'Доставка · ред 3 (такса)', default: 'Безплатна доставка над 40,00 €' },
+          { kind: 'text', key: 'orders.delivery.fact3', label: 'Доставка · ред 3 (такса)', default: 'Безплатна доставка над 40,00 € (78,23 лв.)' },
         ]},
         { id: 'orders.steps', label: 'Стъпки', slots: [
           { kind: 'text', key: 'orders.steps.eyebrow', label: 'Стъпки · надпис', default: 'Стъпка по стъпка' },

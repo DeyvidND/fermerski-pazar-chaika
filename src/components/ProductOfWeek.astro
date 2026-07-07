@@ -35,7 +35,7 @@ const hasImg = !!cover;
       <span class="eyebrow">★ Продукт на седмицата</span>
       <h2 class="potw__name">{potw.name}</h2>
       {note && <p class="lead potw__note">{note}</p>}
-      <div class="potw__price">{money(potw.priceStotinki)}</div>
+      <div class="potw__price"><Fragment set:html={money(potw.priceStotinki)} /></div>
       <a href={href} class="btn btn--primary btn--lg potw__cta">Виж продукта</a>
     </div>
   </div>

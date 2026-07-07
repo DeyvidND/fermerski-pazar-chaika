@@ -257,6 +257,15 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .product__foot { margin-top: 14px; display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
 .product__foot .stepper { align-self: center; }
 
+/* Legally-required BGN price shown next to the EUR price (euro-transition period).
+   Small + muted so it reads as a secondary conversion, not a second price. Forced
+   onto its own line on narrow screens so it never pushes tight price rows (product
+   cards, cart line items, checkout/confirmation summaries) into overflow. */
+.price-bgn { font-size: 0.62em; font-weight: 400; opacity: 0.62; margin-left: 5px; }
+@media (max-width: 480px) {
+  .price-bgn { display: block; margin-left: 0; white-space: nowrap; }
+}
+
 /* =========================================================
    Quantity stepper
    ========================================================= */

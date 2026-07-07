@@ -4,7 +4,7 @@ import Icon from '../../components/Icon.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import Gallery from '../../components/Gallery.astro';
 import { getCatalog } from '../../lib/api';
-import { money } from '../../lib/money';
+import { money, moneyEurOnly } from '../../lib/money';
 import { featured } from '../../lib/catalog';
 import { imageOrigin } from '../../lib/site';
 import { cfImage } from '../../lib/img';
@@ -105,10 +105,10 @@ const structuredData = [
           <h1 style="font-size:clamp(34px,5vw,52px);margin:14px 0 6px">{product.name}</h1>
           {metaBits && <div class="muted" style="font-size:16px">{metaBits}</div>}
           <div class="product__price" id="detailPrice" style="font-size:34px;margin:18px 0">
-            {money(baseHeadlineStotinki)}
+            <Fragment set:html={money(baseHeadlineStotinki)} />
             {baseCompareStotinki != null && (
               <span class="muted" style="font-size:20px;font-weight:500;text-decoration:line-through;margin-left:10px">
-                {money(baseCompareStotinki)}
+                {moneyEurOnly(baseCompareStotinki)}
               </span>
             )}
             {baseDiscount != null && (
@@ -149,7 +149,7 @@ const structuredData = [
                       data-variant-label={v.label}
                       data-price-lv={(eff / 100).toFixed(2)}
                       data-headline={money(eff)}
-                      data-compare={v.salePriceStotinki != null ? money(v.priceStotinki) : ''}
+                      data-compare={v.salePriceStotinki != null ? moneyEurOnly(v.priceStotinki) : ''}
                       data-discount={vDiscount ?? ''}
                       disabled={v.soldOut || undefined}
                       style={v.soldOut

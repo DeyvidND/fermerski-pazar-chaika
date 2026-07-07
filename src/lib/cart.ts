@@ -1,6 +1,7 @@
 // Client-side cart store (localStorage). Item id is the product UUID, so the
 // checkout can post { productId, quantity } straight to the backend. Price is
 // kept in euro (float) for display; the server recomputes authoritative totals.
+import { bgnHtml } from './currency';
 export interface CartItem {
   id: string;
   name: string;
@@ -66,7 +67,7 @@ export const Cart = {
 };
 
 export function money(lv: number): string {
-  return lv.toFixed(2).replace('.', ',') + ' €';
+  return lv.toFixed(2).replace('.', ',') + ' €' + bgnHtml(lv);
 }
 
 /** Sync every .cart-count badge in the header. */
