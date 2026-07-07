@@ -586,7 +586,12 @@ form.addEventListener('submit', async (e) => {
     // (ул./бул./ж.к.) in there means the street belongs one field up.
     if (method === 'address') {
       const detail = (addrDetails?.value || '').trim();
-      if (detail && /ул\.?|улица|бул\.?|булевард|ж\.?\s?к\.?|жк/i.test(detail)) {
+      // Only unambiguous street forms flag: dotted abbreviations (ул./бул.), full
+      // words (улица/булевард), or жк/ж.к. as a bounded token — so ordinary words
+      // that merely contain those letters (булката, дръжка, акумулатор) never
+      // false-flag a legitimate landmark note in this optional field.
+      const streetInDetail = /(^|[^а-яА-ЯёЁ])(ул\.|бул\.|улица|булевард|ж\.?\s?к\.|жк)(?=[\s\d]|$)/i;
+      if (detail && streetInDetail.test(detail)) {
         toast?.('Улицата пиши в полето „Адрес“ по-горе — тук е само за блок/вход/етаж.');
         addrDetails?.focus();
         return;
