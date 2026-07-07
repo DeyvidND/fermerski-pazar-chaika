@@ -245,9 +245,12 @@ export interface Subcategory {
 export interface Slot {
   id: string;
   date: string; // YYYY-MM-DD
-  startTime: string; // HH:MM
-  endTime: string; // HH:MM
-  // Free spots left on a multi-capacity slot; null/absent for normal 1-order slots.
+  // A slot is now a whole day (capacity per day, not an hour window). Times are
+  // null on a day-row slot; kept as string | null so an older backend that still
+  // sends hour windows keeps working.
+  startTime: string | null; // HH:MM
+  endTime: string | null; // HH:MM
+  // Orders still bookable that day; null/absent = unlimited (no capacity cap).
   remaining?: number | null;
   // Optional farmer note shown to the customer (e.g. "ще се обадя преди доставка").
   customerNote?: string | null;

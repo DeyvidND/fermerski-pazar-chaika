@@ -453,10 +453,10 @@ async function loadSlots() {
   if (!deliveryEnabled || !slotCard || slotsLoaded) return;
   slotsLoaded = true; // memoize: one fetch per checkout view, on first address pick
   let slots: Slot[] = [];
-  // Only offer slots within the next 21 days. A farm may seed slots far ahead,
+  // Only offer slots within the next 30 days. A farm may seed slots far ahead,
   // but a months-long pill strip is noise — `to` is an inclusive upper bound.
   const horizon = new Date();
-  horizon.setDate(horizon.getDate() + 21);
+  horizon.setDate(horizon.getDate() + 30);
   const pad = (n: number) => String(n).padStart(2, '0');
   const to = `${horizon.getFullYear()}-${pad(horizon.getMonth() + 1)}-${pad(horizon.getDate())}`;
   try {
@@ -468,17 +468,14 @@ async function loadSlots() {
 
   const datePills = document.getElementById('datePills')!;
   const slotsBox = document.getElementById('slots')!;
-  const step2 = document.getElementById('slotStep2');
   if (!slots.length) {
     slotsAvailable = false;
     datePills.innerHTML = '';
-    if (step2) step2.style.display = 'none';
     slotsBox.innerHTML =
-      '<p class="muted" style="font-size:14px">Няма свободни часове в момента — ще се свържем с теб за уговорка след поръчката.</p>';
+      '<p class="muted" style="font-size:14px">Няма свободни дни за доставка в момента — ще се свържем с теб за уговорка след поръчката.</p>';
     return;
   }
   slotsAvailable = true;
-  if (step2) step2.style.display = '';
 
   const byDate = new Map<string, Slot[]>();
   for (const s of slots) {
@@ -486,8 +483,11 @@ async function loadSlots() {
     byDate.get(s.date)!.push(s);
   }
   const dates = [...byDate.keys()];
-  let activeDate = dates[0];
+  let activeDate: string | null = null;
 
+  // A slot is now a whole day (capacity per day, not an hour window) — a date
+  // pill click *is* the selection, no separate hour step. Each date maps to
+  // exactly one day-row slot (byDate.get(d)![0]); pick it straight off the pill.
   const renderPills = () => {
     datePills.innerHTML = dates
       .map((d) => {
@@ -499,47 +499,35 @@ async function loadSlots() {
     datePills.querySelectorAll<HTMLElement>('.date-pill').forEach((p) =>
       p.addEventListener('click', () => {
         activeDate = p.dataset.date!;
-        selectedSlotId = null;
-        document.getElementById('slotChosen')!.style.display = 'none';
+        const s = byDate.get(activeDate)![0];
+        selectedSlotId = s.id;
+        const dt = new Date(`${activeDate}T00:00:00`);
+        selectedSlotLabel = `${WD[dt.getDay()]}, ${dt.getDate()} ${MO[dt.getMonth()]}`;
+        const chosen = document.getElementById('slotChosen')!;
+        chosen.style.display = 'inline-flex';
+        chosen.innerHTML = ICONS.check + ` Избра: ${esc(selectedSlotLabel)}`;
         renderPills();
         renderSlots();
       }),
     );
   };
 
+  // Shows the selected day's farmer note + remaining capacity — no more
+  // time-buttons, the day itself is the whole slot.
   const renderSlots = () => {
-    const list = byDate.get(activeDate) || [];
-    const buttons = list
-      .map((s) => {
-        // Multi-capacity slot: show how many spots are left ("остават 2 места").
-        // Single-order slots send remaining=null, so nothing extra is shown.
-        const left =
-          s.remaining != null && s.remaining > 0
-            ? `<span class="slot-left" style="display:block;font-size:11px;opacity:.7;margin-top:2px">остават ${s.remaining} ${s.remaining === 1 ? 'място' : 'места'}</span>`
-            : '';
-        return `<button type="button" class="slot" data-id="${esc(s.id)}" data-note="${esc(s.customerNote ?? '')}" data-label="${esc(s.startTime)}–${esc(s.endTime)}">${esc(s.startTime)}–${esc(s.endTime)}${left}</button>`;
-      })
-      .join('');
-    // Farmer's note for the day (e.g. "ще се обадя преди доставка") — same across a
-    // day's slots when it comes from the recurring rule, so show it once.
-    const dayNote = list.find((s) => s.customerNote)?.customerNote;
-    const noteLine = dayNote
-      ? `<p class="muted" style="font-size:13px;margin-top:10px">${esc(dayNote)}</p>`
+    if (!activeDate) {
+      slotsBox.innerHTML = '';
+      return;
+    }
+    const s = byDate.get(activeDate)![0];
+    const noteLine = s.customerNote
+      ? `<p class="muted" style="font-size:13px">${esc(s.customerNote)}</p>`
       : '';
-    slotsBox.innerHTML = buttons + noteLine;
-    slotsBox.querySelectorAll<HTMLElement>('.slot').forEach((b) =>
-      b.addEventListener('click', () => {
-        slotsBox.querySelectorAll('.slot').forEach((x) => x.classList.remove('is-active'));
-        b.classList.add('is-active');
-        selectedSlotId = b.dataset.id!;
-        const dt = new Date(`${activeDate}T00:00:00`);
-        selectedSlotLabel = `${dt.getDate()} ${MO[dt.getMonth()]}, ${b.dataset.label}`;
-        const chosen = document.getElementById('slotChosen')!;
-        chosen.style.display = 'inline-flex';
-        const note = b.dataset.note ? ` · <span class="muted">${esc(b.dataset.note)}</span>` : '';
-        chosen.innerHTML = ICONS.check + ` Избра: ${esc(selectedSlotLabel)}${note}`;
-      }),
-    );
+    const leftLine =
+      s.remaining != null
+        ? `<p class="muted" style="font-size:13px;margin-top:${noteLine ? '4px' : '0'}">Остават ${esc(String(s.remaining))} ${s.remaining === 1 ? 'място' : 'места'}</p>`
+        : '';
+    slotsBox.innerHTML = noteLine + leftLine;
   };
 
   renderPills();
