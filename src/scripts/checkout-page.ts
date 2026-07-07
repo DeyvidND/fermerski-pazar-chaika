@@ -276,6 +276,17 @@ function composeAddress(): string {
   return [v(addrInput), v(addrDetails)].filter(Boolean).join(', ');
 }
 
+/** Whether a hand-typed address looks like a real street line — a street name
+ *  (≥3 letters after stripping digits/punctuation) plus a house/block number —
+ *  rather than a bare city ("Варна") or a lone number ("5"). Used to guard typed
+ *  addresses that carry no Google Places pick, across every delivery method that
+ *  needs a findable door ("ул.Дунав5" without spaces still passes). */
+function looksLikeStreetAddress(street: string): boolean {
+  const hasNumber = /\d/.test(street);
+  const hasName = street.replace(/[\s\d.,№#/\\-]/g, '').length >= 3;
+  return hasNumber && hasName;
+}
+
 function shipping(sub: number): number {
   if (method === 'pickup') return 0;
   // Courier splits the cart per farmer and the server prices each farmer's
@@ -537,16 +548,19 @@ form.addEventListener('submit', async (e) => {
     payload.notes = PICKUP_LABEL;
   } else if (method === 'courier') {
     // Courier: each farmer ships their own products COD. Needs the recipient's
-    // door address + structured city (same source as econt_address); no slot,
-    // no Econt office, no carrier picker. Backend splits the cart per farmer.
+    // door address + structured city; no slot, no Econt office, no carrier picker.
+    // Backend splits the cart per farmer. City comes from the Google pick when the
+    // buyer picked one; otherwise the backend geocodes the typed address to derive
+    // the settlement the carrier routes by.
     const street = composeAddress();
-    if (!(addrInput?.value || '').trim()) {
+    const typed = (addrInput?.value || '').trim();
+    if (!typed) {
       toast?.('Въведи адрес за доставка.');
       addrInput?.focus();
       return;
     }
-    if (!picked?.city) {
-      toast?.('Избери адрес от предложенията, за да определим града за куриера.');
+    if (!picked && !looksLikeStreetAddress(typed)) {
+      toast?.('Напиши улица, номер и град (напр. „ул. Дунав 5, Варна“).');
       addrInput?.focus();
       return;
     }
@@ -554,9 +568,9 @@ form.addEventListener('submit', async (e) => {
       deliveryType: 'courier',
       paymentMethod: 'cod',
       deliveryAddress: street,
-      deliveryCity: picked.city,
     });
-    if (picked.postal) payload.deliveryPostal = picked.postal;
+    if (picked?.city) payload.deliveryCity = picked.city;
+    if (picked?.postal) payload.deliveryPostal = picked.postal;
   } else if (method === 'address' || method === 'econt_address') {
     const street = (addrInput?.value || '').trim();
     if (!street) {
@@ -564,20 +578,18 @@ form.addEventListener('submit', async (e) => {
       addrInput?.focus();
       return;
     }
-    // Hand-typed local-delivery address with no Google pick: guard against a bare
-    // city ("Варна") or a lone number ("5"). The courier needs a street name +
-    // number to find the door, so require BOTH a digit (house/block number) and a
-    // name (≥3 letters left after stripping digits/punctuation — so "ул.Дунав5"
-    // typed without spaces still passes). When the buyer picked a Google
-    // suggestion we trust it and skip this check.
-    if (method === 'address' && !picked) {
-      const hasNumber = /\d/.test(street);
-      const hasName = street.replace(/[\s\d.,№#/\\-]/g, '').length >= 3;
-      if (!hasNumber || !hasName) {
-        toast?.('Напиши улица и номер, не само града (напр. „ул. Дунав 5, Варна“).');
-        addrInput?.focus();
-        return;
-      }
+    // Hand-typed address with no Google pick: guard against a bare city ("Варна")
+    // or a lone number ("5"). We need a real street line to find the door (local
+    // delivery) or to geocode the settlement the carrier routes by (Econt door).
+    // When the buyer picked a Google suggestion we trust it and skip this check.
+    if (!picked && !looksLikeStreetAddress(street)) {
+      const msg =
+        method === 'econt_address'
+          ? 'Напиши улица, номер и град (напр. „ул. Дунав 5, Варна“).'
+          : 'Напиши улица и номер, не само града (напр. „ул. Дунав 5, Варна“).';
+      toast?.(msg);
+      addrInput?.focus();
+      return;
     }
     // Confused buyers put the real street in the block/entrance field instead of
     // Адрес (it's the field right underneath, and both look like "extra address
@@ -596,14 +608,6 @@ form.addEventListener('submit', async (e) => {
         addrDetails?.focus();
         return;
       }
-    }
-    // Econt routes a door label by structured city, which we only have from a
-    // picked Google address. Local farm delivery has no such need — a hand-typed
-    // address is geocoded by the backend.
-    if (method === 'econt_address' && !picked?.city) {
-      toast?.('Избери адрес от предложенията, за да определим града за Еконт.');
-      addrInput?.focus();
-      return;
     }
     payload.deliveryType = method;
     if (method === 'address') {
