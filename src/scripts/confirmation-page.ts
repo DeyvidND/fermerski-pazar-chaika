@@ -58,7 +58,10 @@ if (recap?.method === 'courier' && Array.isArray(recap.split)) {
   // #paid shows the grand total for courier (sum of all splits) — courier is
   // always COD (each farmer collects on delivery), never pre-paid online.
   const courierTotal = recap.split.reduce((acc, s) => acc + s.total, 0);
-  document.getElementById('paid')!.textContent = money(courierTotal);
+  // money() emits the €+лв. dual price as HTML (a .price-bgn <span>), so use
+  // innerHTML — textContent prints the raw "<span…>" tag literally. Safe: money()
+  // only formats numbers, no user input reaches it.
+  document.getElementById('paid')!.innerHTML = money(courierTotal);
   document.getElementById('paidLabel')!.textContent = 'За плащане при доставка';
 } else {
   // Normal path: render items list
@@ -70,7 +73,7 @@ if (recap?.method === 'courier' && Array.isArray(recap.split)) {
           `<div style="display:flex;justify-content:space-between;gap:16px;font-size:14.5px;padding:3px 0"><span>${esc(it.name)} × ${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`,
       )
       .join('');
-    document.getElementById('paid')!.textContent = money((recap as StashedNormal).total);
+    document.getElementById('paid')!.innerHTML = money((recap as StashedNormal).total); // set:html — money() emits a €+лв. HTML span
     // "Платено" only holds for the online/Stripe path — наложен платеж (COD)
     // hasn't actually been paid yet, it's collected on delivery/pickup.
     document.getElementById('paidLabel')!.textContent =
