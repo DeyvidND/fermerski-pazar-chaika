@@ -546,7 +546,10 @@ form.addEventListener('submit', async (e) => {
   const customerName = String(data.get('customerName') || '').trim();
   const customerPhone = String(data.get('customerPhone') || '').trim();
   const customerEmail = String(data.get('customerEmail') || '').trim();
-  const toast = (window as any).FFtoast as (m: string) => void;
+  // Every toast raised from checkout is an error/validation warning, so route
+  // them through the error style (red + ✕) — never the green success tick.
+  const FFtoast = (window as any).FFtoast as (m: string, type?: 'success' | 'error') => void;
+  const toast = (m: string) => FFtoast?.(m, 'error');
 
   // Pickup-only backstop: a courierDisabled product can't ship on a waybill. The
   // method cards are already hidden, but guard the POST too (the server rejects it

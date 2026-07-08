@@ -50,16 +50,23 @@ function steppers() {
 }
 
 let toastTimer: ReturnType<typeof setTimeout>;
-function toast(msg: string) {
+// A toast is either a success (green + ✓) or an error (red + ✕). Errors used to
+// share the success styling, so a failed checkout / validation message showed up
+// as a big green "done" tick — the opposite of what happened. The element is
+// reused across calls, so background + icon are re-set every call (not just at
+// creation), otherwise the first toast's colour would stick for later ones.
+function toast(msg: string, type: 'success' | 'error' = 'success') {
   let t = document.getElementById('ff-toast');
   if (!t) {
     t = document.createElement('div');
     t.id = 'ff-toast';
     t.style.cssText =
-      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:#fff;padding:14px 22px;border-radius:14px;font-weight:600;font-size:15px;line-height:1.4;text-align:left;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:min(92vw,440px)';
+      'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);color:#fff;padding:14px 22px;border-radius:14px;font-weight:600;font-size:15px;line-height:1.4;text-align:left;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:min(92vw,440px)';
     document.body.appendChild(t);
   }
-  t.innerHTML = ICONS.check + '<span>' + esc(msg) + '</span>';
+  const isErr = type === 'error';
+  t.style.background = isErr ? '#c0392b' : 'var(--primary)';
+  t.innerHTML = (isErr ? ICONS.close : ICONS.check) + '<span>' + esc(msg) + '</span>';
   // The raw ICONS svg has a viewBox but no width/height, so in the flex toast it
   // balloons to fill the row. Pin it small.
   const ic = t.querySelector('svg');

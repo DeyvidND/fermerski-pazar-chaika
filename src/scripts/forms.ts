@@ -5,7 +5,8 @@
 import { PUBLIC_BASE } from '../lib/config';
 import { validateName, validateEmail, validatePhone, setFieldError } from '../lib/validate';
 
-const toast = (msg: string) => (window as any).FFtoast?.(msg);
+const toast = (msg: string, type: 'success' | 'error' = 'success') =>
+  (window as any).FFtoast?.(msg, type);
 
 // Field name → format validator. Anything not listed is only checked for
 // required-ness. Phone is optional on the contact form, so empty phones pass
@@ -66,7 +67,7 @@ async function submit(form: HTMLFormElement) {
       const msg =
         (body?.message?.message ?? body?.message) ||
         'Възникна грешка. Опитай отново.';
-      toast(Array.isArray(msg) ? msg[0] : String(msg));
+      toast(Array.isArray(msg) ? msg[0] : String(msg), 'error');
       return;
     }
     const success: Record<string, string> = {
@@ -78,7 +79,7 @@ async function submit(form: HTMLFormElement) {
     form.reset();
     form.dispatchEvent(new CustomEvent('api-form:success'));
   } catch {
-    toast('Няма връзка със сървъра. Опитай отново.');
+    toast('Няма връзка със сървъра. Опитай отново.', 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -95,7 +96,7 @@ document.querySelectorAll<HTMLFormElement>('form[data-api-form]').forEach((form)
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!validateForm(form)) {
-      toast('Провери въведените данни.');
+      toast('Провери въведените данни.', 'error');
       return;
     }
     submit(form);
