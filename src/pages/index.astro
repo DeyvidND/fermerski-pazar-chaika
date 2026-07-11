@@ -194,8 +194,8 @@ const ogImage =
           <a href="/shop" class="btn btn--soft">Виж всички</a>
         </div>
         <div class="grid grid--4">
-          {feat.map((p) => <ProductCard product={p} farmerName={farmerName(p.farmerId)}
-            farmerId={p.farmerId} farmerImage={farmerImg(p.farmerId)}
+          {feat.map((p) => <ProductCard product={p} farmerName={showFarmers ? farmerName(p.farmerId) : null}
+            farmerId={showFarmers ? p.farmerId : null} farmerImage={showFarmers ? farmerImg(p.farmerId) : null}
             remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
         </div>
       </div>

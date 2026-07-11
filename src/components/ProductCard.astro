@@ -90,7 +90,7 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   <div class="product__body">
     <a href={href}><h3 class="product__name">{p.name}</h3></a>
     {p.weight && <div class="product__meta">{p.weight}</div>}
-    {farmerName && (
+    {farmerName?.trim() && (
       farmerHref ? (
         <a href={farmerHref} class="product__farmer">
           <span class="avatar">
@@ -259,7 +259,9 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   .product__farmer-name {
     font-size: 13px;
     font-weight: 600;
-    color: var(--color-primary, #4C8A54);
+    /* --ink (not the brand green) — the green fails AA at 13px (~3.6:1); the
+       avatar + hover underline already signal it's a link. */
+    color: var(--ink);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;

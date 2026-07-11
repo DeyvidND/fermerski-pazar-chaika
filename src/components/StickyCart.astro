@@ -33,6 +33,8 @@ import Icon from './Icon.astro';
     const onExcludedPage = /^\/(cart|checkout)(\/|$)/.test(window.location.pathname);
     const show = n > 0 && !onExcludedPage;
     bar.hidden = !show;
+    // Reserve space so the fixed bar never hides the last row / footer links.
+    document.body.classList.toggle('has-sticky-cart', show);
     if (!show) return;
     if (countEl) countEl.textContent = String(n);
     if (totalEl) totalEl.innerHTML = money(Cart.subtotal());
@@ -87,5 +89,15 @@ import Icon from './Icon.astro';
   /* Desktop keeps the header cart icon — this bar is mobile-only. */
   @media (min-width: 820px) {
     .sticky-cart { display: none; }
+  }
+
+  /* Reserve bottom space + lift the toast above the bar, mobile-only. */
+  @media (max-width: 819px) {
+    :global(body.has-sticky-cart) {
+      padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    }
+    :global(body.has-sticky-cart #ff-toast) {
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
   }
 </style>

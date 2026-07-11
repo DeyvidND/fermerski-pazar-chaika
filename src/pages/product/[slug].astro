@@ -222,8 +222,8 @@ const structuredData = [
         <div class="wrap">
           <h2 style="font-size:28px;margin-bottom:22px">Други от пазара</h2>
           <div class="grid grid--4">
-            {related.map((p) => <ProductCard product={p} farmerName={farmerNameOf(p.farmerId)}
-              farmerId={p.farmerId} farmerImage={farmerImgOf(p.farmerId)}
+            {related.map((p) => <ProductCard product={p} farmerName={sf.multiFarmer ? farmerNameOf(p.farmerId) : null}
+              farmerId={sf.multiFarmer ? p.farmerId : null} farmerImage={sf.multiFarmer ? farmerImgOf(p.farmerId) : null}
               remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </div>

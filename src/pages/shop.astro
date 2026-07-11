@@ -38,7 +38,7 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
 // farmers who actually have an active product right now (an empty pick is useless).
 const activeFarmerIds = new Set(active.map((p) => p.farmerId).filter((id): id is string => !!id));
 const filterableFarmers = farmers.filter((f) => activeFarmerIds.has(f.id));
-const showFarmerFilter = sf.multiFarmer && farmers.length > 1;
+const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
 ---
 <Layout title={`Магазин · ${sf.name}`} storefront={sf} pageLabel="Магазин">
   <main>
