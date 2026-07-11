@@ -6,6 +6,7 @@ import SearchBar from '../components/SearchBar.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
 import { ONLY_LOCAL_DELIVERY } from '../lib/config';
+import { itemListLd } from '../lib/jsonld';
 
 const boot = await getCatalog();
 const { storefront: sf, products, farmers, subcategories: subcats } = boot;
@@ -39,8 +40,14 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
 const activeFarmerIds = new Set(active.map((p) => p.farmerId).filter((id): id is string => !!id));
 const filterableFarmers = farmers.filter((f) => activeFarmerIds.has(f.id));
 const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
+// SEO: ItemList of the active catalog (products without a slug have no public
+// URL, so they're excluded — capped at 50 inside itemListLd). Omitted entirely
+// on a not-yet-seeded shop rather than emitting an empty list.
+const shopMetaDesc = `Онлайн магазин с плодове, зеленчуци, мляко, мед и месо от местните фермери на ${sf.name} — с доставка и вземане от място.`;
+const shopListItems = active.filter((p) => p.slug).map((p) => ({ name: p.name, path: `/product/${p.slug}` }));
+const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefined;
 ---
-<Layout title={`Магазин · ${sf.name}`} storefront={sf} pageLabel="Магазин">
+<Layout title={`Магазин · ${sf.name}`} description={shopMetaDesc} storefront={sf} jsonLd={structuredData} pageLabel="Магазин">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Магазин</span></nav>
@@ -50,7 +57,7 @@ const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
       <div class="wrap">
         <div class="section-head">
           <span class="eyebrow"><CopySlot slot="shop.head.eyebrow" copy={sf.copy} /></span>
-          <h2 style="margin-top:8px"><CopySlot slot="shop.head.title" copy={sf.copy} /></h2>
+          <h1 style="margin-top:8px"><CopySlot slot="shop.head.title" copy={sf.copy} /></h1>
           <p><CopySlot slot="shop.head.text" copy={sf.copy} /></p>
         </div>
 

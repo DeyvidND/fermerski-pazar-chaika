@@ -83,6 +83,7 @@ const structuredData = [
     soldOut: productSoldOut,
     images: productImages,
     description: product.description,
+    farmerName: farmer?.name ?? null,
   }),
   breadcrumbLd([
     { name: 'Начало', path: '/' },
@@ -91,7 +92,7 @@ const structuredData = [
   ]),
 ];
 ---
-<Layout title={`${product.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData} pageLabel="Продукт">
+<Layout title={`${product.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData} pageLabel="Продукт" ogType="product">
   <main data-product>
     <div class="wrap">
       <nav class="breadcrumb">

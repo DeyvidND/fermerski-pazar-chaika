@@ -6,10 +6,11 @@
 // into a <script type="application/ld+json"> via the JsonLd.astro component.
 // Every value mirrors what the page actually shows (EUR price, real address) —
 // mismatched structured data gets the markup ignored or penalised by Google.
-import type { Storefront, Product, Article } from './types';
+import type { Storefront, Product, Article, Farmer } from './types';
 import { SITE_URL } from './config';
 import { contactAddress, contactPhone, contactEmail, resolveSocials } from './site';
 import { cfImage } from './img';
+import { priceDisplay } from './pricing';
 
 /** Absolute URL on the canonical site for a path. */
 const abs = (path: string): string => `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
@@ -82,25 +83,38 @@ export function localBusinessLd(sf: Storefront): Record<string, unknown> {
   return ld;
 }
 
-/** A purchasable Product with an Offer (price in EUR + stock state). */
+/** A purchasable Product with an Offer (price in EUR + stock state). `farmerName`
+ *  (when the product has a resolvable farmer) becomes the Offer's seller — falls
+ *  back to the storefront itself for farmer-less/unresolved products, so `seller`
+ *  is always present without fabricating anything not already shown on the page. */
 export function productLd(
   p: Product,
   sf: Storefront,
-  opts: { priceStotinki: number; soldOut: boolean; images: string[]; description?: string | null },
+  opts: {
+    priceStotinki: number;
+    soldOut: boolean;
+    images: string[];
+    description?: string | null;
+    farmerName?: string | null;
+  },
 ): Record<string, unknown> {
   const url = abs(`/product/${encodeURIComponent(p.slug ?? '')}`);
   const images = opts.images.map((u) => absImage(u, 1200)).filter((u): u is string => !!u);
+  const seller = { '@type': 'Organization', name: opts.farmerName?.trim() || sf.name };
   const ld: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: p.name,
     url,
+    sku: p.slug ?? p.id,
     brand: { '@type': 'Brand', name: sf.name },
     offers: {
       '@type': 'Offer',
       price: (opts.priceStotinki / 100).toFixed(2),
       priceCurrency: 'EUR',
       availability: opts.soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller,
       url,
     },
   };
@@ -134,6 +148,40 @@ export function articleLd(
   return ld;
 }
 
+/** A farmer's profile as an Organization, with an OfferCatalog summarizing their
+ *  current in-stock products (name + price). `products` should already be
+ *  filtered to that farmer's active, in-stock items — this builder doesn't
+ *  re-check availability, and it's capped at 50 offers for the same reason
+ *  `itemListLd` is: no ranking benefit past what Google actually surfaces. */
+export function farmerLd(farmer: Farmer, sf: Storefront, products: Product[]): Record<string, unknown> {
+  const url = abs(`/farmer/${encodeURIComponent(farmer.id)}`);
+  const rawImages = farmer.images?.length ? farmer.images : farmer.imageUrl ? [farmer.imageUrl] : [];
+  const image = absImage(rawImages[0], 800);
+  const ld: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: farmer.name,
+    url,
+  };
+  if (image) ld.image = image;
+  if (farmer.bio) ld.description = farmer.bio.replace(/\s+/g, ' ').trim().slice(0, 300);
+  ld.parentOrganization = { '@type': 'Organization', name: sf.name, url: `${SITE_URL}/` };
+  if (products.length) {
+    const capped = products.slice(0, 50);
+    ld.hasOfferCatalog = {
+      '@type': 'OfferCatalog',
+      name: `Продукти на ${farmer.name}`,
+      itemListElement: capped.map((p) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Product', name: p.name },
+        price: (priceDisplay(p).headlineStotinki / 100).toFixed(2),
+        priceCurrency: 'EUR',
+      })),
+    };
+  }
+  return ld;
+}
+
 /** Breadcrumb trail. `path` is a site-relative path; `name` is the crumb label. */
 export function breadcrumbLd(items: { name: string; path: string }[]): Record<string, unknown> {
   return {
@@ -144,6 +192,23 @@ export function breadcrumbLd(items: { name: string; path: string }[]): Record<st
       position: i + 1,
       name: it.name,
       item: abs(it.path),
+    })),
+  };
+}
+
+/** Generic ItemList for a listing page (/shop's products, /farmers' farmers).
+ *  Capped at 50 items — Google only ever surfaces a handful from an ItemList,
+ *  so a longer catalog just bloats the page's <head> for no ranking benefit. */
+export function itemListLd(items: { name: string; path: string }[]): Record<string, unknown> {
+  const capped = items.slice(0, 50);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: capped.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: abs(it.path),
+      name: it.name,
     })),
   };
 }

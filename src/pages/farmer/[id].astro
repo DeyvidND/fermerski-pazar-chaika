@@ -7,7 +7,8 @@ import { getCatalog } from '../../lib/api';
 import { categoriesFrom, farmerSubsections } from '../../lib/catalog';
 import { imageOrigin, telHref } from '../../lib/site';
 import { cfImage } from '../../lib/img';
-import { breadcrumbLd } from '../../lib/jsonld';
+import { farmerLd, breadcrumbLd } from '../../lib/jsonld';
+import { allVariantsSoldOut } from '../../lib/pricing';
 
 const { id } = Astro.params;
 // One /bootstrap round trip (shared memo) instead of four separate reads.
@@ -42,11 +43,22 @@ const metaDesc =
   farmer.bio?.replace(/\s+/g, ' ').trim().slice(0, 160) ||
   `${farmer.name}${eyebrow ? ` · ${eyebrow}` : ''} — ${sf.name}.`;
 const ogImage = cfImage(farmerImages[0], 1200) ?? null;
-const structuredData = breadcrumbLd([
-  { name: 'Начало', path: '/' },
-  { name: 'Фермери', path: '/farmers' },
-  { name: farmer.name, path: `/farmer/${encodeURIComponent(farmer.id)}` },
-]);
+// This farmer's active, in-stock products — feeds the Organization node's
+// OfferCatalog below (never the full unfiltered catalog).
+const farmerInStockProducts = products.filter((p) => {
+  if (p.farmerId !== farmer.id || p.isActive === false) return false;
+  if (allVariantsSoldOut(p)) return false;
+  const remaining = availMap.get(p.id);
+  return !(remaining !== undefined && remaining === 0);
+});
+const structuredData = [
+  farmerLd(farmer, sf, farmerInStockProducts),
+  breadcrumbLd([
+    { name: 'Начало', path: '/' },
+    { name: 'Фермери', path: '/farmers' },
+    { name: farmer.name, path: `/farmer/${encodeURIComponent(farmer.id)}` },
+  ]),
+];
 ---
 <Layout title={`${farmer.name} · ${sf.name}`} description={metaDesc} storefront={sf} imageOrigin={imgOrigin} image={ogImage} jsonLd={structuredData} pageLabel="Профил на фермер">
   <main>

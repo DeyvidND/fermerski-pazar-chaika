@@ -78,7 +78,9 @@ p { text-wrap: pretty; }
 
 .section-head { max-width: 660px; }
 .section-head.center { margin-inline: auto; }
-.section-head h2 { font-size: clamp(28px, 4vw, 44px); margin-top: 10px; }
+/* h1 included: shop.astro/farmers.astro promote their top .section-head title
+   to <h1> for SEO (one per page) — same visual size as the h2 used elsewhere. */
+.section-head h1, .section-head h2 { font-size: clamp(28px, 4vw, 44px); margin-top: 10px; }
 .section-head p { margin-top: 14px; color: var(--ink-soft); font-size: 17px; }
 
 /* =========================================================

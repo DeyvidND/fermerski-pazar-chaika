@@ -38,9 +38,23 @@ interface Props {
    *  Omit for pages that shouldn't count toward that list (404 etc.) — the
    *  backend then falls back to a best-effort path guess. */
   pageLabel?: string;
+  /** og:type — 'website' (default) for regular pages, 'product' on the product
+   *  detail page, 'article' on articles. Link-preview cards (FB/Viber/Telegram)
+   *  and some crawlers use this to pick how to render the share card. */
+  ogType?: string;
 }
 
-const { title, description, bodyClass, imageOrigin, image, jsonLd, noindex, pageLabel } = Astro.props;
+const {
+  title,
+  description,
+  bodyClass,
+  imageOrigin,
+  image,
+  jsonLd,
+  noindex,
+  pageLabel,
+  ogType = 'website',
+} = Astro.props;
 // Reuse the profile a data-heavy page already fetched; otherwise fetch it here.
 const storefront: Storefront =
   Astro.props.storefront ?? (await getStorefront()) ?? FALLBACK_STOREFRONT;
@@ -91,7 +105,7 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
   <link rel="alternate" type="application/rss+xml" title={`${storefront.name} · Статии`} href={`${SITE_URL}/rss.xml`} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={desc} />
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={ogType} />
   <meta property="og:url" content={canonical} />
   <meta property="og:site_name" content={storefront.name} />
   <meta property="og:locale" content="bg_BG" />

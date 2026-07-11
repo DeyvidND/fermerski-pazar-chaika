@@ -8,14 +8,21 @@ import GhostFarmerCard from '../components/GhostFarmerCard.astro';
 import AdminNote from '../components/AdminNote.astro';
 import { getCatalog } from '../lib/api';
 import { catIdOf } from '../lib/catalog';
+import { itemListLd } from '../lib/jsonld';
 
 // One /bootstrap round trip (shared memo) instead of three separate reads.
 const { storefront: sf, farmers, products } = await getCatalog();
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
+// SEO: unique meta description + ItemList of the farmer roster (capped at 50
+// inside itemListLd). Omitted entirely when there are no farmers yet.
+const farmersMetaDesc = `Запознай се с местните фермери и стопанства зад продуктите на ${sf.name}.`;
+const structuredData = farmers.length
+  ? itemListLd(farmers.map((f) => ({ name: f.name, path: `/farmer/${f.id}` })))
+  : undefined;
 ---
-<Layout title={`Фермери · ${sf.name}`} storefront={sf} pageLabel="Фермери">
+<Layout title={`Фермери · ${sf.name}`} description={farmersMetaDesc} storefront={sf} jsonLd={structuredData} pageLabel="Фермери">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Фермери</span></nav>
@@ -25,7 +32,7 @@ const farmerCats = (id: string) =>
       <div class="wrap">
         <div class="section-head">
           <span class="eyebrow"><CopySlot slot="farmers.head.eyebrow" copy={sf.copy} /></span>
-          <h2 style="margin-top:8px"><CopySlot slot="farmers.head.title" copy={sf.copy} /></h2>
+          <h1 style="margin-top:8px"><CopySlot slot="farmers.head.title" copy={sf.copy} /></h1>
           <p><CopySlot slot="farmers.head.text" copy={sf.copy} /></p>
         </div>
 
