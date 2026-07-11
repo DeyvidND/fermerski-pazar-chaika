@@ -33,10 +33,10 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
       </div>
       <div class="nav__actions">
         <a href="/cart" class="icon-btn cart-btn" aria-label="Количка">
-          <span class="cart-btn__icon"><Icon name="cart" /><span class="cart-count is-zero">0</span></span>
+          <span class="cart-btn__icon"><Icon name="cart" /><span class="cart-count is-zero"><span class="cart-count__n">0</span></span></span>
           <span class="cart-btn__label">Количка</span>
         </a>
-        <button class="icon-btn hamburger" id="hamburger" aria-label="Меню"><Icon name="menu" /><span class="hamburger__label">Меню</span></button>
+        <button class="icon-btn hamburger" id="hamburger" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><Icon name="menu" /><span class="hamburger__label">Меню</span></button>
       </div>
     </nav>
   </div>
@@ -44,7 +44,7 @@ const brandIcon = storefront.faviconUrl ? safeHref(storefront.faviconUrl) : stor
 
 <!-- mobile drawer -->
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
-<aside class="drawer" id="drawer" aria-hidden="true">
+<aside class="drawer" id="drawer" aria-hidden="true" inert>
   <div class="drawer__head">
     <span class="brand"><span class:list={["brand__mark", brandIcon && "brand__mark--img"]}>
         {brandIcon ? <img src={brandIcon} alt={storefront.name} /> : <Icon name="berry" />}

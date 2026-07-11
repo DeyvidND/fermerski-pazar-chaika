@@ -36,6 +36,24 @@ const lvNum = (st: number) => (st / 100).toString();
 const freeOverTxt = d.freeThresholdStotinki > 0 ? ` · безплатна над ${eur(d.freeThresholdStotinki)} €${bgnText(d.freeThresholdStotinki / 100)}` : '';
 const addrFeeTxt = d.addressFeeStotinki > 0 ? `${eur(d.addressFeeStotinki)} €${bgnText(d.addressFeeStotinki / 100)}` : 'безплатна';
 
+// Delivery-method visibility, extracted so the same booleans drive both the
+// conditional rendering below and which radio gets the initial `checked`
+// (mirrors the JS default: the first `[data-method]` element in DOM order —
+// see setMethod()'s `document.querySelector('[data-method]')` in checkout-page.ts).
+const showAddress = (delivery && methods.ownSlots) || ONLY_LOCAL_DELIVERY;
+const showEcontOffice = !ONLY_LOCAL_DELIVERY && econt && econtAuto && methods.econtOffice;
+const showEcontDoor = !ONLY_LOCAL_DELIVERY && doorDelivery;
+const showPickup = methods.pickup;
+const defaultDeliveryMethod = showAddress
+  ? 'address'
+  : showEcontOffice
+    ? 'econt'
+    : showEcontDoor
+      ? 'econt_address'
+      : showPickup
+        ? 'pickup'
+        : null;
+
 const ownSlots = sf.ownSlots;
 const ownSlotsSchedule = ownSlots?.schedule ? `${ownSlots.schedule} · ` : '';
 
@@ -98,10 +116,10 @@ const mapsKey = String(
             <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Контакти</h3>
               <div class="stack" style="gap:14px">
-                <div class="field"><label>Име и фамилия</label><input class="input" name="customerName" autocomplete="name" placeholder="Иван Иванов" required /></div>
+                <div class="field"><label for="customerName">Име и фамилия</label><input class="input" id="customerName" name="customerName" autocomplete="name" placeholder="Иван Иванов" required /></div>
                 <div class="field-row">
-                  <div class="field"><label>Телефон</label><input class="input" name="customerPhone" type="tel" autocomplete="tel" placeholder="+359 88 ..." required /></div>
-                  <div class="field"><label>Имейл <span class="muted" style="font-weight:400">(по желание — за потвърждение)</span></label><input class="input" name="customerEmail" type="email" autocomplete="email" placeholder="ime@example.bg" /></div>
+                  <div class="field"><label for="customerPhone">Телефон</label><input class="input" id="customerPhone" name="customerPhone" type="tel" autocomplete="tel" placeholder="+359 88 ..." required /></div>
+                  <div class="field"><label for="customerEmail">Имейл <span class="muted" style="font-weight:400">(по желание — за потвърждение)</span></label><input class="input" id="customerEmail" name="customerEmail" type="email" autocomplete="email" placeholder="ime@example.bg" /></div>
                 </div>
               </div>
             </div>
@@ -109,27 +127,32 @@ const mapsKey = String(
             <!-- delivery method -->
             <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на получаване</h3>
-              <div class="stack" style="gap:12px" id="deliveryMethod">
-                {((delivery && methods.ownSlots) || ONLY_LOCAL_DELIVERY) && (
+              <fieldset class="stack" style="gap:12px;border:0;padding:0;margin:0;min-width:0" id="deliveryMethod">
+                <legend class="sr-only">Начин на доставка</legend>
+                {showAddress && (
                   <label class="radio-card" data-method="address">
+                    <input type="radio" name="deliveryMethod" value="address" class="sr-only" checked={defaultDeliveryMethod === 'address'} />
                     <span class="dot"></span>
                     <span><b>Местна доставка до адрес</b><br><span class="muted" style="font-size:14px">Доставка от фермата · {ownSlotsSchedule}{addrFeeTxt}{d.addressFeeStotinki > 0 ? freeOverTxt : ''}</span><br><span class="muted" style="font-size:13px">само за Варна, Добрич и околностите</span></span>
                   </label>
                 )}
-                {!ONLY_LOCAL_DELIVERY && econt && econtAuto && methods.econtOffice && (
+                {showEcontOffice && (
                   <label class="radio-card" data-method="econt">
+                    <input type="radio" name="deliveryMethod" value="econt" class="sr-only" checked={defaultDeliveryMethod === 'econt'} />
                     <span class="dot"></span>
                     <span><b>Еконт — до офис</b><br><span class="muted" style="font-size:14px">До офис на Еконт в цялата страна · от {eur(d.econtFeeStotinki)} €{bgnText(d.econtFeeStotinki / 100)}</span></span>
                   </label>
                 )}
-                {!ONLY_LOCAL_DELIVERY && doorDelivery && (
+                {showEcontDoor && (
                   <label class="radio-card" data-method="econt_address">
+                    <input type="radio" name="deliveryMethod" value="econt_address" class="sr-only" checked={defaultDeliveryMethod === 'econt_address'} />
                     <span class="dot"></span>
                     <span><b>Доставка до адрес</b><br><span class="muted" style="font-size:14px">Даваш адрес · куриерът доставя до теб · от {eur(d.econtAddressFeeStotinki)} €{bgnText(d.econtAddressFeeStotinki / 100)}</span></span>
                   </label>
                 )}
-                {methods.pickup && (
+                {showPickup && (
                   <label class="radio-card" data-method="pickup">
+                    <input type="radio" name="deliveryMethod" value="pickup" class="sr-only" checked={defaultDeliveryMethod === 'pickup'} />
                     <span class="dot"></span>
                     <span>
                       <b>{pickupLabel}</b><br>
@@ -139,7 +162,7 @@ const mapsKey = String(
                     </span>
                   </label>
                 )}
-              </div>
+              </fieldset>
 
               <!-- Куриер: временно изключен (виж ONLY_LOCAL_DELIVERY горе). Плоска
                    информационна бележка, НЕ радио-карта — иначе изглежда като
@@ -157,12 +180,12 @@ const mapsKey = String(
                    which Places does not return. -->
               <div id="addressFields" style="margin-top:14px;display:none">
                 <div class="field">
-                  <label>Адрес *</label>
-                  <input class="input" id="addressInput" placeholder="Започни да пишеш улица и град…" autocomplete="off" />
+                  <label for="addressInput">Адрес *</label>
+                  <input class="input" id="addressInput" placeholder="Започни да пишеш улица и град…" autocomplete="off" aria-describedby="addrHint" />
                   <span class="muted" id="addrHint" style="font-size:14px;display:block;margin-top:6px">Улица и номер + град (напр. ул. Дунав 5, Варна). Избери от предложенията, ако се появят.</span>
                 </div>
                 <div class="field" style="margin-top:10px">
-                  <label>Блок, вход, етаж, апартамент <span class="muted">(по желание)</span></label>
+                  <label for="addrDetails">Блок, вход, етаж, апартамент <span class="muted">(по желание)</span></label>
                   <input class="input" id="addrDetails" placeholder="напр. бл. 12, вх. А, ет. 3, ап. 9" autocomplete="off" />
                   <span class="muted" style="font-size:14px;display:block;margin-top:6px">Само вход/блок/етаж — <b>не</b> улицата. Улицата и номерът се пишат в „Адрес“ по-горе.</span>
                 </div>
@@ -180,9 +203,9 @@ const mapsKey = String(
 
               <!-- Econt office (auto: live picker · manual: free-text) -->
               <div id="econtOfficeFields" style="margin-top:14px;display:none">
-                <div class="field"><label>Град</label><input class="input" id="econtCity" placeholder="напр. София, Пловдив, Варна" autocomplete="off" /></div>
+                <div class="field"><label for="econtCity">Град</label><input class="input" id="econtCity" placeholder="напр. София, Пловдив, Варна" autocomplete="off" /></div>
                 <div class="field" style="margin-top:10px">
-                  <label>Офис на Еконт</label>
+                  <label for="econtOffice">Офис на Еконт</label>
                   {econtAuto ? (
                     <select class="input" id="econtOffice"><option value="">Първо въведи град</option></select>
                   ) : (
@@ -208,16 +231,19 @@ const mapsKey = String(
             <div class="card co-card">
               <h3 style="font-size:20px;margin-bottom:16px">Начин на плащане</h3>
               {showPaymentChoice ? (
-                <div class="stack" style="gap:12px" id="paymentMethod">
+                <fieldset class="stack" style="gap:12px;border:0;padding:0;margin:0;min-width:0" id="paymentMethod">
+                  <legend class="sr-only">Начин на плащане</legend>
                   <label class="radio-card is-active" data-pay="online">
+                    <input type="radio" name="paymentMethod" value="online" class="sr-only" checked />
                     <span class="dot"></span>
                     <span><b>Карта (онлайн)</b><br><span class="muted" style="font-size:14px">Плащаш сигурно с карта сега</span></span>
                   </label>
                   <label class="radio-card" data-pay="cod">
+                    <input type="radio" name="paymentMethod" value="cod" class="sr-only" />
                     <span class="dot"></span>
                     <span><b>Наложен платеж</b><br><span class="muted" style="font-size:14px">Плащаш при получаване{econt ? ' (напр. в офис на Еконт)' : ''}</span></span>
                   </label>
-                </div>
+                </fieldset>
               ) : (
                 <p class="muted" style="font-size:14px">
                   {stripeEnabled

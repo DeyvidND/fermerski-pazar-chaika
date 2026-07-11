@@ -63,11 +63,11 @@ const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
         {(cats.length > 0 || showBestChip) && (
           <div class="chips-row"
                style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 8px" id="catChips">
-            <button class="chip is-active" data-tab="all">Всички</button>
-            {showBestChip && <button class="chip" data-tab="best-sellers">Най-продавани</button>}
-            {cats.map((c) => <button class="chip" data-tab={c.id}>{c.name}</button>)}
+            <button class="chip is-active" data-tab="all" aria-pressed="true">Всички</button>
+            {showBestChip && <button class="chip" data-tab="best-sellers" aria-pressed="false">Най-продавани</button>}
+            {cats.map((c) => <button class="chip" data-tab={c.id} aria-pressed="false">{c.name}</button>)}
             {showCourierChip && (
-              <button class="chip" id="courierChip" data-courier-filter style="border-color:#4C8A54;color:#4C8A54">
+              <button class="chip" id="courierChip" data-courier-filter aria-pressed="false" style="border-color:#4C8A54;color:#4C8A54">
                 📦 С куриер
               </button>
             )}
@@ -148,9 +148,10 @@ const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
     chips?.addEventListener('click', (e) => {
       const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
       if (!chip) return;
-      chips.querySelectorAll<HTMLElement>('[data-tab]').forEach((c) =>
-        c.classList.toggle('is-active', c === chip),
-      );
+      chips.querySelectorAll<HTMLElement>('[data-tab]').forEach((c) => {
+        c.classList.toggle('is-active', c === chip);
+        c.setAttribute('aria-pressed', String(c === chip));
+      });
       state.cat = chip.dataset.tab || 'all';
       apply();
     });
@@ -160,6 +161,7 @@ const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
     courierChip?.addEventListener('click', () => {
       state.courierOnly = !state.courierOnly;
       courierChip.classList.toggle('is-active', state.courierOnly);
+      courierChip.setAttribute('aria-pressed', String(state.courierOnly));
       apply();
     });
 

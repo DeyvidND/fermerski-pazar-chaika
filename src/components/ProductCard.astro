@@ -175,7 +175,9 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   }
 
   .stock-badge--remaining {
-    background: var(--color-primary, #4C8A54);
+    /* Dedicated darker green — NOT --color-primary (that's ~3.6:1 with white text
+       at this weight/size, fails WCAG AA). Kept local to this badge only. */
+    background: #3F7D43;
     color: #fff;
   }
 

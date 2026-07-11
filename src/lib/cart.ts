@@ -74,8 +74,18 @@ export function money(lv: number): string {
 export function updateCount() {
   const n = Cart.count();
   document.querySelectorAll<HTMLElement>('.cart-count').forEach((el) => {
-    el.textContent = String(n);
+    // Write the number to the inner .cart-count__n span (not the badge itself)
+    // so a plain el.textContent write can't clobber other markup in the badge.
+    const numEl = el.querySelector<HTMLElement>('.cart-count__n');
+    if (numEl) numEl.textContent = String(n);
+    else el.textContent = String(n);
     el.classList.toggle('is-zero', n === 0);
+    // The link carries a static aria-label ("Количка"), which — per the
+    // accessible-name computation — overrides any visible/sr-only descendant
+    // text, so the item count has to be folded into the label itself here to
+    // actually be announced ("Количка, 3 продукта" vs. silently "Количка").
+    const link = el.closest<HTMLElement>('.cart-btn');
+    if (link) link.setAttribute('aria-label', n > 0 ? `Количка, ${n} продукта` : 'Количка');
   });
   window.dispatchEvent(new CustomEvent('cart:changed'));
 }

@@ -84,20 +84,32 @@ let payBeforeCourier: 'online' | 'cod' = pay;
 const payEls = Array.from(document.querySelectorAll<HTMLElement>('[data-pay]'));
 const payCardEl = payEls.find((el) => el.dataset.pay === 'online') || null;
 const payCodEl = payEls.find((el) => el.dataset.pay === 'cod') || null;
-/** Reflect the active payment choice in the radio-cards. */
+const payCardInput = payCardEl?.querySelector<HTMLInputElement>('input[name="paymentMethod"]') || null;
+/** Reflect the active payment choice in the radio-cards (+ the native radios,
+ *  so keyboard/AT state always matches the visual .is-active card). */
 function syncPayUI() {
-  payEls.forEach((x) => x.classList.toggle('is-active', x.dataset.pay === pay));
+  payEls.forEach((x) => {
+    x.classList.toggle('is-active', x.dataset.pay === pay);
+    const input = x.querySelector<HTMLInputElement>('input[name="paymentMethod"]');
+    if (input) input.checked = x.dataset.pay === pay;
+  });
+}
+/** Select a payment method — shared by the label click handler and the native
+ *  radio's change handler (arrow-key selection fires change, not click). */
+function selectPayment(val: 'online' | 'cod') {
+  // Courier is COD only — while it's selected the card option is disabled, so
+  // this is defensive (the input itself is also `disabled` — see applyPaymentForMethod).
+  if (method === 'courier' && val === 'online') return;
+  pay = val;
+  syncPayUI();
+  // COD adds a carrier surcharge → re-price the door comparison.
+  if (comparisonActive && method === 'econt_address') void loadCompare();
 }
 payEls.forEach((el) =>
-  el.addEventListener('click', () => {
-    // Courier is COD only — while it's selected the card option is disabled and
-    // clicking it is a no-op (the handler below force-sets COD).
-    if (method === 'courier' && el.dataset.pay === 'online') return;
-    pay = el.dataset.pay as 'online' | 'cod';
-    syncPayUI();
-    // COD adds a carrier surcharge → re-price the door comparison.
-    if (comparisonActive && method === 'econt_address') void loadCompare();
-  }),
+  el.addEventListener('click', () => selectPayment(el.dataset.pay as 'online' | 'cod')),
+);
+document.querySelectorAll<HTMLInputElement>('input[name="paymentMethod"]').forEach((input) =>
+  input.addEventListener('change', () => selectPayment(input.value as 'online' | 'cod')),
 );
 /** Courier is COD-only: lock the payment choice to COD and grey out the card
  *  option while courier is the method; restore the buyer's prior choice on exit. */
@@ -109,11 +121,15 @@ function applyPaymentForMethod(m: Method) {
       payCardEl.style.opacity = '.45';
       payCardEl.style.pointerEvents = 'none';
     }
+    // Also disable the native radio — pointer-events:none only blocks the mouse,
+    // a keyboard/AT user could still Tab to it and select "card" during courier.
+    if (payCardInput) payCardInput.disabled = true;
   } else {
     if (payCardEl) {
       payCardEl.style.opacity = '';
       payCardEl.style.pointerEvents = '';
     }
+    if (payCardInput) payCardInput.disabled = false;
     // Coming back from courier → restore what the buyer had before (only if the
     // card option exists / Stripe is on; otherwise stay on COD).
     if (payCardEl || payCodEl) pay = payBeforeCourier;
@@ -376,9 +392,13 @@ function renderSummary() {
 
 function setMethod(m: Method) {
   method = m;
-  document.querySelectorAll<HTMLElement>('[data-method]').forEach((el) =>
-    el.classList.toggle('is-active', el.dataset.method === m),
-  );
+  document.querySelectorAll<HTMLElement>('[data-method]').forEach((el) => {
+    el.classList.toggle('is-active', el.dataset.method === m);
+    // Keep the native radio in sync too (setMethod can be called programmatically,
+    // e.g. the courier-disabled bounce below, not just from a user radio pick).
+    const input = el.querySelector<HTMLInputElement>('input[name="deliveryMethod"]');
+    if (input) input.checked = el.dataset.method === m;
+  });
   // Structured address fields: local delivery + Econt-to-door.
   addr.style.display = usesAddress(m) ? '' : 'none';
   // Load Places autocomplete lazily the first time an address method is used —
@@ -404,6 +424,12 @@ function setMethod(m: Method) {
 
 document.querySelectorAll<HTMLElement>('[data-method]').forEach((el) =>
   el.addEventListener('click', () => setMethod(el.dataset.method as Method)),
+);
+// Native radios: arrow-key navigation between options in the group checks a
+// radio and fires `change` WITHOUT a `click` (so the listener above alone
+// leaves keyboard selection dead) — this is the keyboard-equivalent read path.
+document.querySelectorAll<HTMLInputElement>('input[name="deliveryMethod"]').forEach((input) =>
+  input.addEventListener('change', () => setMethod(input.value as Method)),
 );
 
 /* ---------- Econt office picker ---------- */

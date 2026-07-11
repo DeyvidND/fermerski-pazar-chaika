@@ -20,19 +20,37 @@ function promo() {
 function drawer() {
   const d = document.getElementById('drawer');
   const back = document.getElementById('drawerBackdrop');
+  const hamburger = document.getElementById('hamburger');
+  const closeBtn = document.getElementById('drawerClose') as HTMLElement | null;
   const open = () => {
     d?.classList.add('open');
     back?.classList.add('open');
     document.body.style.overflow = 'hidden';
+    // The drawer starts aria-hidden + inert (see Header.astro) so AT never
+    // announces, and Tab never reaches, the off-screen nav links — flip both
+    // (and the toggle button's state) open.
+    d?.removeAttribute('aria-hidden');
+    if (d) (d as HTMLElement & { inert: boolean }).inert = false;
+    hamburger?.setAttribute('aria-expanded', 'true');
+    closeBtn?.focus();
   };
   const shut = () => {
     d?.classList.remove('open');
     back?.classList.remove('open');
     document.body.style.overflow = '';
+    d?.setAttribute('aria-hidden', 'true');
+    if (d) (d as HTMLElement & { inert: boolean }).inert = true;
+    hamburger?.setAttribute('aria-expanded', 'false');
+    // Return focus to the control that opened the drawer — otherwise focus is
+    // left on (or inside) a now-hidden aside, stranding keyboard/AT users.
+    hamburger?.focus();
   };
-  document.getElementById('hamburger')?.addEventListener('click', open);
-  document.getElementById('drawerClose')?.addEventListener('click', shut);
+  hamburger?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', shut);
   back?.addEventListener('click', shut);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && d?.classList.contains('open')) shut();
+  });
 }
 
 function steppers() {
@@ -60,6 +78,10 @@ function toast(msg: string, type: 'success' | 'error' = 'success') {
   if (!t) {
     t = document.createElement('div');
     t.id = 'ff-toast';
+    // role="alert" (implicit aria-live="assertive") so screen readers announce
+    // the message the moment it's set — errors here are validation failures
+    // that block checkout, so they must not go silently unheard.
+    t.setAttribute('role', 'alert');
     t.style.cssText =
       'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);color:#fff;padding:14px 22px;border-radius:14px;font-weight:600;font-size:15px;line-height:1.4;text-align:left;z-index:90;box-shadow:0 16px 40px -10px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;display:flex;gap:10px;align-items:center;max-width:min(92vw,440px)';
     document.body.appendChild(t);
