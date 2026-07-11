@@ -87,6 +87,14 @@ p { text-wrap: pretty; }
 .btn--soft:hover { background: var(--primary); color: #fff; }
 .btn--lg { padding: 16px 30px; font-size: 16.5px; }
 .btn--sm { padding: 9px 16px; font-size: 14px; }
+/* Touch tap target: .btn--sm is used both as a card CTA and as small desktop
+   links (articles, farmer cards). Scope the 44px bump to mobile only so
+   tight desktop spots (e.g. klasik theme's already-compact .btn--sm padding)
+   are untouched — min-height alone (no padding change) reaches 44px without
+   disturbing any existing padding overrides. */
+@media (max-width: 600px) {
+  .btn--sm { min-height: 44px; }
+}
 .btn--full { width: 100%; }
 .btn--block { display: flex; width: 100%; }
 
@@ -245,7 +253,7 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 .product__body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .product__name { font-family: var(--font-head); font-size: 20px; font-weight: var(--h-weight); overflow-wrap: anywhere; }
 [data-theme="klasik"] .product__name { font-size: 24px; }
-.product__meta { font-size: 13.5px; color: var(--muted); }
+.product__meta { font-size: 14px; color: var(--muted); }
 /* margin-top:auto pushes the price + foot (Add button) to the bottom of the card.
    Cards in a grid row stretch to equal height, so this bottom-aligns the price and
    button across the whole row even when product photos differ in height. */
@@ -287,6 +295,17 @@ body.show-modules .is-optional > .opt-inline { display: inline-flex; }
 }
 .stepper input::-webkit-outer-spin-button,
 .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Phone 2-up product cards: the fixed ~143px stepper (46+48+46, all flex:none)
+   is wider than the ~120px card content column, so the −/+ buttons overflowed
+   and got clipped by .card{overflow:hidden}. Stretch it to the card width
+   instead so both buttons stay tappable. Desktop keeps the fixed-width, centered
+   stepper (unaffected — this only fires ≤600px). */
+@media (max-width: 600px) {
+  .product__foot .stepper { align-self: stretch; width: 100%; }
+  .product__foot .stepper button { flex: 1; }
+  .product__foot .stepper input { flex: 1; width: auto; min-width: 0; }
+}
 
 /* =========================================================
    Forms
@@ -695,9 +714,9 @@ body.show-modules .module-toggle .sw::after { transform: translateX(14px); }
 .li-body { display: flex; flex-direction: column; gap: 4px; }
 .li-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .li-name { font-family: var(--font-head); font-size: 19px; font-weight: var(--h-weight); flex: 1; }
-.li-meta { font-size: 13.5px; }
+.li-meta { font-size: 14px; }
 .li-price { font-weight: 700; font-size: 18px; white-space: nowrap; }
-.li-actions { display: flex; gap: 14px; align-items: center; margin-top: 8px; }
+.li-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 8px; }
 @media (max-width: 520px) { .line-item { grid-template-columns: 64px 1fr; } .line-item .ph { width: 64px; height: 64px; } .li-name { font-size: 16px; } }
 
 .co-card { padding: 24px; box-shadow: none; }
