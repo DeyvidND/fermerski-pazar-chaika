@@ -11,6 +11,7 @@ import { SITE_URL } from './config';
 import { contactAddress, contactPhone, contactEmail, resolveSocials } from './site';
 import { cfImage } from './img';
 import { priceDisplay } from './pricing';
+import { farmerSlug } from './farmer-slug';
 
 /** Absolute URL on the canonical site for a path. */
 const abs = (path: string): string => `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
@@ -154,7 +155,7 @@ export function articleLd(
  *  re-check availability, and it's capped at 50 offers for the same reason
  *  `itemListLd` is: no ranking benefit past what Google actually surfaces. */
 export function farmerLd(farmer: Farmer, sf: Storefront, products: Product[]): Record<string, unknown> {
-  const url = abs(`/farmer/${encodeURIComponent(farmer.id)}`);
+  const url = abs(`/farmer/${farmerSlug(farmer.name)}`);
   const rawImages = farmer.images?.length ? farmer.images : farmer.imageUrl ? [farmer.imageUrl] : [];
   const image = absImage(rawImages[0], 800);
   const ld: Record<string, unknown> = {

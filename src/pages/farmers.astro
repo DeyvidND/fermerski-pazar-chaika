@@ -9,17 +9,21 @@ import AdminNote from '../components/AdminNote.astro';
 import { getCatalog } from '../lib/api';
 import { catIdOf } from '../lib/catalog';
 import { itemListLd } from '../lib/jsonld';
+import { farmerSlugMap } from '../lib/farmer-slug';
 
 // One /bootstrap round trip (shared memo) instead of three separate reads.
 const { storefront: sf, farmers, products } = await getCatalog();
 const farmerCount = (id: string) => products.filter((p) => p.farmerId === id).length;
 const farmerCats = (id: string) =>
   new Set(products.filter((p) => p.farmerId === id).map((p) => catIdOf(p, sf.multiSubcat))).size;
+// Collision-safe slug per farmer (see lib/farmer-slug.ts) — shared by every
+// link/structured-data reference to a farmer on this page.
+const slugs = farmerSlugMap(farmers);
 // SEO: unique meta description + ItemList of the farmer roster (capped at 50
 // inside itemListLd). Omitted entirely when there are no farmers yet.
 const farmersMetaDesc = `Запознай се с местните фермери и стопанства зад продуктите на ${sf.name}.`;
 const structuredData = farmers.length
-  ? itemListLd(farmers.map((f) => ({ name: f.name, path: `/farmer/${f.id}` })))
+  ? itemListLd(farmers.map((f) => ({ name: f.name, path: `/farmer/${slugs.get(f.id)}` })))
   : undefined;
 ---
 <Layout title={`Фермери · ${sf.name}`} description={farmersMetaDesc} storefront={sf} jsonLd={structuredData} pageLabel="Фермери">
@@ -50,7 +54,7 @@ const structuredData = farmers.length
         <div class="grid grid--3 grid--farmers" style="margin-top:8px">
           {farmers.length
             ? farmers.map((f) => (
-                <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
+                <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} slug={slugs.get(f.id)!} />
               ))
             : [0, 1, 2].map(() => <GhostFarmerCard />)}
         </div>

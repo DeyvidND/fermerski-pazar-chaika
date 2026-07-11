@@ -10,6 +10,7 @@
 import type { APIRoute } from 'astro';
 import { SITE_URL } from '../lib/config';
 import { getCatalog, getArticles } from '../lib/api';
+import { farmerSlugMap } from '../lib/farmer-slug';
 
 export const prerender = false;
 
@@ -77,9 +78,10 @@ export const GET: APIRoute = async () => {
     });
   }
 
+  const farmerSlugs = farmerSlugMap(catalog.farmers);
   for (const f of catalog.farmers) {
     entries.push({
-      loc: `/farmer/${encodeURIComponent(f.id)}`,
+      loc: `/farmer/${farmerSlugs.get(f.id)}`,
       lastmod: f.createdAt,
       changefreq: 'monthly',
       priority: '0.6',

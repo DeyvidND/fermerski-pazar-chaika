@@ -11,6 +11,7 @@ import { cfImage } from '../../lib/img';
 import { productLd, breadcrumbLd } from '../../lib/jsonld';
 import { hasVariants, allVariantsSoldOut, variantPriceStotinki, cheapestVariant, discountPercent } from '../../lib/pricing';
 import { ONLY_LOCAL_DELIVERY } from '../../lib/config';
+import { farmerSlugMap } from '../../lib/farmer-slug';
 
 const { slug } = Astro.params;
 // One /bootstrap round trip (shared memo). The backend's single-product endpoint
@@ -28,6 +29,8 @@ if (!product) {
 }
 
 const farmer = farmers.find((f) => f.id === product.farmerId) ?? null;
+// Collision-safe slug per farmer (see lib/farmer-slug.ts).
+const slugs = farmerSlugMap(farmers);
 const farmerNameOf = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
 const farmerImgOf = (id: string | null) => {
   const f = farmers.find((x) => x.id === id);
@@ -211,7 +214,7 @@ const structuredData = [
           {farmer && (
             <div class="card" style="margin-top:26px;padding:18px;box-shadow:none;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
               <span><span class="muted" style="font-size:13px">Фермер</span><br><b>{farmer.name}</b></span>
-              <a href={`/farmer/${farmer.id}`} class="btn btn--soft btn--sm">Виж стопанството</a>
+              <a href={`/farmer/${slugs.get(farmer.id)}`} class="btn btn--soft btn--sm">Виж стопанството</a>
             </div>
           )}
         </div>
@@ -224,7 +227,8 @@ const structuredData = [
           <h2 style="font-size:28px;margin-bottom:22px">Други от пазара</h2>
           <div class="grid grid--4">
             {related.map((p) => <ProductCard product={p} farmerName={sf.multiFarmer ? farmerNameOf(p.farmerId) : null}
-              farmerId={sf.multiFarmer ? p.farmerId : null} farmerImage={sf.multiFarmer ? farmerImgOf(p.farmerId) : null}
+              farmerId={sf.multiFarmer ? p.farmerId : null} farmerSlug={sf.multiFarmer && p.farmerId ? slugs.get(p.farmerId) : null}
+              farmerImage={sf.multiFarmer ? farmerImgOf(p.farmerId) : null}
               remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </div>

@@ -11,6 +11,7 @@ import { categoriesFrom, featured, catIdOf } from '../lib/catalog';
 import { imageOrigin, mapEmbedSrc } from '../lib/site';
 import { cfImage } from '../lib/img';
 import ProductOfWeek from '../components/ProductOfWeek.astro';
+import { farmerSlugMap } from '../lib/farmer-slug';
 
 // One round trip via /bootstrap (falls back to the four parallel reads on an older
 // backend). Seeds the per-resource memo so the rest of this render + a within-TTL
@@ -55,6 +56,10 @@ const feat =
     ? pickByIds(products, L.latest.ids).filter((p) => p.isActive !== false)
     : featured(products, L.latest.count);
 const homeReviews = boot.homeReviews ?? [];
+// Collision-safe slug per farmer (see lib/farmer-slug.ts), computed off the
+// FULL roster (not `farmerList`, which may be a manual subset) so slugs stay
+// stable regardless of which farmers this page happens to show.
+const slugs = farmerSlugMap(farmers);
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
 const farmerImg = (id: string | null) => {
   const f = farmers.find((x) => x.id === id);
@@ -175,7 +180,7 @@ const ogImage =
           </div>
           <div class="grid grid--3 grid--farmers">
             {farmerList.map((f) => (
-              <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} />
+              <FarmerCard farmer={f} productCount={farmerCount(f.id)} categoryCount={farmerCats(f.id)} slug={slugs.get(f.id)!} />
             ))}
           </div>
         </div>
@@ -195,7 +200,8 @@ const ogImage =
         </div>
         <div class="grid grid--4">
           {feat.map((p) => <ProductCard product={p} farmerName={showFarmers ? farmerName(p.farmerId) : null}
-            farmerId={showFarmers ? p.farmerId : null} farmerImage={showFarmers ? farmerImg(p.farmerId) : null}
+            farmerId={showFarmers ? p.farmerId : null} farmerSlug={showFarmers && p.farmerId ? slugs.get(p.farmerId) : null}
+            farmerImage={showFarmers ? farmerImg(p.farmerId) : null}
             remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
         </div>
       </div>

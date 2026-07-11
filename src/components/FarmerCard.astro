@@ -7,8 +7,13 @@ interface Props {
   farmer: Farmer;
   productCount: number;
   categoryCount: number;
+  /** Collision-safe `/farmer/<slug>` slug for this farmer, precomputed by the
+   *  caller (via `farmerSlugMap`) across the full farmer roster — keeps every
+   *  card's link consistent even when the caller only renders a subset. */
+  slug: string;
 }
-const { farmer: f, productCount, categoryCount } = Astro.props;
+const { farmer: f, productCount, categoryCount, slug } = Astro.props;
+const href = `/farmer/${slug}`;
 const eyebrow = [f.role, f.since ? 'от ' + f.since : null].filter(Boolean).join(' · ');
 // Bios are always clamped to 3 lines so cards stay even-height (esp. 2-up on
 // phones, where a narrow column wraps even short bios past 3 lines). The
@@ -17,7 +22,7 @@ const longBio = (f.bio?.length ?? 0) > 50;
 ---
 <article class="card farmer-card" data-farmer
   data-name={[f.name, f.role].filter(Boolean).join(' ').toLocaleLowerCase('bg')}>
-  <a href={`/farmer/${f.id}`} class="ph farmer-card__photo">
+  <a href={href} class="ph farmer-card__photo">
     {f.imageUrl ? (
       <img src={cfImage(f.imageUrl, 800)} srcset={cfSrcset(f.imageUrl, [400, 800])}
            sizes="(max-width:700px) 100vw, 360px" alt={f.name} loading="lazy" decoding="async"
@@ -31,10 +36,10 @@ const longBio = (f.bio?.length ?? 0) > 50;
     <h3 class="farmer-card__name">{f.name}</h3>
     {f.role && <div class="farmer-card__person">{f.role}</div>}
     {f.bio && <p class="farmer-card__blurb is-clamped">{f.bio}</p>}
-    {longBio && <a href={`/farmer/${f.id}`} class="farmer-card__more">Прочети още →</a>}
+    {longBio && <a href={href} class="farmer-card__more">Прочети още →</a>}
     <div class="farmer-card__foot">
       <span class="farmer-card__count">{productCount} продукта · {categoryCount} категории</span>
-      <a href={`/farmer/${f.id}`} class="btn btn--primary btn--sm">Виж продуктите →</a>
+      <a href={href} class="btn btn--primary btn--sm">Виж продуктите →</a>
     </div>
   </div>
 </article>

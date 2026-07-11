@@ -14,6 +14,9 @@ interface Props {
   /** Farmer id → links the card's farmer row to their micro-store. Omit on the
    *  farmer's own page (already there, so no link/avatar needed). */
   farmerId?: string | null;
+  /** Collision-safe `/farmer/<slug>` slug (from `farmerSlugMap`) for the link
+   *  built from `farmerId`. Falls back to the raw id when omitted. */
+  farmerSlug?: string | null;
   /** Farmer photo for the small round avatar. Absent → initials fallback. */
   farmerImage?: string | null;
   cat?: string; // grouping id, used by the catalog filter tabs
@@ -26,6 +29,7 @@ const {
   farmerName = null,
   farmerCourierReady = false,
   farmerId = null,
+  farmerSlug = null,
   farmerImage = null,
   cat = '',
   remaining = null,
@@ -46,7 +50,9 @@ const priceLv = (pd.headlineStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
 // Farmer row: links to the micro-store when an id is given (omitted on the
 // farmer's own page, where the link would be redundant). No image → initials.
-const farmerHref = farmerId ? `/farmer/${farmerId}` : null;
+// `farmerSlug` (collision-safe, from farmerSlugMap) is preferred; falls back
+// to the raw id so an un-migrated caller still links somewhere valid.
+const farmerHref = farmerId ? `/farmer/${farmerSlug || farmerId}` : null;
 const farmerInitials = farmerName
   ? farmerName.trim().split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toLocaleUpperCase('bg')
   : '';

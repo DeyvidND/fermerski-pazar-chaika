@@ -9,16 +9,23 @@ import { imageOrigin, telHref } from '../../lib/site';
 import { cfImage } from '../../lib/img';
 import { farmerLd, breadcrumbLd } from '../../lib/jsonld';
 import { allVariantsSoldOut } from '../../lib/pricing';
+import { resolveFarmer } from '../../lib/farmer-slug';
 
-const { id } = Astro.params;
+const { slug } = Astro.params;
 // One /bootstrap round trip (shared memo) instead of four separate reads.
 const boot = await getCatalog();
 const { storefront: sf, farmers, products, subcategories: subcats } = boot;
-const farmer = farmers.find((f) => f.id === id) ?? null;
+const { farmer, canonicalSlug, needsRedirect } = resolveFarmer(farmers, slug);
 
 if (!farmer) {
-  // Unknown farmer id → real HTTP 404, not a soft-404 redirect to the list.
+  // Unknown farmer slug/id → real HTTP 404, not a soft-404 redirect to the list.
   return Astro.rewrite('/404');
+}
+
+if (needsRedirect && canonicalSlug) {
+  // Old id-based link (pre-slug) → 301 to the canonical name-slug URL,
+  // preserving whatever SEO equity/backlinks pointed at the old /farmer/<uuid>.
+  return Astro.redirect(`/farmer/${canonicalSlug}`, 301);
 }
 
 // Per-product availability map: productId → remaining. Without this, product
@@ -56,7 +63,7 @@ const structuredData = [
   breadcrumbLd([
     { name: 'Начало', path: '/' },
     { name: 'Фермери', path: '/farmers' },
-    { name: farmer.name, path: `/farmer/${encodeURIComponent(farmer.id)}` },
+    { name: farmer.name, path: `/farmer/${canonicalSlug}` },
   ]),
 ];
 ---

@@ -7,6 +7,7 @@ import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
 import { ONLY_LOCAL_DELIVERY } from '../lib/config';
 import { itemListLd } from '../lib/jsonld';
+import { farmerSlugMap } from '../lib/farmer-slug';
 
 const boot = await getCatalog();
 const { storefront: sf, products, farmers, subcategories: subcats } = boot;
@@ -21,6 +22,8 @@ const bestSellersOn = sf.merchandising?.bestSellers?.show ?? false;
 const activeIds = new Set(active.map((p) => p.id));
 const bestSellerSet = new Set((boot.bestSellerIds ?? []).filter((id) => activeIds.has(id)));
 const showBestChip = bestSellersOn && bestSellerSet.size > 0;
+// Collision-safe slug per farmer (see lib/farmer-slug.ts).
+const slugs = farmerSlugMap(farmers);
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
 const farmerImg = (id: string | null) => {
   const f = farmers.find((x) => x.id === id);
@@ -98,7 +101,8 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)}
                   farmerCourierReady={farmerCourierReady(p.farmerId)}
-                  farmerId={p.farmerId} farmerImage={farmerImg(p.farmerId)}
+                  farmerId={p.farmerId} farmerSlug={p.farmerId ? slugs.get(p.farmerId) : null}
+                  farmerImage={farmerImg(p.farmerId)}
                   cat={catIdOf(p, sf.multiSubcat)}
                   remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null}
                   bestSeller={bestSellerSet.has(p.id)} />
