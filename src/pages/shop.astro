@@ -21,6 +21,10 @@ const activeIds = new Set(active.map((p) => p.id));
 const bestSellerSet = new Set((boot.bestSellerIds ?? []).filter((id) => activeIds.has(id)));
 const showBestChip = bestSellersOn && bestSellerSet.size > 0;
 const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
+const farmerImg = (id: string | null) => {
+  const f = farmers.find((x) => x.id === id);
+  return f?.images?.[0] ?? f?.imageUrl ?? null;
+};
 // Gated on ONLY_LOCAL_DELIVERY (../lib/config) — courier is checkout-locked
 // storefront-wide right now, so no badge/chip may promise it either.
 const farmerCourierReady = (id: string | null) =>
@@ -29,6 +33,12 @@ const farmerCourierReady = (id: string | null) =>
 const showCourierChip = active.some((p) => farmerCourierReady(p.farmerId) && !(p.courierDisabled ?? false));
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
+// Farmer filter — a compact <select> (not another chip row) so 10-40 farmers stay
+// elder-friendly. Gated on multiFarmer + >1 farmer total; options are only the
+// farmers who actually have an active product right now (an empty pick is useless).
+const activeFarmerIds = new Set(active.map((p) => p.farmerId).filter((id): id is string => !!id));
+const filterableFarmers = farmers.filter((f) => activeFarmerIds.has(f.id));
+const showFarmerFilter = sf.multiFarmer && farmers.length > 1;
 ---
 <Layout title={`Магазин · ${sf.name}`} storefront={sf} pageLabel="Магазин">
   <main>
@@ -64,6 +74,16 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           </div>
         )}
 
+        {showFarmerFilter && (
+          <div class="field" style="max-width:280px;margin:14px 0 4px">
+            <label for="farmerFilter">Филтър по фермер</label>
+            <select id="farmerFilter" class="input">
+              <option value="all">Всички фермери</option>
+              {filterableFarmers.map((f) => <option value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
+        )}
+
         {seeded && <p class="result-count" id="shopCount" style="margin:8px 0 18px" hidden></p>}
 
         <div class="grid grid--4" id="catalogGrid">
@@ -71,6 +91,7 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)}
                   farmerCourierReady={farmerCourierReady(p.farmerId)}
+                  farmerId={p.farmerId} farmerImage={farmerImg(p.farmerId)}
                   cat={catIdOf(p, sf.multiSubcat)}
                   remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null}
                   bestSeller={bestSellerSet.has(p.id)} />
@@ -94,7 +115,7 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
     const emptyEl = document.getElementById('shopEmpty');
     const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-product]')) : [];
 
-    const state = { cat: 'all', courierOnly: false, q: '' };
+    const state = { cat: 'all', courierOnly: false, q: '', farmer: 'all' };
 
     function apply() {
       let visible = 0;
@@ -105,11 +126,12 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
           (state.cat === 'best-sellers' && card.dataset.bestseller === '1');
         const matchCourier = !state.courierOnly || card.dataset.courier === '1';
         const matchText = state.q === '' || (card.dataset.name || '').includes(state.q);
-        const show = matchCat && matchCourier && matchText;
+        const matchFarmer = state.farmer === 'all' || card.dataset.farmer === state.farmer;
+        const show = matchCat && matchCourier && matchText && matchFarmer;
         card.style.display = show ? '' : 'none';
         if (show) visible++;
       }
-      const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly;
+      const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly || state.farmer !== 'all';
       if (countEl) {
         countEl.hidden = !filtering;
         countEl.textContent = visible === 1 ? '1 резултат' : `${visible} резултата`;
@@ -144,6 +166,13 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
     // Text search.
     wireSearch('shopSearch', (q) => {
       state.q = q;
+      apply();
+    });
+
+    // Farmer filter — compact <select>, composes with category + courier + text.
+    const farmerFilter = document.getElementById('farmerFilter') as HTMLSelectElement | null;
+    farmerFilter?.addEventListener('change', () => {
+      state.farmer = farmerFilter.value || 'all';
       apply();
     });
 

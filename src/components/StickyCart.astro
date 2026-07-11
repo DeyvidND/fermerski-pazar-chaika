@@ -1,0 +1,91 @@
+---
+// Sticky mobile cart bar — a fixed bottom strip that surfaces the cart count +
+// subtotal once something's in it, so a shopper scrolled deep into /shop never
+// loses sight of "go to cart". Desktop already has the header cart icon, so this
+// hides at the same 820px breakpoint the header nav collapses around content-wise
+// (own media query below, independent of the header's).
+import Icon from './Icon.astro';
+---
+<div class="sticky-cart" id="stickyCart" hidden>
+  <div class="sticky-cart__inner">
+    <div class="sticky-cart__info">
+      <span class="sticky-cart__icon"><Icon name="cart" /></span>
+      <span><span class="sc-count">0</span> продукта</span>
+    </div>
+    <a href="/cart" class="btn btn--primary sticky-cart__cta">
+      <span class="sc-total"></span>
+      <span class="sticky-cart__label">Към количката</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  import { Cart, money } from '../lib/cart';
+
+  const bar = document.getElementById('stickyCart');
+  const countEl = bar?.querySelector<HTMLElement>('.sc-count');
+  const totalEl = bar?.querySelector<HTMLElement>('.sc-total');
+
+  function render() {
+    if (!bar) return;
+    const n = Cart.count();
+    // Never show on /cart or /checkout — the real cart/summary is already on screen.
+    const onExcludedPage = /^\/(cart|checkout)(\/|$)/.test(window.location.pathname);
+    const show = n > 0 && !onExcludedPage;
+    bar.hidden = !show;
+    if (!show) return;
+    if (countEl) countEl.textContent = String(n);
+    if (totalEl) totalEl.innerHTML = money(Cart.subtotal());
+  }
+
+  render();
+  window.addEventListener('cart:changed', render);
+</script>
+
+<style>
+  .sticky-cart {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 65;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 24px -12px rgba(0, 0, 0, 0.28);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .sticky-cart[hidden] { display: none; }
+  .sticky-cart__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 16px;
+  }
+  .sticky-cart__info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .sticky-cart__icon { display: inline-flex; flex: none; }
+  .sticky-cart__icon svg { width: 22px; height: 22px; }
+  .sticky-cart__cta {
+    flex: none;
+    flex-direction: column;
+    gap: 0;
+    line-height: 1.2;
+    padding: 9px 18px;
+  }
+  .sticky-cart__label { font-size: 13px; }
+  .sc-total { font-size: 15px; font-weight: 700; }
+
+  /* Desktop keeps the header cart icon — this bar is mobile-only. */
+  @media (min-width: 820px) {
+    .sticky-cart { display: none; }
+  }
+</style>

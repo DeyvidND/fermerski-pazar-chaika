@@ -11,6 +11,11 @@ interface Props {
   stepper?: boolean;
   farmerName?: string | null;
   farmerCourierReady?: boolean;
+  /** Farmer id → links the card's farmer row to their micro-store. Omit on the
+   *  farmer's own page (already there, so no link/avatar needed). */
+  farmerId?: string | null;
+  /** Farmer photo for the small round avatar. Absent → initials fallback. */
+  farmerImage?: string | null;
   cat?: string; // grouping id, used by the catalog filter tabs
   remaining?: number | null; // active availability window remaining stock (undefined = no window)
   bestSeller?: boolean; // member of the „Най-продавани" set → shown under that chip
@@ -20,6 +25,8 @@ const {
   stepper = false,
   farmerName = null,
   farmerCourierReady = false,
+  farmerId = null,
+  farmerImage = null,
   cat = '',
   remaining = null,
   bestSeller = false,
@@ -37,7 +44,12 @@ const pd = priceDisplay(p);
 const discount = discountPercent(pd);
 const priceLv = (pd.headlineStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
-const metaBits = [p.weight, farmerName].filter(Boolean).join(' · ');
+// Farmer row: links to the micro-store when an id is given (omitted on the
+// farmer's own page, where the link would be redundant). No image → initials.
+const farmerHref = farmerId ? `/farmer/${farmerId}` : null;
+const farmerInitials = farmerName
+  ? farmerName.trim().split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toLocaleUpperCase('bg')
+  : '';
 const photoCount = p.images?.length ?? (p.imageUrl ? 1 : 0);
 const shapeAspect = p.coverCrop?.shape === 'square' ? '1/1' : p.coverCrop?.shape === 'tall' ? '4/5' : null;
 
@@ -48,10 +60,12 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
 ---
 <article class={`card product${soldOut ? ' product--sold-out' : ''}`} data-product data-cat={cat} data-bestseller={bestSeller ? '1' : undefined}
   data-courier={courierAvailable ? '1' : undefined}
+  data-farmer={farmerId ?? undefined}
   data-name={[p.name, farmerName].filter(Boolean).join(' ').toLocaleLowerCase('bg')}
   style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
+    {bestSeller && <span class="hit-badge" style="position:absolute;top:12px;right:12px;z-index:2">Хит</span>}
     {photoCount > 1 && (
       <span class="photo-count" style="position:absolute;bottom:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:700">
         <Icon name="camera" /> {photoCount}
@@ -75,7 +89,23 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   </a>
   <div class="product__body">
     <a href={href}><h3 class="product__name">{p.name}</h3></a>
-    {metaBits && <div class="product__meta">{metaBits}</div>}
+    {p.weight && <div class="product__meta">{p.weight}</div>}
+    {farmerName && (
+      farmerHref ? (
+        <a href={farmerHref} class="product__farmer">
+          <span class="avatar">
+            {farmerImage ? (
+              <img src={cfImage(farmerImage, 96)} alt="" loading="lazy" decoding="async" />
+            ) : (
+              <span class="avatar__initials">{farmerInitials}</span>
+            )}
+          </span>
+          <span class="product__farmer-name">{farmerName}</span>
+        </a>
+      ) : (
+        <div class="product__farmer product__farmer--plain">{farmerName}</div>
+      )
+    )}
     <div class="product__price">
       {pd.fromPrefix && <span class="muted" style="font-weight:500;font-size:14px">от </span>}
       <Fragment set:html={money(pd.headlineStotinki)} />
@@ -177,5 +207,66 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
     font-weight: 600;
     background: #fdf1e3;
     color: #9a5b13;
+  }
+
+  /* „Хит" badge — overlays the image, mirrors the .tag promo pill on the
+     opposite corner. Amber is fixed (not theme-accent) so it reads the same
+     „best-seller" signal on every theme, same reasoning as the stock badges. */
+  .hit-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: var(--chip-radius, 999px);
+    background: #E8A33D;
+    color: #2a2110;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  /* Farmer row — small avatar (photo or initials) + name, linking to the
+     farmer's micro-store. Kept to one line so 2-up mobile cards never overflow. */
+  .product__farmer {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 4px;
+    min-width: 0;
+    text-decoration: none;
+  }
+  a.product__farmer:hover .product__farmer-name { text-decoration: underline; }
+  .product__farmer .avatar {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--color-primary, #4C8A54);
+    color: #fff;
+  }
+  .product__farmer .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .product__farmer .avatar__initials {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .product__farmer-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary, #4C8A54);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .product__farmer--plain {
+    font-size: 13px;
+    color: var(--muted);
   }
 </style>

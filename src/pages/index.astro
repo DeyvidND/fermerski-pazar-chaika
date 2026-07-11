@@ -55,6 +55,11 @@ const feat =
     ? pickByIds(products, L.latest.ids).filter((p) => p.isActive !== false)
     : featured(products, L.latest.count);
 const homeReviews = boot.homeReviews ?? [];
+const farmerName = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
+const farmerImg = (id: string | null) => {
+  const f = farmers.find((x) => x.id === id);
+  return f?.images?.[0] ?? f?.imageUrl ?? null;
+};
 // Per-product availability map: productId → remaining (defensive: field absent on older backends).
 const availMap = new Map((boot.availability ?? []).map((w: { productId: string; remaining: number }) => [w.productId, w.remaining]));
 // «Продукт на седмицата» — resolved by the backend bootstrap; look it up by id.
@@ -189,7 +194,9 @@ const ogImage =
           <a href="/shop" class="btn btn--soft">Виж всички</a>
         </div>
         <div class="grid grid--4">
-          {feat.map((p) => <ProductCard product={p} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
+          {feat.map((p) => <ProductCard product={p} farmerName={farmerName(p.farmerId)}
+            farmerId={p.farmerId} farmerImage={farmerImg(p.farmerId)}
+            remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
         </div>
       </div>
     </section>

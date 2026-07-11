@@ -6,6 +6,7 @@ import Header from './Header.astro';
 import Footer from './Footer.astro';
 import TrackingScripts from './TrackingScripts.astro';
 import ConsentBanner from './ConsentBanner.astro';
+import StickyCart from './StickyCart.astro';
 import { getStorefront, getCatalog, FALLBACK_STOREFRONT } from '../lib/api';
 import { safeHref } from '../lib/site';
 import { SITE_URL } from '../lib/config';
@@ -162,6 +163,7 @@ const canonical = `${SITE_URL}${Astro.url.pathname}`;
     const pageLabel = document.body.dataset.pageLabel || undefined;
     ffTrack('page_view', pageLabel ? { pageLabel } : {});
   </script>
+  <StickyCart />
 </body>
 </html>
 

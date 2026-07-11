@@ -77,4 +77,5 @@ export function updateCount() {
     el.textContent = String(n);
     el.classList.toggle('is-zero', n === 0);
   });
+  window.dispatchEvent(new CustomEvent('cart:changed'));
 }

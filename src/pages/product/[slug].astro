@@ -29,6 +29,10 @@ if (!product) {
 
 const farmer = farmers.find((f) => f.id === product.farmerId) ?? null;
 const farmerNameOf = (id: string | null) => farmers.find((f) => f.id === id)?.name ?? null;
+const farmerImgOf = (id: string | null) => {
+  const f = farmers.find((x) => x.id === id);
+  return f?.images?.[0] ?? f?.imageUrl ?? null;
+};
 const catName = sf.multiSubcat
   ? subcats.find((s) => s.id === product.subcategoryId)?.name ?? null
   : product.category && product.category !== 'bundle'
@@ -218,7 +222,9 @@ const structuredData = [
         <div class="wrap">
           <h2 style="font-size:28px;margin-bottom:22px">Други от пазара</h2>
           <div class="grid grid--4">
-            {related.map((p) => <ProductCard product={p} farmerName={farmerNameOf(p.farmerId)} remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
+            {related.map((p) => <ProductCard product={p} farmerName={farmerNameOf(p.farmerId)}
+              farmerId={p.farmerId} farmerImage={farmerImgOf(p.farmerId)}
+              remaining={availMap.has(p.id) ? (availMap.get(p.id) ?? null) : null} />)}
           </div>
         </div>
       </section>
