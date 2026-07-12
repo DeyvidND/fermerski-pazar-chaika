@@ -217,6 +217,22 @@ const structuredData = [
               <a href={`/farmer/${slugs.get(farmer.id)}`} class="btn btn--soft btn--sm">Виж стопанството</a>
             </div>
           )}
+          {farmer?.legal?.name && (
+            <div class="card" style="margin-top:12px;padding:16px 18px;box-shadow:none;font-size:13.5px;line-height:1.6">
+              <div style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;color:var(--muted,#6f7a69);margin-bottom:4px">Продавач на този продукт</div>
+              <div style="font-weight:700;font-size:15px">{farmer.legal.name}</div>
+              <div style="color:var(--muted,#6f7a69);margin-top:2px">
+                {(farmer.legal.eik || farmer.legal.regNo) && (
+                  <span>{farmer.legal.eik ? `ЕИК/БУЛСТАТ ${farmer.legal.eik}` : `Рег. № зем. производител ${farmer.legal.regNo}`}</span>
+                )}
+                {farmer.legal.vatNumber && <span> · ДДС № {farmer.legal.vatNumber}</span>}
+                {farmer.legal.address && <span> · {farmer.legal.address}</span>}
+              </div>
+              <p style="margin:8px 0 0;font-size:12px;color:var(--muted,#6f7a69)">
+                Договорът за покупка се сключва с този производител. Пазарът е посредник (онлайн място за търговия).
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>
