@@ -205,6 +205,7 @@ const structuredData = [
             <button class="btn btn--primary btn--lg" data-add-cart
               data-id={product.id} data-name={product.name} data-price={priceLv} data-weight={product.weight || ''}
               data-variant-id={defaultVariantId} data-variant-label={defaultVariantLabel}
+              data-farmer-id={farmer?.id ?? undefined} data-farmer-name={farmer?.name ?? undefined}
               disabled={productSoldOut || undefined}
               style={productSoldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
               {productSoldOut ? 'Изчерпан' : 'Добави в количка'}

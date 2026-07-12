@@ -11,6 +11,11 @@ export interface CartItem {
   /** Chosen variant (вид/грамаж). Absent = a plain single-price product. */
   variantId?: string;
   variantLabel?: string;
+  /** Farmer-as-seller: which producer sells this line. Captured at add-time from the
+   *  product's data attributes so the checkout can disclose multi-seller orders (each
+   *  producer is the seller) without a network lookup. Absent on legacy cart lines. */
+  farmerId?: string;
+  farmerName?: string;
 }
 
 const KEY = 'ff_cart';

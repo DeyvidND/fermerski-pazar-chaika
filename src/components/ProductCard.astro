@@ -156,6 +156,7 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
       ) : (
         <button class="btn btn--primary btn--sm btn--full" data-add-cart
           data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}
+          data-farmer-id={farmerId ?? undefined} data-farmer-name={farmerName ?? undefined}
           disabled={soldOut || undefined}
           style={soldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
           <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Добави'}

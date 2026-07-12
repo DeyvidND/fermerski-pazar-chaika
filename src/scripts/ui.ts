@@ -134,6 +134,10 @@ function addToCart() {
         weight: btn.dataset.weight || '',
         variantId: btn.dataset.variantId || undefined,
         variantLabel: btn.dataset.variantLabel || undefined,
+        // Farmer-as-seller: stamp the selling producer onto the cart line (checkout
+        // reads it to disclose multi-seller orders). Absent when the button has no farmer.
+        farmerId: btn.dataset.farmerId || undefined,
+        farmerName: btn.dataset.farmerName || undefined,
       },
       qty,
     );

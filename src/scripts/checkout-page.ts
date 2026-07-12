@@ -862,43 +862,28 @@ void initCourier();
 
 /* ---------- farmer-as-seller: multi-seller disclosure (КЗП) ---------- */
 // When the cart holds products from more than one producer, the buyer contracts with
-// EACH producer separately (the platform is an intermediary, not the seller). Cart
-// lines carry only the productId, so derive the distinct sellers via the bootstrap
-// product→farmer map and disclose them above the terms checkbox. Falls back to the
-// display name when a producer hasn't filled legal seller data yet; never blocks checkout.
-async function initSellersNotice(): Promise<void> {
+// EACH producer separately (the platform is an intermediary, not the seller). The seller
+// is stamped onto every cart line at add-time (farmerId/farmerName), so this reads the
+// cart directly — no network lookup, reliable client-side. Discloses the sellers above
+// the terms checkbox. Inert for single-seller carts and legacy lines without a farmer.
+function initSellersNotice(): void {
   const el = document.getElementById('sellersNotice');
   if (!el) return;
-  const cart = Cart.get();
-  if (!cart.length) return;
-  try {
-    const boot = await getBootstrap();
-    if (!boot) return;
-    const { products, farmers } = boot;
-    const productById = new Map(products.map((p) => [p.id, p]));
-    const farmerById = new Map(farmers.map((f) => [f.id, f]));
-    const sellerIds = new Set<string>();
-    for (const line of cart) {
-      const fid = productById.get(line.id)?.farmerId;
-      if (fid) sellerIds.add(fid);
-    }
-    if (sellerIds.size < 2) return; // single (or unknown) seller → no notice needed
-    const names = [...sellerIds]
-      .map((id) => farmerById.get(id))
-      .filter((f): f is NonNullable<typeof f> => !!f)
-      .map((f) => esc(f.legal?.name || f.name));
-    el.innerHTML =
-      `<div style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:13px;line-height:1.55">` +
-      `<b>Поръчка от ${sellerIds.size} производители.</b> ` +
-      `Договорът за всеки продукт се сключва със съответния производител — пазарът е посредник (онлайн място за търговия).` +
-      (names.length ? ` <span class="muted">Продавачи: ${names.join(', ')}.</span>` : '') +
-      `</div>`;
-    el.hidden = false;
-  } catch {
-    /* bootstrap unavailable → skip the notice, never block checkout */
+  const byFarmer = new Map<string, string>();
+  for (const line of Cart.get()) {
+    if (line.farmerId) byFarmer.set(line.farmerId, line.farmerName || '');
   }
+  if (byFarmer.size < 2) return; // single (or unknown) seller → no notice needed
+  const names = [...byFarmer.values()].filter(Boolean).map((n) => esc(n));
+  el.innerHTML =
+    `<div style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:13px;line-height:1.55">` +
+    `<b>Поръчка от ${byFarmer.size} производители.</b> ` +
+    `Договорът за всеки продукт се сключва със съответния производител — пазарът е посредник (онлайн място за търговия).` +
+    (names.length ? ` <span class="muted">Продавачи: ${names.join(', ')}.</span>` : '') +
+    `</div>`;
+  el.hidden = false;
 }
-void initSellersNotice();
+initSellersNotice();
 
 /* ---------- pickup-only gate (courierDisabled products) ---------- */
 // Some products (perishable/fragile) are flagged `courierDisabled` and must never
