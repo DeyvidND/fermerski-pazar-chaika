@@ -260,6 +260,9 @@ const mapsKey = String(
             <h3 style="font-size:22px;margin-bottom:14px">Твоята поръчка</h3>
             <div id="orderLines"></div>
             <div id="orderTotals"></div>
+            <!-- Farmer-as-seller: when the cart spans >1 producer, disclose that the buyer
+                 contracts with each producer separately (populated by checkout-page.ts). -->
+            <div id="sellersNotice" hidden></div>
             <label id="termsCheck" style="display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin-top:16px;padding:8px 2px;cursor:pointer">
               <input type="checkbox" required style="margin-top:1px;flex:none;width:24px;height:24px" />
               <span>Прочетох и приемам <a href="/terms" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Общите условия</a> и <a href="/privacy" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">Политиката за поверителност</a>.</span>
