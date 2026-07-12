@@ -228,6 +228,17 @@ export interface Farmer {
   createdAt: string | null;
   /** Phase 2: farmer offers nationwide courier delivery (enabled + carrier connected). */
   courierReady?: boolean;
+  /** Legal seller identity (farmer-as-seller marketplace). КЗП disclosure — the buyer
+   *  contracts with this producer, not the platform. NULL / absent = not yet provided. */
+  legal?: {
+    kind?: 'individual' | 'sole_trader' | 'company';
+    name?: string;
+    eik?: string;
+    vatNumber?: string;
+    address?: string;
+    regNo?: string;
+    confirmedAt?: string;
+  } | null;
 }
 
 export interface Subcategory {
