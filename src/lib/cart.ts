@@ -87,16 +87,22 @@ export function money(lv: number): string {
  *  any one other product suffices. Extra units of the SAME flagged product do NOT
  *  count. Returns the flagged lines still unsatisfied. The server enforces the
  *  same rule on /checkout — this is the pre-block UX. */
+/** Sum of the OTHER cart lines (different product id) in integer stotinki. Rounds
+ *  each line's euro price to cents before summing, so a basket that exactly meets
+ *  the threshold can never be lost to float drift (e.g. 0,01+4,02+0,47 summing to
+ *  4.4999999… < 4.5 in float euros). Matches the server, which compares in stotinki. */
+function otherProductsStotinki(items: CartItem[], excludeId: string): number {
+  return items
+    .filter((o) => o.id !== excludeId)
+    .reduce((s, o) => s + Math.round(o.price * 100) * o.qty, 0);
+}
+
 export function unsatisfiedCompanions(items: CartItem[]): CartItem[] {
   return items.filter((it) => {
     if (!it.requiresCompanion) return false;
-    const others = items.filter((o) => o.id !== it.id);
     const min = it.companionMinPriceStotinki ?? 0;
-    if (min > 0) {
-      const othersTotal = others.reduce((s, o) => s + o.price * o.qty, 0);
-      return othersTotal < min / 100;
-    }
-    return others.length === 0;
+    if (min > 0) return otherProductsStotinki(items, it.id) < min;
+    return items.filter((o) => o.id !== it.id).length === 0;
   });
 }
 
@@ -110,12 +116,9 @@ export function companionSatisfied(
   minStotinki: number | null | undefined,
   items: CartItem[] = Cart.get(),
 ): boolean {
-  const others = items.filter((o) => o.id !== productId);
   const min = minStotinki ?? 0;
-  if (min > 0) {
-    return others.reduce((s, o) => s + o.price * o.qty, 0) >= min / 100;
-  }
-  return others.length > 0;
+  if (min > 0) return otherProductsStotinki(items, productId) >= min;
+  return items.filter((o) => o.id !== productId).length > 0;
 }
 
 /** Euro amount still needed before a companion product unlocks (0 when satisfied
@@ -127,10 +130,7 @@ export function companionShortfall(
 ): number {
   const min = minStotinki ?? 0;
   if (min <= 0) return 0;
-  const othersTotal = items
-    .filter((o) => o.id !== productId)
-    .reduce((s, o) => s + o.price * o.qty, 0);
-  return Math.max(0, min / 100 - othersTotal);
+  return Math.max(0, min - otherProductsStotinki(items, productId)) / 100;
 }
 
 /** Bulgarian nudge for an unsatisfied companion line (task #2). */
