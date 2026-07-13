@@ -183,7 +183,38 @@ p { text-wrap: pretty; }
 .searchbar__clear svg { width: 16px; height: 16px; display: block; }
 @media (min-width: 701px) { .searchbar { max-width: 460px; } }
 
-.result-count { color: var(--muted); font-size: 13px; }
+.result-count { color: var(--muted); font-size: 13px; margin: 8px 0 18px; }
+
+/* Shop filter zone (shop.astro): search + category chips + farmer <select>.
+   Desktop keeps the wrapping chip row. On phones (≤600px) that row becomes a
+   single horizontal scroller instead of wrapping into a ~5-row wall that buries
+   the products below the fold, and each chip grows to a 44px tap target for the
+   older shoppers this market serves. The farmer <select> goes full-width so it
+   lines up with the search pill above it (was a stray 280px left-aligned box). */
+.shop-search { margin-top: 26px; }
+.chips-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
+.shop-farmer { max-width: 280px; margin: 14px 0 4px; }
+@media (max-width: 600px) {
+  .chips-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* full-bleed to the .wrap edges (constant 24px pad) so the row scrolls
+       edge-to-edge and the cut-off last chip hints there's more to the side */
+    margin-inline: -24px;
+    padding-inline: 24px;
+  }
+  .chips-row::-webkit-scrollbar { display: none; }
+  .chips-row .chip {
+    flex: none;
+    min-height: 44px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  .shop-farmer { max-width: none; }
+}
 
 .tag {
   display: inline-flex; align-items: center; gap: 6px;

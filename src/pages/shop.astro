@@ -65,19 +65,18 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         </div>
 
         {seeded && (
-          <div style="margin-top:26px">
+          <div class="shop-search">
             <SearchBar id="shopSearch" placeholder="Търси продукт или фермер…" />
           </div>
         )}
 
         {(cats.length > 0 || showBestChip) && (
-          <div class="chips-row"
-               style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 8px" id="catChips">
+          <div class="chips-row" id="catChips">
             <button class="chip is-active" data-tab="all" aria-pressed="true">Всички</button>
             {showBestChip && <button class="chip" data-tab="best-sellers" aria-pressed="false">Най-продавани</button>}
             {cats.map((c) => <button class="chip" data-tab={c.id} aria-pressed="false">{c.name}</button>)}
             {showCourierChip && (
-              <button class="chip" id="courierChip" data-courier-filter aria-pressed="false" style="border-color:#4C8A54;color:#4C8A54">
+              <button class="chip" id="courierChip" data-courier-filter aria-pressed="false" style="border-color:var(--primary);color:var(--primary)">
                 📦 С куриер
               </button>
             )}
@@ -85,7 +84,7 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         )}
 
         {showFarmerFilter && (
-          <div class="field" style="max-width:280px;margin:14px 0 4px">
+          <div class="field shop-farmer">
             <label for="farmerFilter">Филтър по фермер</label>
             <select id="farmerFilter" class="input">
               <option value="all">Всички фермери</option>
@@ -94,7 +93,9 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
           </div>
         )}
 
-        {seeded && <p class="result-count" id="shopCount" style="margin:8px 0 18px" hidden></p>}
+        {seeded && (
+          <p class="result-count" id="shopCount">{active.length === 1 ? '1 резултат' : `${active.length} резултата`}</p>
+        )}
 
         <div class="grid grid--4" id="catalogGrid">
           {seeded
@@ -142,9 +143,8 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         card.style.display = show ? '' : 'none';
         if (show) visible++;
       }
-      const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly || state.farmer !== 'all';
       if (countEl) {
-        countEl.hidden = !filtering;
+        // Always visible (SSR seeds it with the full count); keep it current.
         countEl.textContent = visible === 1 ? '1 резултат' : `${visible} резултата`;
       }
       if (emptyEl) {
