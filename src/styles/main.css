@@ -194,6 +194,15 @@ p { text-wrap: pretty; }
 .shop-search { margin-top: 26px; }
 .chips-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
 .shop-farmer { max-width: 280px; margin: 14px 0 4px; }
+.shop-resultbar { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin: 8px 0 18px; }
+.shop-resultbar .result-count { margin: 0; }
+.shop-reset {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--primary); font-size: 13px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.shop-reset[hidden] { display: none; }
+.shop-reset:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 @media (max-width: 600px) {
   .chips-row {
     flex-wrap: nowrap;
@@ -214,6 +223,11 @@ p { text-wrap: pretty; }
     white-space: nowrap;
   }
   .shop-farmer { max-width: none; }
+  /* fade the right edge only while more chips remain to the right */
+  .chips-row.chips-row--more {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent);
+  }
 }
 
 .tag {

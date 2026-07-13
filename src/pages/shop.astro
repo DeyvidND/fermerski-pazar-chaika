@@ -71,7 +71,7 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         )}
 
         {(cats.length > 0 || showBestChip) && (
-          <div class="chips-row" id="catChips">
+          <div class="chips-row" id="catChips" role="group" aria-label="Категории">
             <button class="chip is-active" data-tab="all" aria-pressed="true">Всички</button>
             {showBestChip && <button class="chip" data-tab="best-sellers" aria-pressed="false">Най-продавани</button>}
             {cats.map((c) => <button class="chip" data-tab={c.id} aria-pressed="false">{c.name}</button>)}
@@ -94,7 +94,10 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         )}
 
         {seeded && (
-          <p class="result-count" id="shopCount">{active.length === 1 ? '1 резултат' : `${active.length} резултата`}</p>
+          <div class="shop-resultbar">
+            <p class="result-count" id="shopCount">{active.length === 1 ? '1 резултат' : `${active.length} резултата`}</p>
+            <button type="button" class="shop-reset" id="shopReset" hidden>Изчисти филтрите</button>
+          </div>
         )}
 
         <div class="grid grid--4" id="catalogGrid">
@@ -125,7 +128,21 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
     const grid = document.getElementById('catalogGrid');
     const countEl = document.getElementById('shopCount');
     const emptyEl = document.getElementById('shopEmpty');
+    const resetBtn = document.getElementById('shopReset');
     const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-product]')) : [];
+
+    // Fade the right edge of the mobile chip scroller while there's more to
+    // reveal, so the horizontal scroll is discoverable.
+    function updateChipFade() {
+      if (!chips) return;
+      chips.classList.toggle(
+        'chips-row--more',
+        chips.scrollLeft + chips.clientWidth < chips.scrollWidth - 2,
+      );
+    }
+    chips?.addEventListener('scroll', updateChipFade, { passive: true });
+    window.addEventListener('resize', updateChipFade);
+    updateChipFade();
 
     const state = { cat: 'all', courierOnly: false, q: '', farmer: 'all' };
 
@@ -143,10 +160,12 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         card.style.display = show ? '' : 'none';
         if (show) visible++;
       }
+      const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly || state.farmer !== 'all';
       if (countEl) {
         // Always visible (SSR seeds it with the full count); keep it current.
         countEl.textContent = visible === 1 ? '1 резултат' : `${visible} резултата`;
       }
+      if (resetBtn) resetBtn.hidden = !filtering;
       if (emptyEl) {
         emptyEl.hidden = visible !== 0;
         emptyEl.textContent = state.q
@@ -186,6 +205,30 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
     const farmerFilter = document.getElementById('farmerFilter') as HTMLSelectElement | null;
     farmerFilter?.addEventListener('change', () => {
       state.farmer = farmerFilter.value || 'all';
+      apply();
+    });
+
+    // Reset every active filter back to default (all categories, no farmer, no
+    // courier, empty search). Shown only while something is filtering.
+    resetBtn?.addEventListener('click', () => {
+      state.cat = 'all';
+      state.courierOnly = false;
+      state.farmer = 'all';
+      chips?.querySelectorAll<HTMLElement>('[data-tab]').forEach((c) => {
+        const isAll = c.dataset.tab === 'all';
+        c.classList.toggle('is-active', isAll);
+        c.setAttribute('aria-pressed', String(isAll));
+      });
+      if (courierChip) {
+        courierChip.classList.remove('is-active');
+        courierChip.setAttribute('aria-pressed', 'false');
+      }
+      if (farmerFilter) farmerFilter.value = 'all';
+      const input = document.getElementById('shopSearch') as HTMLInputElement | null;
+      if (input) {
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
       apply();
     });
 
