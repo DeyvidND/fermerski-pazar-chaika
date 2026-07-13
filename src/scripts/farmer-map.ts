@@ -64,23 +64,55 @@ function pinIcon(maps: any) {
   };
 }
 
-/** Info-window content: a small editorial card matching the site's brand
- *  tokens (Lora serif name, muted village line with an accent dot, and a
- *  pill-style profile link when the point resolved to a real farmer). Colors
- *  are hardcoded to theme.css's values — InfoWindow content sits outside the
- *  page's normal cascade scope, so custom properties aren't a safe bet here. */
-function infoHtml(p: MapPoint): string {
-  const name = `<div style="font-family:'Lora',Georgia,serif;font-weight:600;font-size:16px;color:#25301F;margin:0 0 4px">${esc(p.name)}</div>`;
-  const village =
-    `<div style="display:flex;align-items:center;gap:6px;color:#686456;font-size:12.5px;` +
-    `margin-bottom:${p.slug ? '10px' : '0'}">` +
-    `<span style="width:6px;height:6px;border-radius:50%;background:#E8A33D;flex:none"></span>${esc(p.village)}</div>`;
+/** Inner HTML of a custom popup card. Class-based (styled by the `is:global`
+ *  .ff-popup* rules in karta.astro) rather than inline styles, so the card is a
+ *  real branded element instead of Google's default white InfoWindow chrome. */
+function popupHtml(p: MapPoint): string {
+  const close = `<button class="ff-popup__close" type="button" aria-label="Затвори">&times;</button>`;
+  const name = `<div class="ff-popup__name">${esc(p.name)}</div>`;
+  const village = `<div class="ff-popup__village"><span class="ff-popup__dot"></span>${esc(p.village)}</div>`;
   const link = p.slug
-    ? `<a href="/farmer/${encodeURIComponent(p.slug)}" style="display:inline-flex;align-items:center;gap:4px;` +
-      `font-family:'Commissioner',system-ui,sans-serif;font-size:13px;font-weight:600;color:#2C5530;` +
-      `text-decoration:none;padding:6px 12px;background:#E7EDE4;border-radius:999px">Виж профил →</a>`
+    ? `<a class="ff-popup__link" href="/farmer/${encodeURIComponent(p.slug)}">Виж профил →</a>`
     : '';
-  return `<div style="min-width:190px;max-width:240px;font-family:'Commissioner',system-ui,sans-serif;line-height:1.4;padding:2px">${name}${village}${link}</div>`;
+  return `<div class="ff-popup__card">${close}${name}${village}${link}</div>`;
+}
+
+/** Build a custom OverlayView popup class bound to the loaded Maps namespace.
+ *  Google's InfoWindow forces its own white bubble + close button + tail chrome
+ *  that can't be fully themed; an OverlayView gives us a plain positioned div we
+ *  style entirely ourselves (branded card + tail via CSS). */
+function createPopupClass(maps: any): any {
+  return class Popup extends maps.OverlayView {
+    position: any;
+    el: HTMLDivElement;
+    constructor(position: any, html: string, onClose: () => void) {
+      super();
+      this.position = position;
+      const el = document.createElement('div');
+      el.className = 'ff-popup';
+      el.innerHTML = html;
+      el.querySelector('.ff-popup__close')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onClose();
+      });
+      // Let the card be clicked/scrolled without panning/zooming the map under it.
+      maps.OverlayView.preventMapHitsAndGesturesFrom(el);
+      this.el = el;
+    }
+    onAdd() {
+      this.getPanes().floatPane.appendChild(this.el);
+    }
+    onRemove() {
+      this.el.remove();
+    }
+    draw() {
+      const p = this.getProjection().fromLatLngToDivPixel(this.position);
+      if (p) {
+        this.el.style.left = `${p.x}px`;
+        this.el.style.top = `${p.y}px`;
+      }
+    }
+  };
 }
 
 function init(): void {
@@ -95,7 +127,11 @@ function init(): void {
   } catch {
     points = [];
   }
-  if (!key || points.length === 0) return; // keep fallback visible
+  if (!key || points.length === 0) {
+    // No map possible → reveal the text village list (hidden by default in SSR).
+    if (fallback) fallback.hidden = false;
+    return;
+  }
 
   // Reveal the container BEFORE creating the map so it has real dimensions.
   el.hidden = false;
@@ -106,29 +142,43 @@ function init(): void {
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
+        zoomControl: true,
+        clickableIcons: false,
+        backgroundColor: '#F6F0E2',
       });
       const bounds = new maps.LatLngBounds();
-      const info = new maps.InfoWindow();
       const icon = pinIcon(maps);
+      const Popup = createPopupClass(maps);
+
+      // One popup at a time — opening another (or clicking the map) closes it.
+      let current: any = null;
+      const closeCurrent = () => {
+        if (current) {
+          current.setMap(null);
+          current = null;
+        }
+      };
 
       for (const p of points) {
         const pos = { lat: p.lat, lng: p.lng };
         const marker = new maps.Marker({ position: pos, map, icon, title: `${p.name} · ${p.village}` });
         bounds.extend(pos);
         marker.addListener('click', () => {
-          info.setContent(infoHtml(p));
-          info.open({ map, anchor: marker });
+          closeCurrent();
+          current = new Popup(new maps.LatLng(pos), popupHtml(p), closeCurrent);
+          current.setMap(map);
         });
       }
+      map.addListener('click', closeCurrent);
 
-      map.fitBounds(bounds, 48);
+      map.fitBounds(bounds, 64);
       // Clamp the INITIAL zoom only (a tight cluster would otherwise zoom to
       // street level); the user can still zoom in afterwards.
       maps.event.addListenerOnce(map, 'idle', () => {
         if (map.getZoom() > 11) map.setZoom(11);
       });
 
-      // Map is up — hide the text fallback.
+      // Map is up — the fallback list stays hidden (its SSR default).
       if (fallback) fallback.hidden = true;
     })
     .catch(() => {

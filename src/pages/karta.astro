@@ -52,7 +52,11 @@ const metaDesc = `Виж на картата откъде идват ферме�
           aria-label="Карта с местоположението на фермерите"
         ></div>
 
-        <ul id="mapFallback" class="map-fallback">
+        <!-- Village list: hidden by default; the client script reveals it only
+             when the map can't run (no key / load failure), and <noscript>
+             below reveals it when JS is off. So with a working map it never
+             shows — no card grid stacked under the map. -->
+        <ul id="mapFallback" class="map-fallback" hidden>
           {points.map((p) => (
             <li class="map-fallback__item">
               <span class="map-fallback__village">{p.village}</span>
@@ -62,6 +66,9 @@ const metaDesc = `Виж на картата откъде идват ферме�
             </li>
           ))}
         </ul>
+        <noscript>
+          <style>#mapFallback[hidden] { display: grid; }</style>
+        </noscript>
       </div>
     </section>
   </main>
@@ -88,6 +95,9 @@ const metaDesc = `Виж на картата откъде идват ферме�
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 12px;
     }
+    /* `[hidden]`'s UA `display:none` is author-overridden by `display:grid`
+       above, so make the hide explicit — else the list shows under the map. */
+    .map-fallback[hidden] { display: none; }
     .map-fallback__item {
       display: flex;
       flex-direction: column;
@@ -101,5 +111,97 @@ const metaDesc = `Виж на картата откъде идват ферме�
     .map-fallback__name { font-weight: 600; color: var(--ink, #25301f); text-decoration: none; }
     a.map-fallback__name:hover { color: var(--primary, #2c5530); text-decoration: underline; }
     @media (max-width: 480px) { .farmer-map { min-height: 380px; } }
+  </style>
+
+  <!-- Global (unscoped) so it reaches the popup element the client script
+       injects into Google's map panes at runtime. Colors are theme.css's brand
+       tokens, hardcoded because this DOM lives outside the page's cascade. -->
+  <style is:global>
+    .ff-popup {
+      position: absolute;
+      transform: translate(-50%, calc(-100% - 46px));
+      pointer-events: none;
+    }
+    .ff-popup__card {
+      position: relative;
+      pointer-events: auto;
+      min-width: 190px;
+      max-width: 244px;
+      padding: 15px 17px 16px;
+      background: #FBF8F1;
+      border: 1px solid #E2DAC8;
+      border-radius: 16px;
+      box-shadow: 0 20px 46px -20px rgba(44, 85, 48, .5);
+      font-family: "Commissioner", system-ui, sans-serif;
+    }
+    .ff-popup__card::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -7px;
+      width: 14px;
+      height: 14px;
+      transform: translateX(-50%) rotate(45deg);
+      background: #FBF8F1;
+      border-right: 1px solid #E2DAC8;
+      border-bottom: 1px solid #E2DAC8;
+    }
+    .ff-popup__name {
+      margin: 0 26px 6px 0;
+      font-family: "Lora", Georgia, serif;
+      font-weight: 600;
+      font-size: 16.5px;
+      line-height: 1.25;
+      color: #25301F;
+    }
+    .ff-popup__village {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      color: #686456;
+    }
+    .ff-popup__dot {
+      width: 6px;
+      height: 6px;
+      flex: none;
+      border-radius: 50%;
+      background: #E8A33D;
+    }
+    .ff-popup__link {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2C5530;
+      text-decoration: none;
+      background: #E7EDE4;
+      border-radius: 999px;
+      transition: background .15s ease;
+    }
+    .ff-popup__link:hover { background: #DBE5D6; }
+    .ff-popup__close {
+      position: absolute;
+      top: 9px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 18px;
+      line-height: 1;
+      color: #A49D8B;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+    }
+    .ff-popup__close:hover { background: #F1EAD9; color: #25301F; }
   </style>
 </Layout>
