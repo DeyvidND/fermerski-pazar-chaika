@@ -1,0 +1,92 @@
+---
+import Layout from '../components/Layout.astro';
+import { getCatalog } from '../lib/api';
+import { farmerSlugMap } from '../lib/farmer-slug';
+import { FARMER_MAP_POINTS, resolveMapPoints } from '../lib/farmer-map';
+
+export const prerender = false;
+
+// Browser Google Maps key — read at REQUEST time from the container runtime env
+// (Dokploy), NOT a build-time import.meta.env constant (prod image is built in CI
+// before Dokploy supplies the env). Same pattern as checkout.astro. Empty key →
+// the map stays off and the fallback village list is the page.
+const runtimeEnv = (globalThis as any).process?.env ?? {};
+const mapsKey = String(
+  runtimeEnv.PUBLIC_GOOGLE_MAPS_KEY ?? import.meta.env.PUBLIC_GOOGLE_MAPS_KEY ?? '',
+).trim();
+
+const { storefront: sf, farmers } = await getCatalog();
+const slugs = farmerSlugMap(farmers);
+const points = resolveMapPoints(FARMER_MAP_POINTS, farmers, slugs);
+
+const metaDesc = `Виж на картата откъде идват фермерите и стопанствата зад продуктите на ${sf.name}.`;
+---
+<Layout title={`Карта на фермерите · ${sf.name}`} description={metaDesc} storefront={sf} pageLabel="Карта">
+  <main>
+    <div class="wrap">
+      <nav class="breadcrumb"><a href="/">Начало</a> / <span>Карта</span></nav>
+    </div>
+
+    <section class="section--tight">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Откъде идва храната</span>
+          <h1 style="margin-top:8px">Карта на фермерите</h1>
+          <p>Нашите фермери и стопанства из България. Точките са приблизителни — по селото на стопанството.</p>
+        </div>
+
+        <div
+          id="farmerMap"
+          class="farmer-map"
+          hidden
+          data-maps-key={mapsKey}
+          data-points={JSON.stringify(points)}
+          aria-label="Карта с местоположението на фермерите"
+        ></div>
+
+        <ul id="mapFallback" class="map-fallback">
+          {points.map((p) => (
+            <li class="map-fallback__item">
+              <span class="map-fallback__village">{p.village}</span>
+              {p.slug
+                ? <a class="map-fallback__name" href={`/farmer/${p.slug}`}>{p.name}</a>
+                : <span class="map-fallback__name">{p.name}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    .farmer-map {
+      width: 100%;
+      min-height: 460px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--surface-2, #f3f4f6);
+    }
+    .map-fallback {
+      list-style: none;
+      margin: 8px 0 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .map-fallback__item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--surface-2, #f3f4f6);
+      border: 1px solid var(--border, #e5e7eb);
+    }
+    .map-fallback__village { font-size: 13px; color: var(--muted, #6b7280); }
+    .map-fallback__name { font-weight: 600; color: var(--text, #111827); text-decoration: none; }
+    a.map-fallback__name:hover { text-decoration: underline; }
+    @media (max-width: 480px) { .farmer-map { min-height: 380px; } }
+  </style>
+</Layout>
