@@ -9,6 +9,7 @@ export function navLinks(multiFarmer: boolean): NavLink[] {
   return [
     { label: 'Начало', href: '/' },
     ...(multiFarmer ? [{ label: 'Фермери', href: '/farmers' }] : []),
+    ...(multiFarmer ? [{ label: 'Карта', href: '/karta' }] : []),
     { label: 'Магазин', href: '/shop' },
     { label: 'Поръчки', href: '/orders' },
     { label: 'За нас', href: '/about' },
