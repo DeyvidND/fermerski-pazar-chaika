@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard.astro';
 import SearchBar from '../components/SearchBar.astro';
 import { getCatalog } from '../lib/api';
 import { categoriesFrom, catIdOf } from '../lib/catalog';
+import { ICONS } from '../lib/icons';
 import { ONLY_LOCAL_DELIVERY } from '../lib/config';
 import { itemListLd } from '../lib/jsonld';
 import { farmerSlugMap } from '../lib/farmer-slug';
@@ -43,6 +44,21 @@ const availMap = new Map((boot.availability ?? []).map((w: { productId: string; 
 const activeFarmerIds = new Set(active.map((p) => p.farmerId).filter((id): id is string => !!id));
 const filterableFarmers = farmers.filter((f) => activeFarmerIds.has(f.id));
 const showFarmerFilter = sf.multiFarmer && filterableFarmers.length > 1;
+// Live per-category count over the ACTIVE set, keyed the same way the cards are
+// (catIdOf). Drives the chip count badges and drops empty categories from the
+// filter row (an empty-category filter is useless — same logic as the farmer
+// filter). NB: cat.count from categoriesFrom() also counts INACTIVE, so we don't
+// use it here.
+const catCount = new Map<string, number>();
+for (const p of active) {
+  const k = catIdOf(p, sf.multiSubcat);
+  if (k) catCount.set(k, (catCount.get(k) ?? 0) + 1);
+}
+const shopCats = cats.filter((c) => (catCount.get(c.id) ?? 0) > 0);
+const courierCount = active.filter((p) => farmerCourierReady(p.farmerId) && !(p.courierDisabled ?? false)).length;
+// „Зареди още" page size — SSR seeds the result bar with the first page's count.
+const PAGE = 24;
+const initialShown = Math.min(PAGE, active.length);
 // SEO: ItemList of the active catalog (products without a slug have no public
 // URL, so they're excluded — capped at 50 inside itemListLd). Omitted entirely
 // on a not-yet-seeded shop rather than emitting an empty list.
@@ -70,37 +86,61 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
           </div>
         )}
 
-        {(cats.length > 0 || showBestChip) && (
-          <div class="chips-row" id="catChips" role="group" aria-label="Категории">
-            <button class="chip is-active" data-tab="all" aria-pressed="true">Всички</button>
-            {showBestChip && <button class="chip" data-tab="best-sellers" aria-pressed="false">Най-продавани</button>}
-            {cats.map((c) => <button class="chip" data-tab={c.id} aria-pressed="false">{c.name}</button>)}
+        {(shopCats.length > 0 || showBestChip) && (
+          <div class="chips-sticky">
+            <div class="chips-row" id="catChips" role="group" aria-label="Категории">
+              <button class="chip is-active" data-tab="all" aria-pressed="true">
+                <span class="chip__ic" set:html={ICONS.basket} />
+                <span class="chip__label">Всички</span>
+                <span class="chip__count">{active.length}</span>
+              </button>
+              {showBestChip && (
+                <button class="chip" data-tab="best-sellers" aria-pressed="false">
+                  <span class="chip__ic" set:html={ICONS.star} />
+                  <span class="chip__label">Най-продавани</span>
+                  <span class="chip__count">{bestSellerSet.size}</span>
+                </button>
+              )}
+              {shopCats.map((c) => (
+                <button class="chip" data-tab={c.id} aria-pressed="false">
+                  <span class="chip__ic" set:html={ICONS[c.icon] ?? ICONS.berry} />
+                  <span class="chip__label">{c.name}</span>
+                  <span class="chip__count">{catCount.get(c.id) ?? 0}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(showFarmerFilter || showCourierChip) && (
+          <div class="shop-filters2">
+            {showFarmerFilter && (
+              <div class="field shop-farmer">
+                <label for="farmerFilter">Филтър по фермер</label>
+                <select id="farmerFilter" class="input">
+                  <option value="all">Всички фермери</option>
+                  {filterableFarmers.map((f) => <option value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+            )}
             {showCourierChip && (
-              <button class="chip" id="courierChip" data-courier-filter aria-pressed="false" style="border-color:var(--primary);color:var(--primary)">
-                📦 С куриер
+              <button class="chip chip--courier" id="courierChip" data-courier-filter aria-pressed="false">
+                <span class="chip__ic" set:html={ICONS.truck} />
+                <span class="chip__label">С куриер</span>
+                <span class="chip__count">{courierCount}</span>
               </button>
             )}
           </div>
         )}
 
-        {showFarmerFilter && (
-          <div class="field shop-farmer">
-            <label for="farmerFilter">Филтър по фермер</label>
-            <select id="farmerFilter" class="input">
-              <option value="all">Всички фермери</option>
-              {filterableFarmers.map((f) => <option value={f.id}>{f.name}</option>)}
-            </select>
-          </div>
-        )}
-
         {seeded && (
           <div class="shop-resultbar">
-            <p class="result-count" id="shopCount">{active.length === 1 ? '1 резултат' : `${active.length} резултата`}</p>
+            <p class="result-count" id="shopCount">Показани {initialShown} от {active.length}</p>
             <button type="button" class="shop-reset" id="shopReset" hidden>Изчисти филтрите</button>
           </div>
         )}
 
-        <div class="grid grid--4" id="catalogGrid">
+        <div class="grid grid--4" id="catalogGrid" data-page-size={PAGE}>
           {seeded
             ? active.map((p) => (
                 <ProductCard product={p} stepper farmerName={farmerName(p.farmerId)}
@@ -116,20 +156,52 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         {seeded && (
           <p id="shopEmpty" style="text-align:center;color:var(--muted);padding:40px 0" hidden></p>
         )}
+        {seeded && (
+          <div class="shop-more" id="shopMore" hidden>
+            <button type="button" class="btn btn--soft shop-more__btn" id="shopMoreBtn">
+              Зареди още<span id="shopMoreCount" class="shop-more__count"></span>
+            </button>
+          </div>
+        )}
       </div>
     </section>
   </main>
   <script>
     // Unified catalog filter: category chip + „С куриер" + text search all
-    // compose (AND) through one apply() so they never fight over `display`.
+    // compose (AND) through one apply(); a „Зареди още" pager then slices the
+    // matched set. Filters and paging both write `display` but never conflict —
+    // apply() decides membership, renderPage() decides how many of it are shown.
     import { wireSearch } from '../scripts/search';
 
+    const stickyRow = document.querySelector<HTMLElement>('.chips-sticky');
     const chips = document.getElementById('catChips');
     const grid = document.getElementById('catalogGrid');
     const countEl = document.getElementById('shopCount');
     const emptyEl = document.getElementById('shopEmpty');
     const resetBtn = document.getElementById('shopReset');
+    const moreWrap = document.getElementById('shopMore');
+    const moreBtn = document.getElementById('shopMoreBtn');
+    const moreCount = document.getElementById('shopMoreCount');
     const cards = grid ? Array.from(grid.querySelectorAll<HTMLElement>('[data-product]')) : [];
+    const PAGE = Number(grid?.dataset.pageSize) || 24;
+
+    // Sticky chip row parks just below the sticky header. The header wraps on some
+    // in-app browsers, so its height isn't constant — measure it into a CSS var
+    // rather than hardcoding an offset, and flag `.is-stuck` for the shadow.
+    let stickyTop = 0;
+    function syncStickyTop() {
+      const header = document.querySelector<HTMLElement>('.site-header');
+      stickyTop = header ? Math.round(header.getBoundingClientRect().height) : 0;
+      document.documentElement.style.setProperty('--shop-sticky-top', stickyTop + 'px');
+    }
+    function syncStuck() {
+      if (!stickyRow) return;
+      stickyRow.classList.toggle('is-stuck', stickyRow.getBoundingClientRect().top <= stickyTop + 0.5);
+    }
+    syncStickyTop();
+    syncStuck();
+    window.addEventListener('resize', () => { syncStickyTop(); syncStuck(); });
+    window.addEventListener('scroll', syncStuck, { passive: true });
 
     // Fade the right edge of the mobile chip scroller while there's more to
     // reveal, so the horizontal scroll is discoverable.
@@ -145,9 +217,28 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
     updateChipFade();
 
     const state = { cat: 'all', courierOnly: false, q: '', farmer: 'all' };
+    let matched: HTMLElement[] = []; // cards passing every active filter, in DOM order
+    let shown = PAGE;                // how many of `matched` are currently visible
+
+    // Show only the first `shown` of the matched set; hide the tail. Keeps the
+    // result-bar count and the „Зареди още" button in sync.
+    function renderPage() {
+      const visible = Math.min(shown, matched.length);
+      for (let i = 0; i < matched.length; i++) {
+        matched[i].style.display = i < visible ? '' : 'none';
+      }
+      if (countEl) {
+        countEl.textContent = matched.length === 0
+          ? 'Няма резултати'
+          : `Показани ${visible} от ${matched.length}`;
+      }
+      const remaining = matched.length - visible;
+      if (moreWrap) moreWrap.hidden = remaining <= 0;
+      if (moreCount) moreCount.textContent = remaining > 0 ? ` (още ${remaining})` : '';
+    }
 
     function apply() {
-      let visible = 0;
+      matched = [];
       for (const card of cards) {
         const matchCat =
           state.cat === 'all' ||
@@ -156,22 +247,35 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
         const matchCourier = !state.courierOnly || card.dataset.courier === '1';
         const matchText = state.q === '' || (card.dataset.name || '').includes(state.q);
         const matchFarmer = state.farmer === 'all' || card.dataset.farmer === state.farmer;
-        const show = matchCat && matchCourier && matchText && matchFarmer;
-        card.style.display = show ? '' : 'none';
-        if (show) visible++;
+        if (matchCat && matchCourier && matchText && matchFarmer) matched.push(card);
+        else card.style.display = 'none';
       }
+      shown = PAGE; // every filter change resets paging to the first page
+      renderPage();
+
       const filtering = state.q !== '' || state.cat !== 'all' || state.courierOnly || state.farmer !== 'all';
-      if (countEl) {
-        // Always visible (SSR seeds it with the full count); keep it current.
-        countEl.textContent = visible === 1 ? '1 резултат' : `${visible} резултата`;
-      }
       if (resetBtn) resetBtn.hidden = !filtering;
       if (emptyEl) {
-        emptyEl.hidden = visible !== 0;
+        emptyEl.hidden = matched.length !== 0;
         emptyEl.textContent = state.q
           ? `Няма намерени продукти за „${state.q}“`
           : 'Няма продукти за този филтър';
       }
+    }
+
+    // „Зареди още" — reveal the next page. Auto-loads too when the button nears
+    // the viewport (IntersectionObserver); the button stays as the manual/no-JS
+    // fallback and the primary control.
+    moreBtn?.addEventListener('click', () => { shown += PAGE; renderPage(); });
+    if (moreWrap && 'IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !moreWrap.hidden && shown < matched.length) {
+            shown += PAGE;
+            renderPage();
+          }
+        }
+      }, { rootMargin: '400px 0px' }).observe(moreWrap);
     }
 
     // Category chips (delegated). Courier chip has no data-tab, so it's ignored here.
@@ -232,7 +336,11 @@ const structuredData = shopListItems.length ? itemListLd(shopListItems) : undefi
       apply();
     });
 
-    // Deep link: /shop#<categoryId> activates that category chip on load.
+    // Initial paint: SSR renders every card, so slice down to the first page.
+    apply();
+
+    // Deep link: /shop#<categoryId> activates that category chip on load
+    // (its click re-runs apply() with that category).
     const hash = decodeURIComponent(location.hash.replace('#', ''));
     if (hash) {
       const chip = chips?.querySelector<HTMLElement>(`[data-tab="${CSS.escape(hash)}"]`);

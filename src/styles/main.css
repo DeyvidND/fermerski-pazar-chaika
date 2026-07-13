@@ -145,6 +145,21 @@ p { text-wrap: pretty; }
   background: var(--primary); color: #fff; border-color: var(--primary);
 }
 [data-theme="klasik"] .chip { text-transform: uppercase; letter-spacing: .12em; font-size: 11.5px; }
+/* Chip internals: category glyph + label + live count badge. Icon & label
+   inherit the chip's colour (so they flip to white on the active/filled chip);
+   the count badge is a soft pill that inverts on the active chip. */
+.chip__ic { display: inline-flex; flex: none; }
+.chip__ic svg { width: 16px; height: 16px; display: block; }
+.chip__label { white-space: nowrap; }
+.chip__count {
+  flex: none; min-width: 20px; text-align: center;
+  padding: 1px 7px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; line-height: 1.5;
+  background: var(--surface-2); color: var(--muted);
+}
+.chip:hover .chip__count { color: inherit; }
+.chip.is-active .chip__count { background: rgba(255, 255, 255, .22); color: #fff; }
+[data-theme="klasik"] .chip__count { font-size: 10.5px; }
 
 /* Live search bar (SearchBar.astro) — mobile-first pill. Full width on phones;
    capped on desktop so it doesn't sprawl. Reuses the input focus-ring language. */
@@ -185,15 +200,27 @@ p { text-wrap: pretty; }
 
 .result-count { color: var(--muted); font-size: 13px; margin: 8px 0 18px; }
 
-/* Shop filter zone (shop.astro): search + category chips + farmer <select>.
-   Desktop keeps the wrapping chip row. On phones (≤600px) that row becomes a
-   single horizontal scroller instead of wrapping into a ~5-row wall that buries
-   the products below the fold, and each chip grows to a 44px tap target for the
-   older shoppers this market serves. The farmer <select> goes full-width so it
-   lines up with the search pill above it (was a stray 280px left-aligned box). */
+/* Shop filter zone (shop.astro): search + category chips + farmer <select> +
+   courier chip. Desktop keeps the wrapping chip row. On phones (≤600px) that row
+   becomes a single horizontal scroller instead of wrapping into a ~5-row wall
+   that buries the products below the fold, and each chip grows to a 44px tap
+   target for the older shoppers this market serves. */
 .shop-search { margin-top: 26px; }
-.chips-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
-.shop-farmer { max-width: 280px; margin: 14px 0 4px; }
+/* Category chips stick under the (sticky, variable-height) site header on scroll
+   so shoppers can re-filter without scrolling back up. The offset is measured
+   into --shop-sticky-top by shop.astro's script; z-index sits below the header
+   (40). Background covers the products that scroll underneath; shadow on stuck. */
+.chips-sticky {
+  position: sticky; top: var(--shop-sticky-top, 0px); z-index: 30;
+  background: var(--bg); padding-block: 12px; margin: 10px 0 2px;
+  transition: box-shadow .2s ease;
+}
+.chips-sticky.is-stuck { box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .4); }
+.chips-row { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Secondary filters — farmer <select> + courier chip on one aligned row. */
+.shop-filters2 { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin: 4px 0; }
+.shop-farmer { flex: 1 1 240px; max-width: 340px; margin: 0; }
+.chip--courier { min-height: 44px; align-self: flex-end; }
 .shop-resultbar { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin: 8px 0 18px; }
 .shop-resultbar .result-count { margin: 0; }
 .shop-reset {
@@ -203,17 +230,21 @@ p { text-wrap: pretty; }
 }
 .shop-reset[hidden] { display: none; }
 .shop-reset:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+/* „Зареди още" pager — centred soft-green CTA below the grid. */
+.shop-more { display: flex; justify-content: center; margin: 28px 0 4px; }
+.shop-more[hidden] { display: none; }
+.shop-more__btn { min-width: 240px; }
+.shop-more__count { font-weight: 600; opacity: .85; }
 @media (max-width: 600px) {
+  /* full-bleed the sticky bg to the viewport (cancel the .wrap 24px pad) so the
+     stuck row spans edge-to-edge; chips still start at the 24px content gutter */
+  .chips-sticky { margin-inline: -24px; padding-inline: 24px; }
   .chips-row {
     flex-wrap: nowrap;
     overflow-x: auto;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    /* full-bleed to the .wrap edges (constant 24px pad) so the row scrolls
-       edge-to-edge and the cut-off last chip hints there's more to the side */
-    margin-inline: -24px;
-    padding-inline: 24px;
   }
   .chips-row::-webkit-scrollbar { display: none; }
   .chips-row .chip {
@@ -222,7 +253,8 @@ p { text-wrap: pretty; }
     scroll-snap-align: start;
     white-space: nowrap;
   }
-  .shop-farmer { max-width: none; }
+  .shop-farmer { max-width: none; flex-basis: 100%; }
+  .chip--courier { align-self: stretch; justify-content: center; }
   /* fade the right edge only while more chips remain to the right */
   .chips-row.chips-row--more {
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent);
