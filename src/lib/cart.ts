@@ -16,6 +16,11 @@ export interface CartItem {
    *  producer is the seller) without a network lookup. Absent on legacy cart lines. */
   farmerId?: string;
   farmerName?: string;
+  /** Companion rule (task #2), captured at add-time from the product data. When
+   *  set, this line can't be ordered alone — see `unsatisfiedCompanions`. */
+  requiresCompanion?: boolean;
+  /** EUR-cents threshold for the required companion; null/absent = any other product. */
+  companionMinPriceStotinki?: number | null;
 }
 
 const KEY = 'ff_cart';
@@ -73,6 +78,29 @@ export const Cart = {
 
 export function money(lv: number): string {
   return lv.toFixed(2).replace('.', ',') + ' €' + bgnHtml(lv);
+}
+
+/** Companion rule (task #2). A line flagged `requiresCompanion` needs ≥1 OTHER
+ *  product in the cart whose unit price ≥ `companionMinPriceStotinki` (or any
+ *  other product when the threshold is null/0). Extra units of the SAME flagged
+ *  product do NOT satisfy it. Returns the flagged lines that are still unsatisfied.
+ *  The server enforces the same rule on /checkout — this is the pre-block UX. */
+export function unsatisfiedCompanions(items: CartItem[]): CartItem[] {
+  return items.filter((it) => {
+    if (!it.requiresCompanion) return false;
+    const minEuro = (it.companionMinPriceStotinki ?? 0) / 100;
+    return !items.some((o) => o.id !== it.id && o.price >= minEuro);
+  });
+}
+
+/** Bulgarian nudge for an unsatisfied companion line (task #2). */
+export function companionMessage(it: CartItem): string {
+  const min = it.companionMinPriceStotinki;
+  if (min && min > 0) {
+    const eur = (min / 100).toFixed(2).replace('.', ',') + ' €';
+    return `„${it.name}“ не се продава самостоятелно — добавете още един продукт на стойност поне ${eur}.`;
+  }
+  return `„${it.name}“ не се продава самостоятелно — добавете още един продукт по избор.`;
 }
 
 /** Sync every .cart-count badge in the header. */

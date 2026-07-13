@@ -4,7 +4,7 @@
 // Only local farm delivery uses a slot. Posts the order to the public checkout
 // endpoint; redirects to Stripe when a checkoutUrl comes back, else to the
 // confirmation page (cash / no-Stripe farm).
-import { Cart, money } from '../lib/cart';
+import { Cart, money, unsatisfiedCompanions, companionMessage } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { PUBLIC_BASE } from '../lib/config';
 import { esc } from '../lib/escape';
@@ -569,6 +569,17 @@ form.addEventListener('submit', async (e) => {
     return;
   }
   const data = new FormData(form);
+  const FFtoastEarly = (window as any).FFtoast as (m: string, type?: 'success' | 'error') => void;
+
+  // Companion rule (task #2): block a "не се продава самостоятелно" product that
+  // has no qualifying companion in the cart. The server rejects it with a 400 too;
+  // this pre-block gives a clearer, earlier message and points the shopper back.
+  const unmet = unsatisfiedCompanions(items);
+  if (unmet.length) {
+    FFtoastEarly?.(companionMessage(unmet[0]), 'error');
+    location.assign('/cart');
+    return;
+  }
   const customerName = String(data.get('customerName') || '').trim();
   const customerPhone = String(data.get('customerPhone') || '').trim();
   const customerEmail = String(data.get('customerEmail') || '').trim();

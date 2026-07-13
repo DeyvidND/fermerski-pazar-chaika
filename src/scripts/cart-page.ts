@@ -1,5 +1,5 @@
 // Renders the cart page from localStorage. Re-renders on qty change / removal.
-import { Cart, lineKey, money } from '../lib/cart';
+import { Cart, lineKey, money, unsatisfiedCompanions, companionMessage } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
 import { coverCropStyle } from '../lib/cover-crop';
@@ -46,6 +46,9 @@ interface RecProduct {
   imageUrl?: string | null;
   images?: string[];
   coverCrop?: CoverCrop | null;
+  /** Companion rule (task #2) — present when the recommendations payload carries it. */
+  requiresCompanion?: boolean;
+  companionMinPriceStotinki?: number | null;
 }
 const recCache = new Map<string, RecProduct[]>();
 // Attention animation fires once per page visit, when the block first scrolls
@@ -111,7 +114,14 @@ async function renderRecs(ids: string[]) {
     if (!p) return;
     card.querySelector('[data-add]')!.addEventListener('click', () => {
       Cart.add(
-        { id: p.id, name: p.name, price: p.priceStotinki / 100, weight: p.weight ?? undefined },
+        {
+          id: p.id,
+          name: p.name,
+          price: p.priceStotinki / 100,
+          weight: p.weight ?? undefined,
+          requiresCompanion: p.requiresCompanion || undefined,
+          companionMinPriceStotinki: p.companionMinPriceStotinki ?? undefined,
+        },
         1,
       );
       render();
@@ -167,6 +177,15 @@ function render() {
   }
 
   const sub = Cart.subtotal();
+  // Companion rule (task #2): if a flagged product lacks its required companion,
+  // warn and disable "Към касата" (the checkout + server enforce it too).
+  const unmet = unsatisfiedCompanions(items);
+  const companionWarn = unmet.length
+    ? `<div class="card" style="margin-top:14px;padding:12px 14px;box-shadow:none;border-left:3px solid #d98a2b;font-size:13px;line-height:1.5">${esc(companionMessage(unmet[0]))}</div>`
+    : '';
+  const checkoutCta = unmet.length
+    ? `<button type="button" class="btn btn--primary btn--full btn--lg" style="margin-top:16px;opacity:.55;cursor:not-allowed" disabled>Към касата</button>`
+    : `<a href="/checkout" class="btn btn--primary btn--full btn--lg" style="margin-top:16px">Към касата</a>`;
   area.innerHTML = `
     <div class="commerce-grid">
       <div>
@@ -178,7 +197,8 @@ function render() {
         <div class="summary__row"><span>Междинна сума</span><span>${money(sub)}</span></div>
         <div class="summary__row"><span>Доставка</span><span class="muted">изчислява се при поръчка</span></div>
         <div class="summary__row total"><span>Общо</span><span>${money(sub)}</span></div>
-        <a href="/checkout" class="btn btn--primary btn--full btn--lg" style="margin-top:16px">Към касата</a>
+        ${companionWarn}
+        ${checkoutCta}
         <div class="note-fresh" style="margin-top:16px;width:100%;justify-content:center">${ICONS.leaf} Свежо за петъчната доставка</div>
       </aside>
     </div>

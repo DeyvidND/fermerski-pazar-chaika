@@ -138,6 +138,12 @@ function addToCart() {
         // reads it to disclose multi-seller orders). Absent when the button has no farmer.
         farmerId: btn.dataset.farmerId || undefined,
         farmerName: btn.dataset.farmerName || undefined,
+        // Companion rule (task #2): stamp the flag + threshold so the cart/checkout
+        // can pre-block a "can't be bought alone" product without a network lookup.
+        requiresCompanion: btn.dataset.requiresCompanion === '1' || undefined,
+        companionMinPriceStotinki: btn.dataset.companionMin
+          ? parseInt(btn.dataset.companionMin, 10)
+          : undefined,
       },
       qty,
     );

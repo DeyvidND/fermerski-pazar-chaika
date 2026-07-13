@@ -48,6 +48,8 @@ const pd = priceDisplay(p);
 const discount = discountPercent(pd);
 const priceLv = (pd.headlineStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
+// Ready-made bundle (task #1): a готова кошница sold as one SKU.
+const isBundle = (p.bundleProducts?.length ?? 0) > 0 || p.category === 'bundle';
 // Farmer row: links to the micro-store when an id is given (omitted on the
 // farmer's own page, where the link would be redundant). No image → initials.
 // `farmerSlug` (collision-safe, from farmerSlugMap) is preferred; falls back
@@ -71,6 +73,7 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
   style={soldOut ? 'opacity:0.72' : undefined}>
   <a href={href} class="ph" style={shapeAspect ? `aspect-ratio:${shapeAspect}` : undefined}>
     {tag && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2">{tag}</span>}
+    {isBundle && <span class="tag" style="position:absolute;top:12px;left:12px;z-index:2;transform:translateY(28px);background:#4a7c3a">🧺 Пакет</span>}
     {bestSeller && <span class="hit-badge" style="position:absolute;top:12px;right:12px;z-index:2">Хит</span>}
     {photoCount > 1 && (
       <span class="photo-count" style="position:absolute;bottom:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:700">
@@ -157,6 +160,8 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
         <button class="btn btn--primary btn--sm btn--full" data-add-cart
           data-id={p.id} data-name={p.name} data-price={priceLv} data-weight={p.weight || ''}
           data-farmer-id={farmerId ?? undefined} data-farmer-name={farmerName ?? undefined}
+          data-requires-companion={p.requiresCompanion ? '1' : undefined}
+          data-companion-min={p.companionMinPriceStotinki ?? undefined}
           disabled={soldOut || undefined}
           style={soldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
           <Icon name="cart" /> {soldOut ? 'Изчерпан' : 'Добави'}
