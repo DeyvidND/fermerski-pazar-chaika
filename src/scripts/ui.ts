@@ -145,12 +145,18 @@ function refreshCompanionLocks() {
       const ok = companionSatisfied(id, min);
       // Remember the original markup once so we can restore it on unlock.
       if (btn.dataset.companionOrigHtml == null) btn.dataset.companionOrigHtml = btn.innerHTML;
+      // The card's persistent „why" hint (if present) is redundant once the
+      // basket qualifies — hide it so a satisfied cart isn't nagged.
+      const hint = (btn.closest<HTMLElement>('[data-product]') || document)
+        .querySelector<HTMLElement>('[data-companion-hint]');
       if (ok) {
+        if (hint) hint.hidden = true;
         btn.disabled = false;
         btn.classList.remove('is-companion-locked');
         btn.innerHTML = btn.dataset.companionOrigHtml;
         btn.removeAttribute('title');
       } else {
+        if (hint) hint.hidden = false;
         const shortfall = companionShortfall(id, min);
         const label =
           min > 0

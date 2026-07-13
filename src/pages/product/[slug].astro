@@ -164,8 +164,14 @@ const structuredData = [
           )}
 
           {product.requiresCompanion && (
-            <div class="card" style="margin-top:14px;padding:14px 16px;box-shadow:none;border-left:3px solid #d98a2b;font-size:13.5px;line-height:1.55">
-              <b>Не се продава самостоятелно.</b> {product.companionMinPriceStotinki ? `Добавете други продукти на обща стойност поне ${moneyEurOnly(product.companionMinPriceStotinki)}` : 'Добавете още поне един продукт'}, за да завършите поръчката.
+            <div style="display:flex;gap:11px;align-items:flex-start;margin-top:14px;padding:13px 15px;border-radius:12px;background:#fbf1e2;color:#7a4f16;font-size:13.5px;line-height:1.55">
+              <span aria-hidden="true" style="font-size:18px;line-height:1.2;flex:none">🧺</span>
+              <div>
+                <b>Промо цена — върви с поръчката.</b><br />
+                {product.companionMinPriceStotinki
+                  ? `Този продукт е на специална цена, затова се добавя заедно с други продукти на обща стойност поне ${moneyEurOnly(product.companionMinPriceStotinki)}. Щом количката ги достигне, бутонът се отключва автоматично.`
+                  : 'Този продукт е на специална цена, затова се добавя заедно с още поне един продукт. Щом добавите друг продукт, бутонът се отключва автоматично.'}
+              </div>
             </div>
           )}
 

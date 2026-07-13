@@ -181,7 +181,7 @@ function render() {
   // warn and disable "Към касата" (the checkout + server enforce it too).
   const unmet = unsatisfiedCompanions(items);
   const companionWarn = unmet.length
-    ? `<div class="card" style="margin-top:14px;padding:12px 14px;box-shadow:none;border-left:3px solid #d98a2b;font-size:13px;line-height:1.5">${esc(companionMessage(unmet[0]))}</div>`
+    ? `<div style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fbf1e2;color:#7a4f16;font-size:13px;line-height:1.5"><span aria-hidden="true" style="flex:none">🧺</span><span>${esc(companionMessage(unmet[0]))}</span></div>`
     : '';
   const checkoutCta = unmet.length
     ? `<button type="button" class="btn btn--primary btn--full btn--lg" style="margin-top:16px;opacity:.55;cursor:not-allowed" disabled>Към касата</button>`

@@ -168,6 +168,14 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
         </button>
       )}
     </div>
+    {p.requiresCompanion && !soldOut && !hasV && (
+      <p class="companion-hint" data-companion-hint>
+        <span aria-hidden="true">🧺</span>
+        {p.companionMinPriceStotinki
+          ? `Промо цена — добавя се към поръчка с други продукти за поне ${moneyEurOnly(p.companionMinPriceStotinki)}`
+          : 'Промо цена — добавя се заедно с още поне един продукт'}
+      </p>
+    )}
   </div>
 </article>
 
@@ -285,4 +293,23 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
     font-size: 13px;
     color: var(--muted);
   }
+
+  /* Loss-leader companion hint — explains WHY the add button is gated and how to
+     unlock it (the button itself carries the live shortfall). Warm cream tint =
+     „special price", not an error; full-radius background, no accent stripe.
+     Toggled by refreshCompanionLocks() — hidden once the basket qualifies. */
+  .companion-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: #fbf1e2;
+    color: #7a4f16;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+  .companion-hint[hidden] { display: none; }
 </style>
