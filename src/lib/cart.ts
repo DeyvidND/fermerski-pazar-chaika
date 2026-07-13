@@ -80,16 +80,23 @@ export function money(lv: number): string {
   return lv.toFixed(2).replace('.', ',') + ' €' + bgnHtml(lv);
 }
 
-/** Companion rule (task #2). A line flagged `requiresCompanion` needs ≥1 OTHER
- *  product in the cart whose unit price ≥ `companionMinPriceStotinki` (or any
- *  other product when the threshold is null/0). Extra units of the SAME flagged
- *  product do NOT satisfy it. Returns the flagged lines that are still unsatisfied.
- *  The server enforces the same rule on /checkout — this is the pre-block UX. */
+/** Companion rule (task #2, loss-leader). A line flagged `requiresCompanion`
+ *  needs the OTHER products in the cart to TOTAL ≥ `companionMinPriceStotinki`
+ *  (sum of price × qty over every different-product line — a basket of cheaper
+ *  goods qualifies, not only one expensive item). When the threshold is null/0,
+ *  any one other product suffices. Extra units of the SAME flagged product do NOT
+ *  count. Returns the flagged lines still unsatisfied. The server enforces the
+ *  same rule on /checkout — this is the pre-block UX. */
 export function unsatisfiedCompanions(items: CartItem[]): CartItem[] {
   return items.filter((it) => {
     if (!it.requiresCompanion) return false;
-    const minEuro = (it.companionMinPriceStotinki ?? 0) / 100;
-    return !items.some((o) => o.id !== it.id && o.price >= minEuro);
+    const others = items.filter((o) => o.id !== it.id);
+    const min = it.companionMinPriceStotinki ?? 0;
+    if (min > 0) {
+      const othersTotal = others.reduce((s, o) => s + o.price * o.qty, 0);
+      return othersTotal < min / 100;
+    }
+    return others.length === 0;
   });
 }
 
@@ -98,7 +105,7 @@ export function companionMessage(it: CartItem): string {
   const min = it.companionMinPriceStotinki;
   if (min && min > 0) {
     const eur = (min / 100).toFixed(2).replace('.', ',') + ' €';
-    return `„${it.name}“ не се продава самостоятелно — добавете още един продукт на стойност поне ${eur}.`;
+    return `„${it.name}“ не се продава самостоятелно — добавете други продукти на обща стойност поне ${eur}.`;
   }
   return `„${it.name}“ не се продава самостоятелно — добавете още един продукт по избор.`;
 }

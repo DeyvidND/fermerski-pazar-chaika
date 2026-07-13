@@ -165,7 +165,7 @@ const structuredData = [
 
           {product.requiresCompanion && (
             <div class="card" style="margin-top:14px;padding:14px 16px;box-shadow:none;border-left:3px solid #d98a2b;font-size:13.5px;line-height:1.55">
-              <b>Не се продава самостоятелно.</b> Добавете още поне един продукт{product.companionMinPriceStotinki ? ` на стойност поне ${moneyEurOnly(product.companionMinPriceStotinki)}` : ''}, за да завършите поръчката.
+              <b>Не се продава самостоятелно.</b> {product.companionMinPriceStotinki ? `Добавете други продукти на обща стойност поне ${moneyEurOnly(product.companionMinPriceStotinki)}` : 'Добавете още поне един продукт'}, за да завършите поръчката.
             </div>
           )}
 
