@@ -6,13 +6,21 @@ import { FARMER_MAP_POINTS, resolveMapPoints } from '../lib/farmer-map';
 
 export const prerender = false;
 
-// Browser Google Maps key — read at REQUEST time from the container runtime env
-// (Dokploy), NOT a build-time import.meta.env constant (prod image is built in CI
-// before Dokploy supplies the env). Same pattern as checkout.astro. Empty key →
+// Browser Google Maps key — read at REQUEST time. On this Cloudflare Workers
+// deploy, `Astro.locals.runtime.env` (the Worker's bindings, via
+// `platformProxy` in dev too — see astro.config.mjs) is the correct source;
+// `globalThis.process?.env` is a legacy Dokploy-container idiom (still used by
+// checkout.astro, a known unresolved TODO — see CLOUDFLARE.md #1) that does
+// NOT reliably resolve on Workers, which silently disabled this page's map.
+// `import.meta.env` covers plain `astro dev` without wrangler. Empty key →
 // the map stays off and the fallback village list is the page.
-const runtimeEnv = (globalThis as any).process?.env ?? {};
+const runtimeBindings = (Astro.locals as any)?.runtime?.env ?? {};
+const processEnv = (globalThis as any).process?.env ?? {};
 const mapsKey = String(
-  runtimeEnv.PUBLIC_GOOGLE_MAPS_KEY ?? import.meta.env.PUBLIC_GOOGLE_MAPS_KEY ?? '',
+  runtimeBindings.PUBLIC_GOOGLE_MAPS_KEY ??
+    processEnv.PUBLIC_GOOGLE_MAPS_KEY ??
+    import.meta.env.PUBLIC_GOOGLE_MAPS_KEY ??
+    '',
 ).trim();
 
 const { storefront: sf, farmers } = await getCatalog();
@@ -66,10 +74,11 @@ const metaDesc = `Виж на картата откъде идват ферме�
     .farmer-map {
       width: 100%;
       min-height: 460px;
-      border-radius: 16px;
+      border-radius: var(--radius, 18px);
       overflow: hidden;
-      border: 1px solid var(--border, #e5e7eb);
-      background: var(--surface-2, #f3f4f6);
+      border: 1px solid var(--line, #e2dac8);
+      background: var(--surface-2, #f6f0e2);
+      box-shadow: var(--shadow-sm, 0 2px 8px -3px rgba(44,85,48,.18));
     }
     .map-fallback {
       list-style: none;
@@ -84,13 +93,13 @@ const metaDesc = `Виж на картата откъде идват ферме�
       flex-direction: column;
       gap: 2px;
       padding: 14px 16px;
-      border-radius: 12px;
-      background: var(--surface-2, #f3f4f6);
-      border: 1px solid var(--border, #e5e7eb);
+      border-radius: var(--radius-sm, 12px);
+      background: var(--surface-2, #f6f0e2);
+      border: 1px solid var(--line, #e2dac8);
     }
-    .map-fallback__village { font-size: 13px; color: var(--muted, #6b7280); }
-    .map-fallback__name { font-weight: 600; color: var(--text, #111827); text-decoration: none; }
-    a.map-fallback__name:hover { text-decoration: underline; }
+    .map-fallback__village { font-size: 13px; color: var(--muted, #686456); }
+    .map-fallback__name { font-weight: 600; color: var(--ink, #25301f); text-decoration: none; }
+    a.map-fallback__name:hover { color: var(--primary, #2c5530); text-decoration: underline; }
     @media (max-width: 480px) { .farmer-map { min-height: 380px; } }
   </style>
 </Layout>
