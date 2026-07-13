@@ -2,7 +2,7 @@
 // Mirrors the prototype's app.js (minus the now-SSR chrome + the demo theme
 // switcher / module toggle): cart badge, promo close, mobile drawer, qty
 // steppers, add-to-cart + toast, FAQ accordion, category tabs.
-import { Cart, updateCount } from '../lib/cart';
+import { Cart, updateCount, companionSatisfied, companionShortfall } from '../lib/cart';
 import { ICONS } from '../lib/icons';
 import { esc } from '../lib/escape';
 
@@ -118,11 +118,74 @@ function pulseCart() {
   });
 }
 
+/** Format euros for a lock label: „4,50 €". */
+function euros(lv: number): string {
+  return lv.toFixed(2).replace('.', ',') + ' €';
+}
+
+/**
+ * Companion lock (task #2, loss-leader): a `requiresCompanion` add button stays
+ * disabled with an explanatory label until the cart already holds OTHER products
+ * totalling ≥ its threshold. Re-evaluated on load and on every cart change, so it
+ * unlocks the instant the basket qualifies. The cart/checkout pre-block + server
+ * are the backstops; this makes the reason visible right on the product.
+ */
+function refreshCompanionLocks() {
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-add-cart][data-requires-companion="1"]')
+    .forEach((btn) => {
+      // A button that arrived already disabled (sold out) is locked for another
+      // reason — record it once and never manage it, so we can't un-sell-out it.
+      if (btn.dataset.companionManaged == null) {
+        btn.dataset.companionManaged = btn.disabled ? 'skip' : '1';
+      }
+      if (btn.dataset.companionManaged === 'skip') return;
+      const id = btn.dataset.id!;
+      const min = btn.dataset.companionMin ? parseInt(btn.dataset.companionMin, 10) : 0;
+      const ok = companionSatisfied(id, min);
+      // Remember the original markup once so we can restore it on unlock.
+      if (btn.dataset.companionOrigHtml == null) btn.dataset.companionOrigHtml = btn.innerHTML;
+      if (ok) {
+        btn.disabled = false;
+        btn.classList.remove('is-companion-locked');
+        btn.innerHTML = btn.dataset.companionOrigHtml;
+        btn.removeAttribute('title');
+      } else {
+        const shortfall = companionShortfall(id, min);
+        const label =
+          min > 0
+            ? `🔒 Още ${euros(shortfall)} други продукти`
+            : '🔒 Добави с друг продукт';
+        btn.disabled = true;
+        btn.classList.add('is-companion-locked');
+        btn.innerHTML = label;
+        btn.title =
+          min > 0
+            ? `„${btn.dataset.name}“ се добавя само с други продукти на обща стойност поне ${euros(min / 100)}.`
+            : `„${btn.dataset.name}“ се добавя само заедно с друг продукт.`;
+      }
+    });
+}
+
 function addToCart() {
   document.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-add-cart]');
     if (!btn) return;
     e.preventDefault();
+    // Companion guard: never add a locked loss-leader product. The button is
+    // disabled when unsatisfied, but guard the handler too (defence in depth).
+    if (btn.dataset.requiresCompanion === '1') {
+      const min = btn.dataset.companionMin ? parseInt(btn.dataset.companionMin, 10) : 0;
+      if (!companionSatisfied(btn.dataset.id!, min)) {
+        toast(
+          min > 0
+            ? `„${btn.dataset.name}“ се добавя само с други продукти на обща стойност поне ${euros(min / 100)}.`
+            : `„${btn.dataset.name}“ се добавя само заедно с друг продукт.`,
+          'error',
+        );
+        return;
+      }
+    }
     const scope = btn.closest<HTMLElement>('[data-product]') || document;
     const qtyInput = scope.querySelector('.stepper input') as HTMLInputElement | null;
     const qty = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1;
@@ -138,6 +201,12 @@ function addToCart() {
         // reads it to disclose multi-seller orders). Absent when the button has no farmer.
         farmerId: btn.dataset.farmerId || undefined,
         farmerName: btn.dataset.farmerName || undefined,
+        // Companion rule (task #2): stamp the flag + threshold so the cart/checkout
+        // can pre-block a "can't be bought alone" product without a network lookup.
+        requiresCompanion: btn.dataset.requiresCompanion === '1' || undefined,
+        companionMinPriceStotinki: btn.dataset.companionMin
+          ? parseInt(btn.dataset.companionMin, 10)
+          : undefined,
       },
       qty,
     );
@@ -198,6 +267,10 @@ function init() {
   addToCart();
   accordion();
   tabs();
+  refreshCompanionLocks();
+  // Re-evaluate locks whenever the cart changes (updateCount fires this) so a
+  // loss-leader unlocks the instant the basket reaches its threshold.
+  window.addEventListener('cart:changed', refreshCompanionLocks);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

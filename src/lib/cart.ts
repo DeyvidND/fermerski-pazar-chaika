@@ -16,6 +16,11 @@ export interface CartItem {
    *  producer is the seller) without a network lookup. Absent on legacy cart lines. */
   farmerId?: string;
   farmerName?: string;
+  /** Companion rule (task #2), captured at add-time from the product data. When
+   *  set, this line can't be ordered alone — see `unsatisfiedCompanions`. */
+  requiresCompanion?: boolean;
+  /** EUR-cents threshold for the required companion; null/absent = any other product. */
+  companionMinPriceStotinki?: number | null;
 }
 
 const KEY = 'ff_cart';
@@ -73,6 +78,69 @@ export const Cart = {
 
 export function money(lv: number): string {
   return lv.toFixed(2).replace('.', ',') + ' €' + bgnHtml(lv);
+}
+
+/** Companion rule (task #2, loss-leader). A line flagged `requiresCompanion`
+ *  needs the OTHER products in the cart to TOTAL ≥ `companionMinPriceStotinki`
+ *  (sum of price × qty over every different-product line — a basket of cheaper
+ *  goods qualifies, not only one expensive item). When the threshold is null/0,
+ *  any one other product suffices. Extra units of the SAME flagged product do NOT
+ *  count. Returns the flagged lines still unsatisfied. The server enforces the
+ *  same rule on /checkout — this is the pre-block UX. */
+/** Sum of the OTHER cart lines (different product id) in integer stotinki. Rounds
+ *  each line's euro price to cents before summing, so a basket that exactly meets
+ *  the threshold can never be lost to float drift (e.g. 0,01+4,02+0,47 summing to
+ *  4.4999999… < 4.5 in float euros). Matches the server, which compares in stotinki. */
+function otherProductsStotinki(items: CartItem[], excludeId: string): number {
+  return items
+    .filter((o) => o.id !== excludeId)
+    .reduce((s, o) => s + Math.round(o.price * 100) * o.qty, 0);
+}
+
+export function unsatisfiedCompanions(items: CartItem[]): CartItem[] {
+  return items.filter((it) => {
+    if (!it.requiresCompanion) return false;
+    const min = it.companionMinPriceStotinki ?? 0;
+    if (min > 0) return otherProductsStotinki(items, it.id) < min;
+    return items.filter((o) => o.id !== it.id).length === 0;
+  });
+}
+
+/** Can a `requiresCompanion` product be added right now? True when the cart
+ *  already holds OTHER products (different id) totalling ≥ the threshold (or, with
+ *  no threshold, at least one other product). Used to lock/unlock the add button
+ *  before the product is even in the cart — the same rule as `unsatisfiedCompanions`
+ *  but keyed by product id instead of an existing cart line. */
+export function companionSatisfied(
+  productId: string,
+  minStotinki: number | null | undefined,
+  items: CartItem[] = Cart.get(),
+): boolean {
+  const min = minStotinki ?? 0;
+  if (min > 0) return otherProductsStotinki(items, productId) >= min;
+  return items.filter((o) => o.id !== productId).length > 0;
+}
+
+/** Euro amount still needed before a companion product unlocks (0 when satisfied
+ *  or no threshold). For the lock label. */
+export function companionShortfall(
+  productId: string,
+  minStotinki: number | null | undefined,
+  items: CartItem[] = Cart.get(),
+): number {
+  const min = minStotinki ?? 0;
+  if (min <= 0) return 0;
+  return Math.max(0, min - otherProductsStotinki(items, productId)) / 100;
+}
+
+/** Bulgarian nudge for an unsatisfied companion line (task #2). */
+export function companionMessage(it: CartItem): string {
+  const min = it.companionMinPriceStotinki;
+  if (min && min > 0) {
+    const eur = (min / 100).toFixed(2).replace('.', ',') + ' €';
+    return `„${it.name}“ не се продава самостоятелно — добавете други продукти на обща стойност поне ${eur}.`;
+  }
+  return `„${it.name}“ не се продава самостоятелно — добавете още един продукт по избор.`;
 }
 
 /** Sync every .cart-count badge in the header. */

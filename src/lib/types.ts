@@ -201,6 +201,27 @@ export interface Product {
   salePriceStotinki?: number | null;
   /** Purchasable options. Empty/absent = a plain single-price product. */
   variants?: PublicProductVariant[];
+  /** Ready-made bundle (task #1): resolved member products, present on
+   *  `category === 'bundle'`. The bundle is sold as one SKU (its own
+   *  `priceStotinki`); the members are informational contents. */
+  bundleProducts?: PublicBundleItem[];
+  /** Companion rule (task #2): when true this product cannot be ordered alone —
+   *  the cart must also hold ≥1 OTHER product (see `companionMinPriceStotinki`).
+   *  Enforced server-side; the storefront check is a UX pre-block. */
+  requiresCompanion?: boolean;
+  /** Optional EUR-cents threshold (same unit as `priceStotinki`): the required
+   *  other product must cost ≥ this. `null`/absent = any other product qualifies. */
+  companionMinPriceStotinki?: number | null;
+}
+
+/** A resolved member of a ready-made bundle (task #1). */
+export interface PublicBundleItem {
+  productId: string;
+  name: string;
+  slug: string | null;
+  image: string | null;
+  quantity: number;
+  priceStotinki: number;
 }
 
 /** How a cover image is framed: focal point (x/y, 0..1) + zoom (1..3). Returned

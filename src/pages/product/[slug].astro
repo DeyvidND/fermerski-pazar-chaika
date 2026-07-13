@@ -140,6 +140,35 @@ const structuredData = [
             </ul>
           )}
 
+          {product.bundleProducts && product.bundleProducts.length > 0 && (
+            <div class="card" style="margin-top:18px;padding:16px 18px;box-shadow:none">
+              <div style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;color:var(--muted,#6f7a69);margin-bottom:10px">🧺 Този пакет съдържа</div>
+              <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+                {product.bundleProducts.map((m) => (
+                  <li style="display:flex;align-items:center;gap:12px">
+                    {m.image ? (
+                      <img src={cfImage(m.image, 96)} alt={m.name} width="44" height="44" loading="lazy"
+                        style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none" />
+                    ) : (
+                      <span style="width:44px;height:44px;border-radius:10px;background:var(--soft,#eef1ea);flex:none;display:flex;align-items:center;justify-content:center"><Icon name="leaf" /></span>
+                    )}
+                    <span style="flex:1;font-weight:600">
+                      {m.slug ? <a href={`/product/${m.slug}`} style="color:inherit;text-decoration:none">{m.name}</a> : m.name}
+                    </span>
+                    <span class="muted" style="font-size:14px;white-space:nowrap">× {m.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+              <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted,#6f7a69)">Пакетът се купува като едно цяло на обявената цена.</p>
+            </div>
+          )}
+
+          {product.requiresCompanion && (
+            <div class="card" style="margin-top:14px;padding:14px 16px;box-shadow:none;border-left:3px solid #d98a2b;font-size:13.5px;line-height:1.55">
+              <b>Не се продава самостоятелно.</b> {product.companionMinPriceStotinki ? `Добавете други продукти на обща стойност поне ${moneyEurOnly(product.companionMinPriceStotinki)}` : 'Добавете още поне един продукт'}, за да завършите поръчката.
+            </div>
+          )}
+
           <div class="note-fresh" style="margin:22px 0"><Icon name="leaf" /> Свежо за петъчния пазар</div>
           {hasV && (
             <div class="variant-picker" data-variant-picker style="margin:18px 0">
@@ -206,6 +235,8 @@ const structuredData = [
               data-id={product.id} data-name={product.name} data-price={priceLv} data-weight={product.weight || ''}
               data-variant-id={defaultVariantId} data-variant-label={defaultVariantLabel}
               data-farmer-id={farmer?.id ?? undefined} data-farmer-name={farmer?.name ?? undefined}
+              data-requires-companion={product.requiresCompanion ? '1' : undefined}
+              data-companion-min={product.companionMinPriceStotinki ?? undefined}
               disabled={productSoldOut || undefined}
               style={productSoldOut ? 'opacity:0.5;pointer-events:none;cursor:not-allowed' : undefined}>
               {productSoldOut ? 'Изчерпан' : 'Добави в количка'}
