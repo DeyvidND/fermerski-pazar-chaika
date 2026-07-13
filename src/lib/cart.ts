@@ -100,6 +100,39 @@ export function unsatisfiedCompanions(items: CartItem[]): CartItem[] {
   });
 }
 
+/** Can a `requiresCompanion` product be added right now? True when the cart
+ *  already holds OTHER products (different id) totalling ≥ the threshold (or, with
+ *  no threshold, at least one other product). Used to lock/unlock the add button
+ *  before the product is even in the cart — the same rule as `unsatisfiedCompanions`
+ *  but keyed by product id instead of an existing cart line. */
+export function companionSatisfied(
+  productId: string,
+  minStotinki: number | null | undefined,
+  items: CartItem[] = Cart.get(),
+): boolean {
+  const others = items.filter((o) => o.id !== productId);
+  const min = minStotinki ?? 0;
+  if (min > 0) {
+    return others.reduce((s, o) => s + o.price * o.qty, 0) >= min / 100;
+  }
+  return others.length > 0;
+}
+
+/** Euro amount still needed before a companion product unlocks (0 when satisfied
+ *  or no threshold). For the lock label. */
+export function companionShortfall(
+  productId: string,
+  minStotinki: number | null | undefined,
+  items: CartItem[] = Cart.get(),
+): number {
+  const min = minStotinki ?? 0;
+  if (min <= 0) return 0;
+  const othersTotal = items
+    .filter((o) => o.id !== productId)
+    .reduce((s, o) => s + o.price * o.qty, 0);
+  return Math.max(0, min / 100 - othersTotal);
+}
+
 /** Bulgarian nudge for an unsatisfied companion line (task #2). */
 export function companionMessage(it: CartItem): string {
   const min = it.companionMinPriceStotinki;
