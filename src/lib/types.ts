@@ -247,6 +247,16 @@ export interface Farmer {
   images?: string[];
   position: number;
   createdAt: string | null;
+  /** Settlement/town the farm is registered in — shown as the map popup's
+   *  village line when real coords are present. Nullable/absent on older
+   *  backends and on farmers who haven't set it. */
+  city?: string | null;
+  /** Geocoded farm location (WGS84), resolved server-side from the farmer's
+   *  registered address. Null/absent until the backend has geocoded it — see
+   *  `src/lib/farmer-map.ts` for the real-coords-first, static-table-fallback
+   *  resolution used on /karta. */
+  lat?: number | null;
+  lng?: number | null;
   /** Phase 2: farmer offers nationwide courier delivery (enabled + carrier connected). */
   courierReady?: boolean;
   /** Legal seller identity (farmer-as-seller marketplace). КЗП disclosure — the buyer

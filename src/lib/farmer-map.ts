@@ -3,6 +3,12 @@
 // Ambiguous village names (Искра, Зимница, Храброво exist several times in BG)
 // use the Dobrich/Varna-region settlement. Edit coordinates here to fine-tune a
 // pin; nothing else in the app needs to change.
+//
+// A real geocoded `farmer.lat`/`farmer.lng` (from the farmer's registered
+// address, resolved server-side) now takes PRIORITY over this table — see
+// `resolveMapPoints` below. This table is the FALLBACK for farmers the
+// backend hasn't geocoded yet, and stays the display for any static entry
+// that doesn't match a live farmer at all (regional showcase).
 import type { Farmer } from './types';
 
 export interface FarmerMapPoint {
@@ -49,9 +55,14 @@ function normName(s: string): string {
     .replace(/^ферма\s+/, '');
 }
 
-/** Attach each point's `/farmer/<slug>` slug when its name matches a live
- *  farmer (by normalized name); otherwise slug=null. Pure — safe to unit test.
- *  `slugs` is the collision-safe map from `farmerSlugMap(farmers)`. */
+/** Resolve the /karta pins. For each live farmer with a real geocoded
+ *  `lat`/`lng`, emit a point straight from the farmer's own data (name, city,
+ *  coords, slug) — the static table is not consulted for that farmer at all.
+ *  Farmers without real coords yet fall back to EXACTLY the previous
+ *  behavior: look up `FARMER_MAP_POINTS` by normalized-name match. Static
+ *  entries that match no live farmer keep showing as-is (regional showcase).
+ *  Pure — safe to unit test. `slugs` is the collision-safe map from
+ *  `farmerSlugMap(farmers)`. */
 export function resolveMapPoints(
   points: FarmerMapPoint[],
   farmers: Farmer[],
@@ -64,5 +75,32 @@ export function resolveMapPoints(
     // First writer wins on a duplicate normalized name — deterministic in roster order.
     if (slug && !byName.has(key)) byName.set(key, slug);
   }
-  return points.map((p) => ({ ...p, slug: byName.get(normName(p.name)) ?? null }));
+
+  const geocodedNames = new Set<string>();
+  const resolved: ResolvedMapPoint[] = [];
+
+  // Real coords first — one pin per farmer that has them, positioned at their
+  // actual (geocoded) location rather than a village-center guess.
+  for (const f of farmers) {
+    if (f.lat == null || f.lng == null) continue;
+    const key = normName(f.name);
+    geocodedNames.add(key);
+    resolved.push({
+      name: f.name,
+      village: f.city ?? '',
+      lat: f.lat,
+      lng: f.lng,
+      slug: slugs.get(f.id) ?? null,
+    });
+  }
+
+  // Static-table fallback for everyone else — unchanged name-match behavior.
+  // Skip any static entry already covered by a real-coords pin above so a
+  // geocoded farmer never doubles up with their old static guess.
+  for (const p of points) {
+    if (geocodedNames.has(normName(p.name))) continue;
+    resolved.push({ ...p, slug: byName.get(normName(p.name)) ?? null });
+  }
+
+  return resolved;
 }
