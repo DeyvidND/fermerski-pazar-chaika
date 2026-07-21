@@ -50,6 +50,11 @@ const priceLv = (pd.headlineStotinki / 100).toFixed(2);
 const tag = p.featured ? '★ Популярен' : pd.compareStotinki != null ? 'Промо' : null;
 // Ready-made bundle (task #1): a готова кошница sold as one SKU.
 const isBundle = (p.bundleProducts?.length ?? 0) > 0 || p.category === 'bundle';
+// A basket with no cover photo of its own is drawn as a grid of its members'
+// photos — up to four, in the order the operator arranged them. An uploaded
+// cover always wins.
+const tiles = (p.bundleProducts ?? []).map((b) => b.image).filter((s): s is string => !!s).slice(0, 4);
+const showTiles = isBundle && !p.imageUrl && tiles.length >= 2;
 // Farmer row: links to the micro-store when an id is given (omitted on the
 // farmer's own page, where the link would be redundant). No image → initials.
 // `farmerSlug` (collision-safe, from farmerSlugMap) is preferred; falls back
@@ -80,7 +85,15 @@ const soldOut = (hasWindow && remaining === 0) || allVariantsSoldOut(p);
         <Icon name="camera" /> {photoCount}
       </span>
     )}
-    {p.imageUrl ? (
+    {showTiles ? (
+      <span class="tile-grid" style={`position:absolute;inset:0;display:grid;gap:2px;grid-template-columns:1fr 1fr;grid-template-rows:${tiles.length > 2 ? '1fr 1fr' : '1fr'}`}>
+        {tiles.map((src, i) => (
+          <img src={cfImage(src, 360)} srcset={cfSrcset(src, [180, 360])}
+               sizes="(max-width:700px) 25vw, 160px" alt={i === 0 ? p.name : ''} loading="lazy" decoding="async"
+               style={`width:100%;height:100%;object-fit:cover;${tiles.length === 3 && i === 0 ? 'grid-row:span 2' : ''}`} />
+        ))}
+      </span>
+    ) : p.imageUrl ? (
       <img src={cfImage(p.imageUrl, 720)} srcset={cfSrcset(p.imageUrl, [360, 720])}
            sizes="(max-width:700px) 50vw, 320px" alt={p.name} loading="lazy" decoding="async"
            style={`position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${coverCropStyle(p.coverCrop)}`} />

@@ -106,7 +106,12 @@ const structuredData = [
     <section class="section--tight">
       <div class="wrap split" style="align-items:flex-start">
         <div>
-          <Gallery images={productImages} alt={product.name} label={`${product.name} · 1:1`} />
+          <Gallery
+            images={productImages}
+            tiles={product.imageUrl ? undefined : (product.bundleProducts ?? []).map((b) => b.image).filter((s): s is string => !!s)}
+            alt={product.name}
+            label={`${product.name} · 1:1`}
+          />
         </div>
         <div>
           {tag && <span class="tag">{tag}</span>}

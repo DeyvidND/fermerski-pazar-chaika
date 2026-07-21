@@ -9,12 +9,25 @@ interface Props {
   alt: string;
   /** Placeholder label shown when there are no images. */
   label?: string;
+  /** Basket mode: draw a grid of member photos instead of one main image. */
+  tiles?: string[];
 }
-const { images, alt, label } = Astro.props;
+const { images, alt, label, tiles } = Astro.props;
+const grid = (tiles ?? []).slice(0, 4);
+const showTiles = grid.length >= 2;
 const has = images.length > 0;
 const multi = images.length > 1;
 ---
-{has ? (
+{showTiles ? (
+  <div class="ph ph--rounded" style={`aspect-ratio:1;display:grid;gap:3px;grid-template-columns:1fr 1fr;grid-template-rows:${grid.length > 2 ? '1fr 1fr' : '1fr'}`}>
+    {grid.map((src, i) => (
+      <img src={cfImage(src, 600)} srcset={cfSrcset(src, [300, 600])}
+           sizes="(max-width:900px) 50vw, 260px" alt={i === 0 ? alt : ''} fetchpriority={i === 0 ? 'high' : undefined}
+           decoding="async"
+           style={`width:100%;height:100%;object-fit:cover;${grid.length === 3 && i === 0 ? 'grid-row:span 2' : ''}`} />
+    ))}
+  </div>
+) : has ? (
   <div class="media-gallery" data-gallery>
     <div class="ph ph--rounded" style="aspect-ratio:1">
       <img
