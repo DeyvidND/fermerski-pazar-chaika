@@ -66,9 +66,9 @@ if (!Cart.get().length) location.replace('/cart');
 
 type Method = 'pickup' | 'address' | 'econt' | 'econt_address' | 'courier';
 let method: Method = 'pickup';
-// True once a pickup-only product (courierDisabled) is found in the cart — set by
-// initCourierDisabledGate() on load. Such products can't go on a courier waybill,
-// so Econt/courier methods are hidden and the submit guard refuses them.
+// True once a pickup-only product (courierDisabled) or a basket is found in the
+// cart — set by initCourierDisabledGate() on load. Neither can go on a courier
+// waybill, so Econt/courier methods are hidden and the submit guard refuses them.
 let courierDisabledBlocked = false;
 let selectedSlotId: string | null = null;
 let selectedSlotLabel = '';
@@ -896,41 +896,49 @@ function initSellersNotice(): void {
 }
 initSellersNotice();
 
-/* ---------- pickup-only gate (courierDisabled products) ---------- */
+/* ---------- pickup-only gate (courierDisabled products + baskets) ---------- */
 // Some products (perishable/fragile) are flagged `courierDisabled` and must never
-// be couriered. Cart lines carry only the productId, so resolve the flag (and name,
-// for the on-screen note) through the cached /bootstrap product map (same source
-// computeCourierEligible uses).
-async function cartCourierDisabledNames(): Promise<string[]> {
+// be couriered. Baskets (`category === 'bundle'`) are pickup/local-delivery only
+// for the same reason — the backend rejects a courier checkout containing one
+// (see cartCourierBlockers below) — so this must not rely solely on the courier
+// kill-switch (ONLY_LOCAL_DELIVERY) staying flipped. Cart lines carry only the
+// productId, so resolve both (and names, for the on-screen note) through the
+// cached /bootstrap product map (same source computeCourierEligible uses).
+async function cartCourierBlockers(): Promise<{ fragileNames: string[]; hasBasket: boolean }> {
   const cart = Cart.get();
-  if (!cart.length) return [];
+  if (!cart.length) return { fragileNames: [], hasBasket: false };
   try {
     const boot = await getBootstrap();
-    if (!boot) return [];
+    if (!boot) return { fragileNames: [], hasBasket: false };
     const byId = new Map(boot.products.map((p) => [p.id, p]));
-    const names: string[] = [];
+    const fragileNames: string[] = [];
+    let hasBasket = false;
     for (const line of cart) {
       const p = byId.get(line.id);
-      if (p?.courierDisabled === true) names.push(p.name);
+      if (!p) continue;
+      if (p.category === 'bundle') hasBasket = true;
+      else if (p.courierDisabled === true) fragileNames.push(p.name);
     }
-    return names;
+    return { fragileNames, hasBasket };
   } catch {
-    return []; // bootstrap unavailable → don't block (server still backstops)
+    return { fragileNames: [], hasBasket: false }; // bootstrap unavailable → don't block (server still backstops)
   }
 }
 
-// When the cart holds a pickup-only product, hide every carrier (waybill) method —
-// Еконт office + door (courier is already locked) — drop a note naming the
-// product(s), and bounce the selection to a waybill-free method (local delivery /
-// pickup). Defensive: never throws out of init.
+// When the cart holds a pickup-only product or a basket, hide every carrier
+// (waybill) method — Еконт office + door (courier is already locked) — drop a
+// note explaining why, and bounce the selection to a waybill-free method (local
+// delivery / pickup). Defensive: never throws out of init.
 async function initCourierDisabledGate(): Promise<void> {
-  let blockedNames: string[] = [];
+  let fragileNames: string[] = [];
+  let hasBasket = false;
   try {
-    blockedNames = await cartCourierDisabledNames();
+    ({ fragileNames, hasBasket } = await cartCourierBlockers());
   } catch {
-    blockedNames = [];
+    fragileNames = [];
+    hasBasket = false;
   }
-  courierDisabledBlocked = blockedNames.length > 0;
+  courierDisabledBlocked = fragileNames.length > 0 || hasBasket;
   if (!courierDisabledBlocked) return;
 
   const carrierMethods = ['econt', 'econt_address'];
@@ -954,11 +962,23 @@ async function initCourierDisabledGate(): Promise<void> {
     note.id = 'courierDisabledNote';
     note.style.cssText =
       'padding:10px 12px;border-radius:10px;background:#fdf1e3;color:#9a5b13;font-size:13.5px;line-height:1.45';
-    const single = blockedNames.length === 1;
-    const subject = single
-      ? `„${blockedNames[0]}“ не се изпраща с куриер (чуплив или бързо разваляем)`
-      : `Тези продукти не се изпращат с куриер (чупливи или бързо разваляеми): ${blockedNames.join(', ')}`;
-    note.textContent = `${subject}. Куриерската доставка е скрита — избери местна доставка или вземане от пазара.`;
+    const sentences: string[] = [];
+    // Same wording the backend uses when it rejects a courier order containing
+    // a basket — keeps the message consistent if the shopper had gotten past
+    // this client-side gate somehow.
+    if (hasBasket) {
+      sentences.push('Кошниците се получават на място или с доставка от фермата, не с куриер.');
+    }
+    if (fragileNames.length) {
+      const single = fragileNames.length === 1;
+      sentences.push(
+        single
+          ? `„${fragileNames[0]}“ не се изпраща с куриер (чуплив или бързо разваляем).`
+          : `Тези продукти не се изпращат с куриер (чупливи или бързо разваляеми): ${fragileNames.join(', ')}.`,
+      );
+    }
+    sentences.push('Куриерската доставка е скрита — избери местна доставка или вземане от пазара.');
+    note.textContent = sentences.join(' ');
     container.prepend(note);
   }
 
