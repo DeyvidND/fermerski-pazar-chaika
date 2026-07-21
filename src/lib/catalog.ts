@@ -16,7 +16,7 @@ export interface Category {
   count: number;
 }
 
-const BUNDLE_LABEL = 'Сезонни пакети';
+const BUNDLE_LABEL = 'Кошници';
 const catLabel = (raw: string) => (raw === 'bundle' ? BUNDLE_LABEL : raw);
 
 /** The grouping key for a product under the active taxonomy. */
@@ -53,7 +53,7 @@ export function categoriesFrom(
     name: catLabel(id),
     desc:
       id === 'bundle'
-        ? 'Готови пакети с подбрани продукти на специална цена.'
+        ? 'Готови кошници с продукти от няколко фермери, на обща цена.'
         : 'Свежи продукти от местните фермери.',
     icon: iconForCategory(catLabel(id)),
     imageUrl: null,

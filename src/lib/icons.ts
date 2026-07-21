@@ -40,6 +40,7 @@ export type IconName = keyof typeof ICONS;
 /** Best-effort icon by category name (free-text `product.category` fallback). */
 export function iconForCategory(name: string | null | undefined): string {
   const n = (name || '').toLowerCase();
+  if (/кошниц|пакет|basket/.test(n)) return 'basket';
   if (/плод|зелен|fruit|produce/.test(n)) return 'produce';
   if (/млеч|сирен|dairy|мляко/.test(n)) return 'dairy';
   if (/мед|honey|пчел/.test(n)) return 'honey';
