@@ -2,7 +2,7 @@
 import Layout from '../components/Layout.astro';
 import { getCatalog } from '../lib/api';
 import { farmerSlugMap } from '../lib/farmer-slug';
-import { FARMER_MAP_POINTS, resolveMapPoints } from '../lib/farmer-map';
+import { resolveMapPoints } from '../lib/farmer-map';
 
 export const prerender = false;
 
@@ -25,7 +25,7 @@ const mapsKey = String(
 
 const { storefront: sf, farmers } = await getCatalog();
 const slugs = farmerSlugMap(farmers);
-const points = resolveMapPoints(FARMER_MAP_POINTS, farmers, slugs);
+const points = resolveMapPoints(farmers, slugs);
 
 const metaDesc = `Виж на картата откъде идват фермерите и стопанствата зад продуктите на ${sf.name}.`;
 ---
@@ -40,7 +40,7 @@ const metaDesc = `Виж на картата откъде идват ферме�
         <div class="section-head">
           <span class="eyebrow">Откъде идва храната</span>
           <h1 style="margin-top:8px">Карта на фермерите</h1>
-          <p>Нашите фермери и стопанства из България. Точките са приблизителни за част от фермерите — по селото на стопанството.</p>
+          <p>Нашите фермери и стопанства из България — по адреса на стопанството, където е известен.</p>
         </div>
 
         <div
