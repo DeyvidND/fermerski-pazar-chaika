@@ -89,10 +89,11 @@ const structuredData = [
               <div><div class="n">{subsections.length}</div><div class="l">категории</div></div>
               {yearsWithUs && <div><div class="n">{yearsWithUs}+</div><div class="l">години с нас</div></div>}
             </div>
-            {(farmer.phone || farmer.email) && (
+            {(farmer.phone || farmer.email || farmer.legal?.address) && (
               <div class="farmer-contact">
                 {farmer.phone && <a href={telHref(farmer.phone)}><Icon name="phone" />{farmer.phone}</a>}
                 {farmer.email && <a href={`mailto:${farmer.email}`}><Icon name="mail" />{farmer.email}</a>}
+                {farmer.legal?.address && <span><Icon name="pin" />{farmer.legal.address}</span>}
               </div>
             )}
             {farmer.legal?.name && (
