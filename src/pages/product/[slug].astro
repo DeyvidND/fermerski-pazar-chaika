@@ -42,11 +42,15 @@ const catName = sf.multiSubcat
     ? product.category
     : null;
 const related = featured(products.filter((p) => p.id !== product.id), 4);
+// A basket with no cover photo of its own is drawn as a grid of its members'
+// photos (see Gallery's `tiles` prop below) — but og:image/JSON-LD need one
+// concrete image, not a grid, so they fall back to the first member photo too.
+const bundleImages = (product.bundleProducts ?? []).map((b) => b.image).filter((s): s is string => !!s);
 const productImages = product.images?.length
   ? product.images
   : product.imageUrl
     ? [product.imageUrl]
-    : [];
+    : bundleImages;
 const metaBits = [product.weight, farmer?.name].filter(Boolean).join(' · ');
 const imgOrigin = imageOrigin(productImages[0]);
 
@@ -108,7 +112,7 @@ const structuredData = [
         <div>
           <Gallery
             images={productImages}
-            tiles={product.imageUrl ? undefined : (product.bundleProducts ?? []).map((b) => b.image).filter((s): s is string => !!s)}
+            tiles={product.imageUrl ? undefined : bundleImages}
             alt={product.name}
             label={`${product.name} · 1:1`}
           />
