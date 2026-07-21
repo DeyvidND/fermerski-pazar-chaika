@@ -85,6 +85,10 @@ function createPopupClass(maps: any): any {
   return class Popup extends maps.OverlayView {
     position: any;
     el: HTMLDivElement;
+    /** Last div-pixel position drawn, so a caller can tell whether the card
+     *  (which renders ~46px + its own height ABOVE the marker via CSS
+     *  transform) would clip against the map container's `overflow:hidden`. */
+    lastPixel: { x: number; y: number } | null = null;
     constructor(position: any, html: string, onClose: () => void) {
       super();
       this.position = position;
@@ -108,12 +112,19 @@ function createPopupClass(maps: any): any {
     draw() {
       const p = this.getProjection().fromLatLngToDivPixel(this.position);
       if (p) {
+        this.lastPixel = p;
         this.el.style.left = `${p.x}px`;
         this.el.style.top = `${p.y}px`;
       }
     }
   };
 }
+
+// Popup card height (~150px) + the 46px gap its CSS transform holds above the
+// marker — a marker drawn closer to the container's top than this clips the
+// card against `.farmer-map`'s `overflow:hidden`. Keep in sync with the
+// .ff-popup* rules in karta.astro.
+const POPUP_TOP_CLEARANCE = 210;
 
 function init(): void {
   const el = document.getElementById('farmerMap');
@@ -165,13 +176,20 @@ function init(): void {
         bounds.extend(pos);
         marker.addListener('click', () => {
           closeCurrent();
-          current = new Popup(new maps.LatLng(pos), popupHtml(p), closeCurrent);
-          current.setMap(map);
+          const popup = new Popup(new maps.LatLng(pos), popupHtml(p), closeCurrent);
+          popup.setMap(map);
+          current = popup;
+          // A marker near the top of the visible map draws its popup above the
+          // container's top edge, clipped by `.farmer-map`'s overflow:hidden
+          // (draw() runs synchronously on setMap, so lastPixel is ready here).
+          // Google's documented workaround: nudge the map down by the shortfall.
+          const px = popup.lastPixel;
+          if (px && px.y < POPUP_TOP_CLEARANCE) map.panBy(0, px.y - POPUP_TOP_CLEARANCE);
         });
       }
       map.addListener('click', closeCurrent);
 
-      map.fitBounds(bounds, 64);
+      map.fitBounds(bounds, { top: POPUP_TOP_CLEARANCE, right: 64, bottom: 64, left: 64 });
       // Clamp the INITIAL zoom only (a tight cluster would otherwise zoom to
       // street level); the user can still zoom in afterwards.
       maps.event.addListenerOnce(map, 'idle', () => {
