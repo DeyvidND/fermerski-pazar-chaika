@@ -19,8 +19,12 @@ export interface Category {
 const BUNDLE_LABEL = 'Кошници';
 const catLabel = (raw: string) => (raw === 'bundle' ? BUNDLE_LABEL : raw);
 
-/** The grouping key for a product under the active taxonomy. */
+/** The grouping key for a product under the active taxonomy. A basket
+ *  (`category === 'bundle'`) always groups as its own "Кошници" category,
+ *  regardless of taxonomy or whatever subcategoryId it happens to carry —
+ *  it's identified by category, not by the tenant's subcategory tree. */
 export function catIdOf(p: Product, multiSubcat: boolean): string {
+  if (p.category === 'bundle') return 'bundle';
   return (multiSubcat ? p.subcategoryId : p.category) || '';
 }
 
@@ -31,15 +35,31 @@ export function categoriesFrom(
   multiSubcat: boolean,
 ): Category[] {
   if (multiSubcat && subcats.length) {
-    return subcats.map((s) => ({
+    const cats = subcats.map((s) => ({
       id: s.id,
       name: s.name,
       desc: s.description || 'Продукти от тази категория, директно от фермера.',
       icon: iconForCategory(s.name),
       imageUrl: s.imageUrl,
       coverCrop: s.coverCrop ?? null,
-      count: products.filter((p) => p.subcategoryId === s.id).length,
+      // Baskets never count here even if they carry this subcategoryId — they
+      // get their own synthetic "Кошници" entry below, so a basket is counted
+      // exactly once.
+      count: products.filter((p) => p.subcategoryId === s.id && p.category !== 'bundle').length,
     }));
+    const bundleCount = products.filter((p) => p.category === 'bundle').length;
+    if (bundleCount > 0) {
+      cats.push({
+        id: 'bundle',
+        name: BUNDLE_LABEL,
+        desc: 'Готови кошници с продукти от няколко фермери, на обща цена.',
+        icon: iconForCategory(BUNDLE_LABEL),
+        imageUrl: null,
+        coverCrop: null,
+        count: bundleCount,
+      });
+    }
+    return cats;
   }
   // Free-text fallback — distinct product.category, preserving first-seen order.
   const seen = new Map<string, number>();
