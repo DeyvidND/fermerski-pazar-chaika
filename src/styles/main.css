@@ -178,14 +178,11 @@ p { text-wrap: pretty; }
   flex: 1; min-width: 0; height: 100%;
   border: 0; background: transparent; font-size: 16px; color: var(--ink);
 }
-.searchbar__input:focus { outline: none; }
-/* Keyboard focus still needs a visible ring — :focus-within above only outlines
-   the pill's border, easy to miss for low-vision/elderly users. */
-.searchbar__input:focus-visible {
-  outline: 2px solid var(--primary, #4C8A54);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+/* No inner outline — the pill's own :focus-within border + ring (above) is the
+   single, clearly-visible focus indicator; a second outline inside it read as
+   a doubled/nested box. */
+.searchbar__input:focus,
+.searchbar__input:focus-visible { outline: none; }
 .searchbar__input::placeholder { color: var(--muted); }
 .searchbar__input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .searchbar__clear {

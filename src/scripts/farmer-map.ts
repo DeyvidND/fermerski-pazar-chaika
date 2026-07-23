@@ -175,6 +175,7 @@ function init(): void {
 
   function closePanel(): void {
     if (panel) panel.hidden = true;
+    mapWrap?.classList.remove('is-panel-open');
   }
 
   function openPanel(farmerId: string): void {
@@ -208,6 +209,7 @@ function init(): void {
       `<a class="btn btn--primary" href="${href}">Виж магазина →</a>`;
 
     panel.hidden = false;
+    mapWrap?.classList.add('is-panel-open');
   }
 
   // Panel is a plain DOM sibling of the map (not a Maps OverlayView), so it

@@ -224,18 +224,18 @@ const structuredData = farmers.length
 
     .km-layout {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr);
-      gap: 24px;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 28px;
       margin-top: 26px;
       align-items: start;
     }
 
     /* ---------- Sidebar (Филтри) ---------- */
-    .km-filters { padding: 22px; }
+    .km-filters { padding: 24px; }
     .km-filters__head {
       font-family: var(--font-head);
       font-weight: var(--h-weight);
-      font-size: 19px;
+      font-size: 21px;
       color: var(--ink);
       cursor: pointer;
       list-style: none;
@@ -254,7 +254,8 @@ const structuredData = farmers.length
     }
     .km-filters[open] > .km-filters__head::before { transform: rotate(-135deg); }
     .km-filters__body { margin-top: 18px; display: flex; flex-direction: column; gap: 18px; }
-    .km-filters__body .searchbar { max-width: none; }
+    .km-filters__body .searchbar { max-width: none; height: 54px; padding: 0 10px 0 16px; }
+    .km-filters__body .searchbar__input { font-size: 16.5px; }
 
     .km-cats { border: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
     .km-cats legend {
@@ -300,6 +301,9 @@ const structuredData = farmers.length
     .km-main { min-height: 400px; }
 
     .km-map-wrap { position: relative; margin-bottom: 22px; }
+    /* Slight blur/dim of the map while a farmer panel is open. */
+    .km-map-wrap.is-panel-open .km-map { filter: blur(2px) brightness(.97); transition: filter .2s ease; }
+    .km-map { transition: filter .2s ease; }
     .km-map-wrap[hidden] { display: none !important; }
 
     .km-map {
@@ -342,12 +346,14 @@ const structuredData = farmers.length
     .km-panel__close:hover { color: var(--ink); border-color: var(--primary); }
     .km-panel__body { padding: 22px; display: flex; flex-direction: column; gap: 4px; }
     .km-panel__photo {
-      width: 100%; aspect-ratio: 4/3; border-radius: var(--radius-sm);
+      width: 100%; aspect-ratio: 4/5; border-radius: var(--radius-sm);
       overflow: hidden; margin-bottom: 14px;
       display: grid; place-items: center;
       background: var(--primary); color: #fff;
     }
-    .km-panel__photo img { width: 100%; height: 100%; object-fit: cover; }
+    /* object-position center-top keeps heads in frame; an operator coverCrop
+       (inline style) still overrides this when set. */
+    .km-panel__photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
     .km-panel__photo .km-card__initials { font-size: 34px; }
     .km-panel__name { display: flex; align-items: center; gap: 8px; font-size: 22px; margin: 0; }
     .km-card__initials { font-family: var(--font-head); font-size: 24px; font-weight: 700; }
