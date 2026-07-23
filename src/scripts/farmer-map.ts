@@ -208,7 +208,8 @@ function init(): void {
       city +
       bio +
       (chips ? `<div class="km-panel__chips">${chips}</div>` : '') +
-      `<a class="btn btn--primary" href="${href}">Виж магазина →</a>`;
+      `<a class="btn btn--primary" href="${href}">Виж магазина →</a>` +
+      `<button type="button" class="km-panel__back" data-km-back>← Назад към картата</button>`;
 
     if (backdrop) backdrop.hidden = false;
     panel.hidden = false;
@@ -221,6 +222,11 @@ function init(): void {
   panel?.addEventListener('click', (e) => e.stopPropagation());
   panelClose?.addEventListener('click', closePanel);
   backdrop?.addEventListener('click', closePanel);
+  // "← Назад" lives inside the re-rendered panel body — delegate so one
+  // listener covers every open.
+  panelBody?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-km-back]')) closePanel();
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && panel && !panel.hidden) closePanel();
   });
