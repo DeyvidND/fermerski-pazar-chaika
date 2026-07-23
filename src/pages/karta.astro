@@ -161,7 +161,20 @@ const metaDesc = `Разгледай нашите фермери и стопан
     import '../scripts/farmer-map';
   </script>
 
-  <style>
+  <!-- is:global: most of this page's DOM (grid cards, panel body) is generated
+       at runtime by scripts/farmer-map.ts — Astro's scoped styles never reach
+       it (no data-astro-cid on script-built nodes), which left it unstyled. -->
+  <style is:global>
+    /* The site-wide `.grid { display:grid }` (and any other author `display`)
+       outranks the UA stylesheet's `[hidden] { display:none }` — pin these so
+       the tab toggle actually hides the inactive view. */
+    .km-grid[hidden],
+    .km-map[hidden],
+    .km-panel[hidden],
+    .km-empty[hidden] {
+      display: none !important;
+    }
+
     .km-head {
       display: flex;
       align-items: flex-end;
