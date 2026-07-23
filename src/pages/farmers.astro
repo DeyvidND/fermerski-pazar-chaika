@@ -152,14 +152,9 @@ const structuredData = farmers.length
             <div class="km-main">
               <!-- Роден Дар layout: map on top (when available), the real
                    server-rendered FarmerCard grid always visible below — both
-                   driven by the same filters. The detail panel overlays the
-                   MAP only, hence the relative wrapper. -->
+                   driven by the same filters. -->
               <div class="km-map-wrap" hidden id="farmerMapWrap">
                 <div id="farmerMap" class="km-map" aria-label="Карта с местоположението на фермерите"></div>
-                <aside id="kartaPanel" class="km-panel" hidden aria-label="Профил на производителя">
-                  <button type="button" class="km-panel__close" id="kartaPanelClose" aria-label="Затвори">&times;</button>
-                  <div id="kartaPanelBody" class="km-panel__body"></div>
-                </aside>
               </div>
               <!-- The client script (scripts/farmer-map.ts) only shows/hides
                    each `[data-farmer-id]` wrapper per the active filter; it
@@ -195,6 +190,14 @@ const structuredData = farmers.length
         </div>
       </div>
     </section>
+
+    <!-- Full-page farmer drawer + backdrop — page-level (fixed), not confined
+         to the map box. The client script (farmer-map.ts) toggles both hidden. -->
+    <div id="kartaBackdrop" class="km-backdrop" hidden></div>
+    <aside id="kartaPanel" class="km-panel" hidden aria-label="Профил на производителя">
+      <button type="button" class="km-panel__close" id="kartaPanelClose" aria-label="Затвори">&times;</button>
+      <div id="kartaPanelBody" class="km-panel__body"></div>
+    </aside>
   </main>
 
   <!-- is:global: the map + detail panel are built/toggled at runtime by
@@ -301,9 +304,6 @@ const structuredData = farmers.length
     .km-main { min-height: 400px; }
 
     .km-map-wrap { position: relative; margin-bottom: 22px; }
-    /* Slight blur/dim of the map while a farmer panel is open. */
-    .km-map-wrap.is-panel-open .km-map { filter: blur(2px) brightness(.97); transition: filter .2s ease; }
-    .km-map { transition: filter .2s ease; }
     .km-map-wrap[hidden] { display: none !important; }
 
     .km-map {
@@ -320,20 +320,30 @@ const structuredData = farmers.length
     .km-empty { text-align: center; color: var(--muted); padding: 60px 0; }
     .km-empty[hidden] { display: none; }
 
-    /* ---------- Detail panel (opened from a map pin) ---------- */
-    .km-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 340px;
-      max-width: 92vw;
-      overflow-y: auto;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius, 18px);
-      box-shadow: var(--shadow-lg);
-      z-index: 5;
+    /* ---------- Detail drawer (opened from a map pin) ---------- */
+    .km-backdrop {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(20, 30, 18, .32);
+      backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+      animation: km-fade .2s ease;
     }
-    .km-panel[hidden] { display: none; }
+    .km-backdrop[hidden] { display: none !important; }
+    @keyframes km-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes km-slide { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .km-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 400px;
+      max-width: 92vw;
+      z-index: 61;
+      overflow-y: auto;
+      animation: km-slide .22s ease;
+      background: var(--surface);
+      border-left: 1px solid var(--line);
+      border-radius: var(--radius-lg, 22px) 0 0 var(--radius-lg, 22px);
+      box-shadow: -16px 0 44px -14px rgba(38,73,47,.4);
+    }
+    .km-panel[hidden] { display: none !important; }
     .km-panel__close {
       position: sticky; top: 10px; margin: 10px 10px -34px auto;
       float: right;

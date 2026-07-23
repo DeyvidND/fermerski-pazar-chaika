@@ -151,6 +151,7 @@ function init(): void {
   const panel = document.getElementById('kartaPanel');
   const panelBody = document.getElementById('kartaPanelBody');
   const panelClose = document.getElementById('kartaPanelClose');
+  const backdrop = document.getElementById('kartaBackdrop');
 
   if (!mapEl || !gridEl) return;
 
@@ -175,7 +176,8 @@ function init(): void {
 
   function closePanel(): void {
     if (panel) panel.hidden = true;
-    mapWrap?.classList.remove('is-panel-open');
+    if (backdrop) backdrop.hidden = true;
+    document.body.style.overflow = '';
   }
 
   function openPanel(farmerId: string): void {
@@ -208,8 +210,9 @@ function init(): void {
       (chips ? `<div class="km-panel__chips">${chips}</div>` : '') +
       `<a class="btn btn--primary" href="${href}">Виж магазина →</a>`;
 
+    if (backdrop) backdrop.hidden = false;
     panel.hidden = false;
-    mapWrap?.classList.add('is-panel-open');
+    document.body.style.overflow = 'hidden';
   }
 
   // Panel is a plain DOM sibling of the map (not a Maps OverlayView), so it
@@ -217,6 +220,7 @@ function init(): void {
   // defense-in-depth against any wrapping click handlers.
   panel?.addEventListener('click', (e) => e.stopPropagation());
   panelClose?.addEventListener('click', closePanel);
+  backdrop?.addEventListener('click', closePanel);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && panel && !panel.hidden) closePanel();
   });
