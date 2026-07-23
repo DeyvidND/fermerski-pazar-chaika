@@ -388,6 +388,35 @@ function renderSummary() {
   // Euro-only, plain text — money() emits an HTML €+лв. span meant for innerHTML,
   // too wide for the fixed mobile bar at 320-375px.
   if (mobileBarTotal) mobileBarTotal.textContent = (sub + ship).toFixed(2).replace('.', ',') + ' €';
+  renderDeliverySplitNotice();
+}
+
+/* ---------- multi-farmer carrier split notice ---------- */
+// Carrier shipping is per farmer: the backend splits a multi-producer cart into one
+// order + one shipment PER FARMER (each with its own COD). Say so clearly BEFORE
+// submit — the confirmation page already explains it after, which is too late.
+// Farmer identity is stamped on cart lines at add-time (same source the sellers
+// notice uses), so this is synchronous — no bootstrap fetch. Dormant while
+// ONLY_LOCAL_DELIVERY hides the carrier methods; lights up on unlock.
+const CARRIER_METHODS: ReadonlySet<Method> = new Set(['econt', 'econt_address', 'courier']);
+
+function renderDeliverySplitNotice(): void {
+  const el = document.getElementById('deliverySplitNotice');
+  if (!el) return;
+  const farmerIds = new Set<string>();
+  for (const line of Cart.get()) if (line.farmerId) farmerIds.add(line.farmerId);
+  const n = farmerIds.size;
+  if (n < 2 || !CARRIER_METHODS.has(method)) {
+    el.hidden = true;
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML =
+    `<div style="margin-top:14px;padding:12px 14px;border:1px solid #f0d9a8;border-radius:12px;background:#fdf6e3;font-size:14px;line-height:1.55">` +
+    `<b>Продуктите ти са от ${n} различни производители.</b><br>` +
+    `Ще се създадат <b>${n} отделни доставки</b> — по една от всеки фермер, всяка със собствен наложен платеж при получаване.` +
+    `</div>`;
+  el.hidden = false;
 }
 
 function setMethod(m: Method) {

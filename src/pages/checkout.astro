@@ -172,6 +172,13 @@ const mapsKey = String(
                 <span class="muted" style="font-size:14px">Работим по него. За сега е достъпна само местната доставка или вземане от пазара (виж горе).</span>
               </div>
 
+              <!-- Multi-farmer courier split: when the cart spans >1 producer AND a
+                   carrier method is selected, each farmer ships separately — one
+                   delivery per farmer. Populated by checkout-page.ts
+                   (renderDeliverySplitNotice); dormant while ONLY_LOCAL_DELIVERY
+                   hides the carrier methods. -->
+              <div id="deliverySplitNotice" hidden></div>
+
               <!-- delivery address (local delivery + Econt-to-address). One field
                    with Google Places autocomplete: the customer types and picks a
                    real address, so the order carries exact coords and the backend
