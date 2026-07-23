@@ -1,14 +1,16 @@
-// Drives the /karta explorer: two-tab „Производители | Карта" toggle, the
+// Drives the /farmers explorer: two-tab „Производители | Карта" toggle, the
 // „Филтри" sidebar (search + category checkboxes, multi-select OR, powered by
-// `matchFarmers` from lib/farmer-map.ts), a responsive farmer card grid, the
-// Google Map (pins only for the currently-filtered farmers, re-rendered on
-// every filter change), and a detail panel opened by clicking a pin — an HTML
-// sibling positioned over the map (NOT a Maps OverlayView popup; the old
-// popup-in-the-map-panes approach is fully replaced).
+// `matchFarmers` from lib/farmer-map.ts), the server-rendered <FarmerCard>
+// grid (this script only shows/hides each `[data-farmer-id]` wrapper — it
+// never rebuilds that markup, so FarmerCard.astro's own styling/behavior is
+// preserved), the Google Map (pins only for the currently-filtered farmers,
+// re-rendered on every filter change), and a detail panel opened by clicking
+// a pin — an HTML sibling positioned over the map (NOT a Maps OverlayView
+// popup).
 //
 // All page data (mapsKey, geocoded pins, the farmer roster, the filterable
 // product list, the category id→name lookup) is read off #kartaExplorer's
-// dataset — set server-side in karta.astro. Empty key / no geocoded pins →
+// dataset — set server-side in farmers.astro. Empty key / no geocoded pins →
 // the Карта tab stays hidden and „Производители" is the only (forced) view;
 // a Maps load failure at runtime degrades the same way.
 
@@ -134,6 +136,15 @@ function init(): void {
   const mapTabBtn = tabsWrap?.querySelector<HTMLButtonElement>('[data-km-tab="map"]') ?? null;
   const mapEl = document.getElementById('farmerMap');
   const gridEl = document.getElementById('farmerGrid');
+  // Server-rendered <FarmerCard> wrappers, keyed by farmer id — apply()
+  // toggles their inline display (not [hidden], to avoid needing extra CSS
+  // specificity rules for grid children) instead of rebuilding any markup.
+  const cardEntries = new Map<string, HTMLElement>(
+    Array.from(document.querySelectorAll<HTMLElement>('[data-farmer-id]')).map((el) => [
+      el.dataset.farmerId!,
+      el,
+    ]),
+  );
   const emptyEl = document.getElementById('kartaEmpty');
   const countEl = document.getElementById('kartaCount');
   const resetBtn = document.getElementById('kartaReset');
@@ -147,8 +158,8 @@ function init(): void {
 
   // Desktop: the sidebar is always expanded — the <details> disclosure is a
   // mobile-only affordance (CSS hides/disables the summary toggle ≥881px, see
-  // karta.astro's <style>). Force it open on load and whenever the viewport
-  // crosses back into desktop width.
+  // farmers.astro's is:global <style>). Force it open on load and whenever the
+  // viewport crosses back into desktop width.
   const desktopMq = window.matchMedia('(min-width: 881px)');
   const syncFiltersOpen = () => {
     if (desktopMq.matches && filtersDetails) filtersDetails.open = true;
@@ -211,31 +222,14 @@ function init(): void {
     if (e.key === 'Escape' && panel && !panel.hidden) closePanel();
   });
 
+  /** Show only the given farmer ids' server-rendered card wrappers. Inline
+   *  style (not [hidden]) so it always wins regardless of the grid's own CSS,
+   *  same trick the old plain-list farmers.astro used. */
   function renderGrid(matched: FarmerPayload[]): void {
-    if (!gridEl) return;
-    gridEl.innerHTML = matched.map(cardHtml).join('');
-  }
-
-  function cardHtml(f: FarmerPayload): string {
-    const photo = f.imageUrl
-      ? `<img src="${esc(cfImage(f.imageUrl, 240) || f.imageUrl)}" alt="" loading="lazy" decoding="async" />`
-      : `<span class="km-card__initials">${esc(initialsOf(f.name))}</span>`;
-    const check = f.verified
-      ? `<span class="km-card__check" title="Потвърден производител">${ICONS.check}</span>`
-      : '';
-    const role = f.role ? `<div class="km-card__role">${esc(f.role)}</div>` : '';
-    const city = f.city ? `<span class="km-card__city">${ICONS.pin}${esc(f.city)}</span>` : '';
-    const href = f.slug ? `/farmer/${encodeURIComponent(f.slug)}` : '/farmers';
-    return (
-      `<article class="card km-card">` +
-      `<div class="km-card__avatar">${photo}</div>` +
-      `<h3 class="km-card__name">${esc(f.name)}${check}</h3>` +
-      role +
-      city +
-      `<div class="km-card__count">${f.productCount} продукта</div>` +
-      `<a class="btn btn--primary btn--sm" href="${href}">Виж магазина →</a>` +
-      `</article>`
-    );
+    const matchedIds = new Set(matched.map((f) => f.id));
+    for (const [id, el] of cardEntries) {
+      el.style.display = matchedIds.has(id) ? '' : 'none';
+    }
   }
 
   function updateMarkers(matchedIds: Set<string>): void {
@@ -363,9 +357,10 @@ function init(): void {
     apply();
   });
 
-  // Initial paint: build the (unfiltered) grid + counts, then reveal whichever
-  // tab is the default (Карта when a key + pins are available, else
-  // „Производители") — lazily creating the map only if that's the one shown.
+  // Initial paint: apply the (unfiltered) card visibility + counts, then
+  // reveal whichever tab is the default (Карта when a key + pins are
+  // available, else „Производители") — lazily creating the map only if
+  // that's the one shown.
   apply();
   setActiveTab(activeTab);
 }

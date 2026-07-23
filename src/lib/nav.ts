@@ -8,8 +8,9 @@ export interface NavLink {
 export function navLinks(multiFarmer: boolean): NavLink[] {
   return [
     { label: 'Начало', href: '/' },
+    // Карта now lives as a tab inside /farmers (see farmers.astro) — Фермери
+    // covers both.
     ...(multiFarmer ? [{ label: 'Фермери', href: '/farmers' }] : []),
-    ...(multiFarmer ? [{ label: 'Карта', href: '/karta' }] : []),
     { label: 'Магазин', href: '/shop' },
     { label: 'Поръчки', href: '/orders' },
     { label: 'За нас', href: '/about' },
