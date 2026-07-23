@@ -1,8 +1,12 @@
 ---
 import Layout from '../components/Layout.astro';
+import SearchBar from '../components/SearchBar.astro';
+import AdminNote from '../components/AdminNote.astro';
 import { getCatalog } from '../lib/api';
 import { farmerSlugMap } from '../lib/farmer-slug';
 import { resolveMapPoints } from '../lib/farmer-map';
+import type { FilterableProduct } from '../lib/farmer-map';
+import { catIdOf, categoriesFrom } from '../lib/catalog';
 
 export const prerender = false;
 
@@ -13,7 +17,7 @@ export const prerender = false;
 // checkout.astro, a known unresolved TODO — see CLOUDFLARE.md #1) that does
 // NOT reliably resolve on Workers, which silently disabled this page's map.
 // `import.meta.env` covers plain `astro dev` without wrangler. Empty key →
-// the map stays off and the fallback village list is the page.
+// the map tab stays off and „Производители" (card grid) is the only view.
 const runtimeBindings = (Astro.locals as any)?.runtime?.env ?? {};
 const processEnv = (globalThis as any).process?.env ?? {};
 const mapsKey = String(
@@ -23,13 +27,55 @@ const mapsKey = String(
     '',
 ).trim();
 
-const { storefront: sf, farmers } = await getCatalog();
+const { storefront: sf, farmers, products, subcategories: subcats } = await getCatalog();
 const slugs = farmerSlugMap(farmers);
 const points = resolveMapPoints(farmers, slugs);
+// The Карта tab only makes sense with a working key AND ≥1 geocoded pin —
+// otherwise „Производители" (the card grid) is the only view. Also the target
+// the client script falls back to if the Maps script fails to load at runtime.
+const mapAvailable = mapsKey.length > 0 && points.length > 0;
 
-const metaDesc = `Виж на картата откъде идват фермерите и стопанствата зад продуктите на ${sf.name}.`;
+const active = products.filter((p) => p.isActive !== false);
+// Sidebar categories: same taxonomy + live counts as shop.astro, restricted to
+// categories that actually have an active product right now.
+const cats = categoriesFrom(active, subcats, sf.multiSubcat);
+const catCount = new Map<string, number>();
+for (const p of active) {
+  const k = catIdOf(p, sf.multiSubcat);
+  if (k) catCount.set(k, (catCount.get(k) ?? 0) + 1);
+}
+const kartaCats = cats.filter((c) => (catCount.get(c.id) ?? 0) > 0);
+
+// Filterable products for the client-side matchFarmers() (lib/farmer-map.ts) —
+// active catalog only (what shoppers can actually buy); catId is resolved
+// server-side here so the client filter never needs to know about multiSubcat.
+const filterableProducts: FilterableProduct[] = active.map((p) => ({
+  farmerId: p.farmerId,
+  name: p.name,
+  catId: catIdOf(p, sf.multiSubcat),
+}));
+
+// „брой продукти" on a farmer card mirrors farmers.astro's farmerCount — ALL of
+// that farmer's products, not just the active subset used for filtering.
+const productCountOf = (id: string) => products.filter((p) => p.farmerId === id).length;
+
+const farmersPayload = farmers.map((f) => ({
+  id: f.id,
+  name: f.name,
+  role: f.role,
+  bio: f.bio,
+  city: f.city ?? '',
+  imageUrl: f.imageUrl,
+  coverCrop: f.coverCrop ?? null,
+  slug: slugs.get(f.id) ?? null,
+  productCount: productCountOf(f.id),
+  // KZP legal identity confirmed → shown as a small ✓ next to the name.
+  verified: !!f.legal?.confirmedAt,
+}));
+
+const metaDesc = `Разгледай нашите фермери и стопанства из България — по карта или като списък, с търсене и филтри по категория, при ${sf.name}.`;
 ---
-<Layout title={`Карта на фермерите · ${sf.name}`} description={metaDesc} storefront={sf} pageLabel="Карта">
+<Layout title={`Фермери и карта · ${sf.name}`} description={metaDesc} storefront={sf} pageLabel="Карта">
   <main>
     <div class="wrap">
       <nav class="breadcrumb"><a href="/">Начало</a> / <span>Карта</span></nav>
@@ -37,38 +83,76 @@ const metaDesc = `Виж на картата откъде идват ферме�
 
     <section class="section--tight">
       <div class="wrap">
-        <div class="section-head">
-          <span class="eyebrow">Откъде идва храната</span>
-          <h1 style="margin-top:8px">Карта на фермерите</h1>
-          <p>Нашите фермери и стопанства из България — по адреса на стопанството, където е известен.</p>
+        <div class="km-head">
+          <div class="section-head" style="max-width:640px;margin:0">
+            <span class="eyebrow">Откъде идва храната</span>
+            <h1 style="margin-top:8px">Фермери и карта</h1>
+            <p>Разгледай нашите фермери и стопанства из България — по карта или като списък.</p>
+          </div>
+          {farmers.length > 0 && (
+            <div class="km-tabs" id="kartaTabs" role="tablist" aria-label="Изглед">
+              <button type="button" class="km-tab" data-km-tab="farmers" role="tab" aria-selected="false">
+                Производители
+              </button>
+              <button type="button" class="km-tab" data-km-tab="map" role="tab" aria-selected="false" hidden={!mapAvailable}>
+                Карта
+              </button>
+            </div>
+          )}
         </div>
 
-        <div
-          id="farmerMap"
-          class="farmer-map"
-          hidden
-          data-maps-key={mapsKey}
-          data-points={JSON.stringify(points)}
-          aria-label="Карта с местоположението на фермерите"
-        ></div>
+        {farmers.length === 0 ? (
+          <div style="margin-top:28px">
+            <AdminNote text="Фермерите се добавят от админ панела — всеки нов профил се появява автоматично тук." />
+          </div>
+        ) : (
+          <div
+            class="km-layout"
+            id="kartaExplorer"
+            data-maps-key={mapsKey}
+            data-map-available={mapAvailable ? '1' : ''}
+            data-points={JSON.stringify(points)}
+            data-farmers={JSON.stringify(farmersPayload)}
+            data-products={JSON.stringify(filterableProducts)}
+            data-cats={JSON.stringify(kartaCats.map((c) => ({ id: c.id, name: c.name })))}
+          >
+            <details class="km-filters card" open>
+              <summary class="km-filters__head">Филтри</summary>
+              <div class="km-filters__body">
+                <SearchBar id="kartaSearch" placeholder="Име, продукт или описание" />
 
-        <!-- Village list: hidden by default; the client script reveals it only
-             when the map can't run (no key / load failure), and <noscript>
-             below reveals it when JS is off. So with a working map it never
-             shows — no card grid stacked under the map. -->
-        <ul id="mapFallback" class="map-fallback" hidden>
-          {points.map((p) => (
-            <li class="map-fallback__item">
-              <span class="map-fallback__village">{p.village}</span>
-              {p.slug
-                ? <a class="map-fallback__name" href={`/farmer/${p.slug}`}>{p.name}</a>
-                : <span class="map-fallback__name">{p.name}</span>}
-            </li>
-          ))}
-        </ul>
-        <noscript>
-          <style>#mapFallback[hidden] { display: grid; }</style>
-        </noscript>
+                {kartaCats.length > 0 && (
+                  <fieldset class="km-cats">
+                    <legend>Категории</legend>
+                    {kartaCats.map((c) => (
+                      <label class="km-cat">
+                        <input type="checkbox" class="km-cat__input" value={c.id} />
+                        <span class="km-cat__name">{c.name}</span>
+                        <span class="km-cat__count">{catCount.get(c.id) ?? 0}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                )}
+
+                <div class="km-filters__foot">
+                  <p class="km-count" id="kartaCount" aria-live="polite">{farmers.length} производители</p>
+                  <button type="button" class="km-reset" id="kartaReset" hidden>Изчисти</button>
+                </div>
+              </div>
+            </details>
+
+            <div class="km-main">
+              <div id="farmerMap" class="km-map" hidden aria-label="Карта с местоположението на фермерите"></div>
+              <div id="farmerGrid" class="grid grid--3 km-grid" hidden></div>
+              <p id="kartaEmpty" class="km-empty" hidden>Няма намерени производители за този филтър.</p>
+
+              <aside id="kartaPanel" class="km-panel" hidden aria-label="Профил на производителя">
+                <button type="button" class="km-panel__close" id="kartaPanelClose" aria-label="Затвори">&times;</button>
+                <div id="kartaPanelBody" class="km-panel__body"></div>
+              </aside>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   </main>
@@ -78,130 +162,230 @@ const metaDesc = `Виж на картата откъде идват ферме�
   </script>
 
   <style>
-    .farmer-map {
+    .km-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    /* Two-tab pill toggle. */
+    .km-tabs {
+      display: inline-flex;
+      flex: none;
+      padding: 4px;
+      gap: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .km-tab {
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      transition: background-color .18s, color .18s;
+    }
+    .km-tab:hover { color: var(--ink); }
+    .km-tab.is-active { background: var(--primary); color: #fff; }
+    .km-tab[hidden] { display: none; }
+
+    .km-layout {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 26px;
+      align-items: start;
+    }
+
+    /* ---------- Sidebar (Филтри) ---------- */
+    .km-filters { padding: 22px; }
+    .km-filters__head {
+      font-family: var(--font-head);
+      font-weight: var(--h-weight);
+      font-size: 19px;
+      color: var(--ink);
+      cursor: pointer;
+      list-style: none;
+    }
+    .km-filters__head::-webkit-details-marker { display: none; }
+    .km-filters__head::before {
+      content: '';
+      display: inline-block;
+      width: 9px; height: 9px;
+      margin-right: 9px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+      transition: transform .18s ease;
+      vertical-align: 2px;
+    }
+    .km-filters[open] > .km-filters__head::before { transform: rotate(-135deg); }
+    .km-filters__body { margin-top: 18px; display: flex; flex-direction: column; gap: 18px; }
+    .km-filters__body .searchbar { max-width: none; }
+
+    .km-cats { border: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+    .km-cats legend {
+      padding: 0 0 8px;
+      font-size: 12.5px;
+      letter-spacing: var(--label-spacing);
+      text-transform: var(--label-transform);
+      font-weight: var(--label-weight);
+      color: var(--muted);
+    }
+    .km-cat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 4px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      min-height: 40px;
+    }
+    .km-cat:hover { background: var(--surface-2); }
+    .km-cat__input { flex: none; width: 19px; height: 19px; accent-color: var(--primary); cursor: pointer; }
+    .km-cat__name { flex: 1; font-size: 14.5px; color: var(--ink-soft); }
+    .km-cat__count {
+      flex: none; min-width: 22px; text-align: center;
+      padding: 1px 7px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 700;
+      background: var(--surface-2); color: var(--muted);
+    }
+
+    .km-filters__foot {
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+    .km-count { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0; }
+    .km-reset {
+      color: var(--primary); font-size: 13px; font-weight: 700;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .km-reset[hidden] { display: none; }
+
+    /* ---------- Main column (map / grid) ---------- */
+    .km-main { position: relative; min-height: 600px; }
+
+    .km-map {
       width: 100%;
-      min-height: 460px;
+      height: 100%;
+      min-height: 600px;
       border-radius: var(--radius, 18px);
       overflow: hidden;
       border: 1px solid var(--line, #e2dac8);
       background: var(--surface-2, #f6f0e2);
       box-shadow: var(--shadow-sm, 0 2px 8px -3px rgba(44,85,48,.18));
     }
-    .map-fallback {
-      list-style: none;
-      margin: 8px 0 0;
-      padding: 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
-    }
-    /* `[hidden]`'s UA `display:none` is author-overridden by `display:grid`
-       above, so make the hide explicit — else the list shows under the map. */
-    .map-fallback[hidden] { display: none; }
-    .map-fallback__item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 14px 16px;
-      border-radius: var(--radius-sm, 12px);
-      background: var(--surface-2, #f6f0e2);
-      border: 1px solid var(--line, #e2dac8);
-    }
-    .map-fallback__village { font-size: 13px; color: var(--muted, #686456); }
-    .map-fallback__name { font-weight: 600; color: var(--ink, #25301f); text-decoration: none; }
-    a.map-fallback__name:hover { color: var(--primary, #2c5530); text-decoration: underline; }
-    @media (max-width: 480px) { .farmer-map { min-height: 380px; } }
-  </style>
 
-  <!-- Global (unscoped) so it reaches the popup element the client script
-       injects into Google's map panes at runtime. Colors are theme.css's brand
-       tokens, hardcoded because this DOM lives outside the page's cascade. -->
-  <style is:global>
-    .ff-popup {
+    .km-grid { margin: 0; }
+    .km-empty { text-align: center; color: var(--muted); padding: 60px 0; }
+    .km-empty[hidden] { display: none; }
+
+    /* ---------- Farmer mini-card (Производители tab) ---------- */
+    .km-card { padding: 20px 20px 22px; align-items: center; text-align: center; }
+    .km-card__avatar {
+      width: 76px; height: 76px; border-radius: 50%;
+      overflow: hidden; margin-bottom: 14px;
+      display: grid; place-items: center;
+      background: var(--primary); color: #fff;
+    }
+    .km-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .km-card__initials { font-family: var(--font-head); font-size: 24px; font-weight: 700; }
+    .km-card__name {
+      display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+      font-size: 18px; margin: 0;
+    }
+    .km-card__check {
+      flex: none; display: inline-flex; width: 16px; height: 16px;
+      align-items: center; justify-content: center;
+      border-radius: 50%; background: var(--primary); color: #fff;
+    }
+    .km-card__check svg { width: 10px; height: 10px; }
+    .km-card__role { font-size: 13.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .km-card__city {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 8px; font-size: 13px; color: var(--muted);
+    }
+    .km-card__city svg { width: 14px; height: 14px; flex: none; }
+    .km-card__count { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+    .km-card .btn { margin-top: 16px; width: 100%; }
+
+    /* ---------- Detail panel ---------- */
+    .km-panel {
       position: absolute;
-      transform: translate(-50%, calc(-100% - 46px));
-      pointer-events: none;
+      top: 0; right: 0; bottom: 0;
+      width: 340px;
+      max-width: 92vw;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius, 18px);
+      box-shadow: var(--shadow-lg);
+      z-index: 5;
     }
-    .ff-popup__card {
-      position: relative;
-      pointer-events: auto;
-      min-width: 190px;
-      max-width: 244px;
-      padding: 15px 17px 16px;
-      background: #FBF8F1;
-      border: 1px solid #E2DAC8;
-      border-radius: 16px;
-      box-shadow: 0 20px 46px -20px rgba(44, 85, 48, .5);
-      font-family: "Commissioner", system-ui, sans-serif;
+    .km-panel[hidden] { display: none; }
+    .km-panel__close {
+      position: sticky; top: 10px; margin: 10px 10px -34px auto;
+      float: right;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; line-height: 1; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--line); border-radius: 50%;
+      z-index: 1;
     }
-    .ff-popup__card::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      bottom: -7px;
-      width: 14px;
-      height: 14px;
-      transform: translateX(-50%) rotate(45deg);
-      background: #FBF8F1;
-      border-right: 1px solid #E2DAC8;
-      border-bottom: 1px solid #E2DAC8;
+    .km-panel__close:hover { color: var(--ink); border-color: var(--primary); }
+    .km-panel__body { padding: 22px; display: flex; flex-direction: column; gap: 4px; }
+    .km-panel__photo {
+      width: 100%; aspect-ratio: 4/3; border-radius: var(--radius-sm);
+      overflow: hidden; margin-bottom: 14px;
+      display: grid; place-items: center;
+      background: var(--primary); color: #fff;
     }
-    .ff-popup__name {
-      margin: 0 26px 6px 0;
-      font-family: "Lora", Georgia, serif;
-      font-weight: 600;
-      font-size: 16.5px;
-      line-height: 1.25;
-      color: #25301F;
+    .km-panel__photo img { width: 100%; height: 100%; object-fit: cover; }
+    .km-panel__photo .km-card__initials { font-size: 34px; }
+    .km-panel__name { display: flex; align-items: center; gap: 8px; font-size: 22px; margin: 0; }
+    .km-panel__role { font-size: 13.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .km-panel__city {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px; font-size: 13.5px; color: var(--muted);
     }
-    .ff-popup__village {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 12.5px;
-      color: #686456;
+    .km-panel__city svg { width: 15px; height: 15px; flex: none; }
+    .km-panel__bio {
+      margin-top: 12px; font-size: 14.5px; color: var(--ink-soft); line-height: 1.55;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden;
     }
-    .ff-popup__dot {
-      width: 6px;
-      height: 6px;
-      flex: none;
-      border-radius: 50%;
-      background: #E8A33D;
+    .km-panel__chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .km-panel__chip {
+      padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: var(--primary-050); color: var(--primary);
     }
-    .ff-popup__link {
-      margin-top: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #2C5530;
-      text-decoration: none;
-      background: #E7EDE4;
-      border-radius: 999px;
-      transition: background .15s ease;
+    .km-panel .btn { margin-top: 20px; width: 100%; }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 880px) {
+      .km-layout { grid-template-columns: 1fr; gap: 16px; }
+      .km-filters__head { pointer-events: auto; }
+      .km-main { min-height: 460px; }
+      .km-map { min-height: 460px; }
+
+      .km-panel {
+        position: fixed;
+        top: auto; left: 0; right: 0; bottom: 0;
+        width: auto; max-width: none;
+        max-height: 60vh;
+        border-radius: var(--radius-lg, 26px) var(--radius-lg, 26px) 0 0;
+        box-shadow: 0 -10px 30px -12px rgba(0, 0, 0, .35);
+      }
     }
-    .ff-popup__link:hover { background: #DBE5D6; }
-    .ff-popup__close {
-      position: absolute;
-      top: 9px;
-      right: 10px;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      font-size: 18px;
-      line-height: 1;
-      color: #A49D8B;
-      background: transparent;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background .15s ease, color .15s ease;
+
+    @media (min-width: 881px) {
+      /* Desktop: the sidebar is always expanded — the disclosure affordance is
+         mobile-only (see farmer-map.ts, which force-opens it above this width). */
+      .km-filters__head { cursor: default; pointer-events: none; }
+      .km-filters__head::before { display: none; }
     }
-    .ff-popup__close:hover { background: #F1EAD9; color: #25301F; }
   </style>
 </Layout>

@@ -1,18 +1,50 @@
-// Renders the /karta farmer map. Reads the key + points off #farmerMap (set
-// server-side in karta.astro). Empty key / load failure / no points → leave the
-// #mapFallback village list visible and do nothing (no broken empty map box).
+// Drives the /karta explorer: two-tab „Производители | Карта" toggle, the
+// „Филтри" sidebar (search + category checkboxes, multi-select OR, powered by
+// `matchFarmers` from lib/farmer-map.ts), a responsive farmer card grid, the
+// Google Map (pins only for the currently-filtered farmers, re-rendered on
+// every filter change), and a detail panel opened by clicking a pin — an HTML
+// sibling positioned over the map (NOT a Maps OverlayView popup; the old
+// popup-in-the-map-panes approach is fully replaced).
 //
-// Loads the Google Maps JS API once (no `places` library — just base maps),
-// drops one marker per point, fits the viewport to all markers, and shows a
-// single shared info window with the farmer name + village, plus a
-// „Виж профил →" link when the point resolved to a real farmer slug.
+// All page data (mapsKey, geocoded pins, the farmer roster, the filterable
+// product list, the category id→name lookup) is read off #kartaExplorer's
+// dataset — set server-side in karta.astro. Empty key / no geocoded pins →
+// the Карта tab stays hidden and „Производители" is the only (forced) view;
+// a Maps load failure at runtime degrades the same way.
+
+import { matchFarmers } from '../lib/farmer-map';
+import { wireSearch } from './search';
+import { cfImage } from '../lib/img';
+import { coverCropStyle } from '../lib/cover-crop';
+import { ICONS } from '../lib/icons';
+import type { CoverCrop } from '../lib/types';
 
 interface MapPoint {
+  id: string;
   name: string;
   village: string;
   lat: number;
   lng: number;
   slug: string | null;
+}
+
+interface FarmerPayload {
+  id: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  city: string;
+  imageUrl: string | null;
+  coverCrop: CoverCrop | null;
+  slug: string | null;
+  productCount: number;
+  verified: boolean;
+}
+
+interface ProductStub {
+  farmerId: string | null;
+  name: string;
+  catId: string;
 }
 
 let mapsPromise: Promise<any> | null = null;
@@ -44,6 +76,14 @@ function esc(s: string): string {
   );
 }
 
+function safeParse<T>(json: string | undefined, fallback: T): T {
+  try {
+    return json ? (JSON.parse(json) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // Brand teardrop pin (primary green, cream ring, accent-gold dot) — matches
 // theme.css's --primary/--surface/--accent so the map doesn't read as a raw
 // default-Google-red-drop against this site's warm, editorial palette.
@@ -64,146 +104,270 @@ function pinIcon(maps: any) {
   };
 }
 
-/** Inner HTML of a custom popup card. Class-based (styled by the `is:global`
- *  .ff-popup* rules in karta.astro) rather than inline styles, so the card is a
- *  real branded element instead of Google's default white InfoWindow chrome. */
-function popupHtml(p: MapPoint): string {
-  const close = `<button class="ff-popup__close" type="button" aria-label="Затвори">&times;</button>`;
-  const name = `<div class="ff-popup__name">${esc(p.name)}</div>`;
-  const village = `<div class="ff-popup__village"><span class="ff-popup__dot"></span>${esc(p.village)}</div>`;
-  const link = p.slug
-    ? `<a class="ff-popup__link" href="/farmer/${encodeURIComponent(p.slug)}">Виж профил →</a>`
-    : '';
-  return `<div class="ff-popup__card">${close}${name}${village}${link}</div>`;
+function initialsOf(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toLocaleUpperCase('bg');
 }
-
-/** Build a custom OverlayView popup class bound to the loaded Maps namespace.
- *  Google's InfoWindow forces its own white bubble + close button + tail chrome
- *  that can't be fully themed; an OverlayView gives us a plain positioned div we
- *  style entirely ourselves (branded card + tail via CSS). */
-function createPopupClass(maps: any): any {
-  return class Popup extends maps.OverlayView {
-    position: any;
-    el: HTMLDivElement;
-    /** Last div-pixel position drawn, so a caller can tell whether the card
-     *  (which renders ~46px + its own height ABOVE the marker via CSS
-     *  transform) would clip against the map container's `overflow:hidden`. */
-    lastPixel: { x: number; y: number } | null = null;
-    constructor(position: any, html: string, onClose: () => void) {
-      super();
-      this.position = position;
-      const el = document.createElement('div');
-      el.className = 'ff-popup';
-      el.innerHTML = html;
-      el.querySelector('.ff-popup__close')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        onClose();
-      });
-      // Let the card be clicked/scrolled without panning/zooming the map under it.
-      maps.OverlayView.preventMapHitsAndGesturesFrom(el);
-      this.el = el;
-    }
-    onAdd() {
-      this.getPanes().floatPane.appendChild(this.el);
-    }
-    onRemove() {
-      this.el.remove();
-    }
-    draw() {
-      const p = this.getProjection().fromLatLngToDivPixel(this.position);
-      if (p) {
-        this.lastPixel = p;
-        this.el.style.left = `${p.x}px`;
-        this.el.style.top = `${p.y}px`;
-      }
-    }
-  };
-}
-
-// Popup card height (~150px) + the 46px gap its CSS transform holds above the
-// marker — a marker drawn closer to the container's top than this clips the
-// card against `.farmer-map`'s `overflow:hidden`. Keep in sync with the
-// .ff-popup* rules in karta.astro.
-const POPUP_TOP_CLEARANCE = 210;
 
 function init(): void {
-  const el = document.getElementById('farmerMap');
-  const fallback = document.getElementById('mapFallback');
-  if (!el) return;
+  const root = document.getElementById('kartaExplorer');
+  if (!root) return; // no farmers at all — AdminNote is shown instead, nothing to wire
 
-  const key = el.dataset.mapsKey || '';
-  let points: MapPoint[] = [];
-  try {
-    points = JSON.parse(el.dataset.points || '[]');
-  } catch {
-    points = [];
+  const mapsKey = root.dataset.mapsKey || '';
+  let mapAvailable = root.dataset.mapAvailable === '1';
+  const points: MapPoint[] = safeParse(root.dataset.points, []);
+  const farmersData: FarmerPayload[] = safeParse(root.dataset.farmers, []);
+  const productsData: ProductStub[] = safeParse(root.dataset.products, []);
+  const catsData: { id: string; name: string }[] = safeParse(root.dataset.cats, []);
+
+  const catNameById = new Map(catsData.map((c) => [c.id, c.name]));
+  const farmersById = new Map(farmersData.map((f) => [f.id, f]));
+
+  const tabsWrap = document.getElementById('kartaTabs');
+  const farmersTabBtn = tabsWrap?.querySelector<HTMLButtonElement>('[data-km-tab="farmers"]') ?? null;
+  const mapTabBtn = tabsWrap?.querySelector<HTMLButtonElement>('[data-km-tab="map"]') ?? null;
+  const mapEl = document.getElementById('farmerMap');
+  const gridEl = document.getElementById('farmerGrid');
+  const emptyEl = document.getElementById('kartaEmpty');
+  const countEl = document.getElementById('kartaCount');
+  const resetBtn = document.getElementById('kartaReset');
+  const catsFieldset = document.querySelector<HTMLFieldSetElement>('.km-cats');
+  const filtersDetails = document.querySelector<HTMLDetailsElement>('.km-filters');
+  const panel = document.getElementById('kartaPanel');
+  const panelBody = document.getElementById('kartaPanelBody');
+  const panelClose = document.getElementById('kartaPanelClose');
+
+  if (!mapEl || !gridEl) return;
+
+  // Desktop: the sidebar is always expanded — the <details> disclosure is a
+  // mobile-only affordance (CSS hides/disables the summary toggle ≥881px, see
+  // karta.astro's <style>). Force it open on load and whenever the viewport
+  // crosses back into desktop width.
+  const desktopMq = window.matchMedia('(min-width: 881px)');
+  const syncFiltersOpen = () => {
+    if (desktopMq.matches && filtersDetails) filtersDetails.open = true;
+  };
+  syncFiltersOpen();
+  desktopMq.addEventListener('change', syncFiltersOpen);
+
+  let activeTab: 'farmers' | 'map' = mapAvailable ? 'map' : 'farmers';
+  let mapInited = false;
+  let map: any = null;
+  const markers = new Map<string, any>(); // farmer id -> google.maps.Marker
+  let firstFit = true;
+  let lastMatched: FarmerPayload[] = farmersData;
+
+  const state = { q: '', cats: new Set<string>() };
+
+  function closePanel(): void {
+    if (panel) panel.hidden = true;
   }
-  if (!key || points.length === 0) {
-    // No map possible → reveal the text village list (hidden by default in SSR).
-    if (fallback) fallback.hidden = false;
-    return;
+
+  function openPanel(farmerId: string): void {
+    const f = farmersById.get(farmerId);
+    if (!f || !panel || !panelBody) return;
+
+    const photo = f.imageUrl
+      ? `<img src="${esc(cfImage(f.imageUrl, 640) || f.imageUrl)}" alt="" loading="lazy" decoding="async" style="${coverCropStyle(f.coverCrop)}" />`
+      : `<span class="km-card__initials">${esc(initialsOf(f.name))}</span>`;
+    const check = f.verified
+      ? `<span class="km-card__check" title="Потвърден производител">${ICONS.check}</span>`
+      : '';
+    const role = f.role ? `<div class="km-panel__role">${esc(f.role)}</div>` : '';
+    const city = f.city ? `<div class="km-panel__city">${ICONS.pin}${esc(f.city)}</div>` : '';
+    const bio = f.bio ? `<p class="km-panel__bio">${esc(f.bio)}</p>` : '';
+    const myCats = new Set(productsData.filter((p) => p.farmerId === f.id).map((p) => p.catId));
+    const chips = [...myCats]
+      .map((id) => catNameById.get(id))
+      .filter((n): n is string => !!n)
+      .map((n) => `<span class="km-panel__chip">${esc(n)}</span>`)
+      .join('');
+    const href = f.slug ? `/farmer/${encodeURIComponent(f.slug)}` : '/farmers';
+
+    panelBody.innerHTML =
+      `<div class="km-panel__photo">${photo}</div>` +
+      `<h2 class="km-panel__name">${esc(f.name)}${check}</h2>` +
+      role +
+      city +
+      bio +
+      (chips ? `<div class="km-panel__chips">${chips}</div>` : '') +
+      `<a class="btn btn--primary" href="${href}">Виж магазина →</a>`;
+
+    panel.hidden = false;
   }
 
-  // Reveal the container BEFORE creating the map so it has real dimensions.
-  el.hidden = false;
+  // Panel is a plain DOM sibling of the map (not a Maps OverlayView), so it
+  // never receives the map's own click events — stopPropagation here is just
+  // defense-in-depth against any wrapping click handlers.
+  panel?.addEventListener('click', (e) => e.stopPropagation());
+  panelClose?.addEventListener('click', closePanel);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel && !panel.hidden) closePanel();
+  });
 
-  loadMaps(key)
-    .then((maps: any) => {
-      const map = new maps.Map(el, {
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        zoomControl: true,
-        clickableIcons: false,
-        backgroundColor: '#F6F0E2',
-      });
-      const bounds = new maps.LatLngBounds();
-      const icon = pinIcon(maps);
-      const Popup = createPopupClass(maps);
+  function renderGrid(matched: FarmerPayload[]): void {
+    if (!gridEl) return;
+    gridEl.innerHTML = matched.map(cardHtml).join('');
+  }
 
-      // One popup at a time — opening another (or clicking the map) closes it.
-      let current: any = null;
-      const closeCurrent = () => {
-        if (current) {
-          current.setMap(null);
-          current = null;
-        }
-      };
+  function cardHtml(f: FarmerPayload): string {
+    const photo = f.imageUrl
+      ? `<img src="${esc(cfImage(f.imageUrl, 240) || f.imageUrl)}" alt="" loading="lazy" decoding="async" />`
+      : `<span class="km-card__initials">${esc(initialsOf(f.name))}</span>`;
+    const check = f.verified
+      ? `<span class="km-card__check" title="Потвърден производител">${ICONS.check}</span>`
+      : '';
+    const role = f.role ? `<div class="km-card__role">${esc(f.role)}</div>` : '';
+    const city = f.city ? `<span class="km-card__city">${ICONS.pin}${esc(f.city)}</span>` : '';
+    const href = f.slug ? `/farmer/${encodeURIComponent(f.slug)}` : '/farmers';
+    return (
+      `<article class="card km-card">` +
+      `<div class="km-card__avatar">${photo}</div>` +
+      `<h3 class="km-card__name">${esc(f.name)}${check}</h3>` +
+      role +
+      city +
+      `<div class="km-card__count">${f.productCount} продукта</div>` +
+      `<a class="btn btn--primary btn--sm" href="${href}">Виж магазина →</a>` +
+      `</article>`
+    );
+  }
 
-      for (const p of points) {
-        const pos = { lat: p.lat, lng: p.lng };
-        const marker = new maps.Marker({ position: pos, map, icon, title: `${p.name} · ${p.village}` });
-        bounds.extend(pos);
-        marker.addListener('click', () => {
-          closeCurrent();
-          const popup = new Popup(new maps.LatLng(pos), popupHtml(p), closeCurrent);
-          popup.setMap(map);
-          current = popup;
-          // A marker near the top of the visible map draws its popup above the
-          // container's top edge, clipped by `.farmer-map`'s overflow:hidden
-          // (draw() runs synchronously on setMap, so lastPixel is ready here).
-          // Google's documented workaround: nudge the map down by the shortfall.
-          const px = popup.lastPixel;
-          if (px && px.y < POPUP_TOP_CLEARANCE) map.panBy(0, px.y - POPUP_TOP_CLEARANCE);
-        });
+  function updateMarkers(matchedIds: Set<string>): void {
+    if (!map) return;
+    const maps = (window as any).google?.maps;
+    if (!maps) return;
+    const bounds = new maps.LatLngBounds();
+    let any = false;
+    for (const [id, marker] of markers) {
+      const show = matchedIds.has(id);
+      marker.setMap(show ? map : null);
+      if (show) {
+        bounds.extend(marker.getPosition());
+        any = true;
       }
-      map.addListener('click', closeCurrent);
-
-      map.fitBounds(bounds, { top: POPUP_TOP_CLEARANCE, right: 64, bottom: 64, left: 64 });
+    }
+    if (!any) return;
+    map.fitBounds(bounds, { top: 64, right: 64, bottom: 64, left: 64 });
+    if (firstFit) {
+      firstFit = false;
       // Clamp the INITIAL zoom only (a tight cluster would otherwise zoom to
-      // street level); the user can still zoom in afterwards.
+      // street level); the user can still zoom in afterwards, and later
+      // filter-triggered re-fits don't reclamp.
       maps.event.addListenerOnce(map, 'idle', () => {
         if (map.getZoom() > 11) map.setZoom(11);
       });
+    }
+  }
 
-      // Map is up — the fallback list stays hidden (its SSR default).
-      if (fallback) fallback.hidden = true;
-    })
-    .catch(() => {
-      // Bad key / API off / offline → restore the fallback, hide the empty box.
-      el.hidden = true;
-      if (fallback) fallback.hidden = false;
+  function ensureMap(): void {
+    if (mapInited || !mapAvailable || !mapEl) return;
+    mapInited = true;
+    mapEl.hidden = false; // reveal before creating so it has real dimensions
+
+    loadMaps(mapsKey)
+      .then((maps: any) => {
+        map = new maps.Map(mapEl, {
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          zoomControl: true,
+          clickableIcons: false,
+          backgroundColor: '#F6F0E2',
+        });
+        const icon = pinIcon(maps);
+        for (const p of points) {
+          const marker = new maps.Marker({
+            position: { lat: p.lat, lng: p.lng },
+            map: null,
+            icon,
+            title: `${p.name} · ${p.village}`,
+          });
+          marker.addListener('click', () => openPanel(p.id));
+          markers.set(p.id, marker);
+        }
+        map.addListener('click', () => closePanel());
+        updateMarkers(new Set(lastMatched.map((f) => f.id)));
+      })
+      .catch(() => {
+        // Bad key / API off / offline → the map tab is unusable; drop back to
+        // the card grid (the always-available view) and hide the tab so the
+        // shopper isn't stuck looking at an empty box.
+        mapAvailable = false;
+        mapEl.hidden = true;
+        mapTabBtn?.setAttribute('hidden', '');
+        if (activeTab === 'map') setActiveTab('farmers');
+      });
+  }
+
+  function setActiveTab(tab: 'farmers' | 'map'): void {
+    if (tab === 'map' && !mapAvailable) tab = 'farmers';
+    activeTab = tab;
+    farmersTabBtn?.classList.toggle('is-active', tab === 'farmers');
+    farmersTabBtn?.setAttribute('aria-selected', String(tab === 'farmers'));
+    mapTabBtn?.classList.toggle('is-active', tab === 'map');
+    mapTabBtn?.setAttribute('aria-selected', String(tab === 'map'));
+    if (gridEl) gridEl.hidden = tab !== 'farmers';
+    if (mapEl) mapEl.hidden = tab !== 'map';
+    closePanel();
+    if (tab === 'map') ensureMap();
+  }
+
+  farmersTabBtn?.addEventListener('click', () => setActiveTab('farmers'));
+  mapTabBtn?.addEventListener('click', () => setActiveTab('map'));
+
+  function apply(): void {
+    const matched = matchFarmers(farmersData, productsData, { q: state.q, cats: state.cats });
+    lastMatched = matched;
+    renderGrid(matched);
+    if (mapInited) updateMarkers(new Set(matched.map((f) => f.id)));
+
+    if (countEl) {
+      countEl.textContent = matched.length === 1 ? '1 производител' : `${matched.length} производители`;
+    }
+    if (emptyEl) emptyEl.hidden = matched.length !== 0;
+
+    const filtering = state.q !== '' || state.cats.size > 0;
+    if (resetBtn) resetBtn.hidden = !filtering;
+  }
+
+  wireSearch('kartaSearch', (q) => {
+    state.q = q;
+    apply();
+  });
+
+  catsFieldset?.addEventListener('change', (e) => {
+    const input = e.target as HTMLInputElement;
+    if (!input.classList.contains('km-cat__input')) return;
+    if (input.checked) state.cats.add(input.value);
+    else state.cats.delete(input.value);
+    apply();
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    state.q = '';
+    state.cats.clear();
+    catsFieldset?.querySelectorAll<HTMLInputElement>('.km-cat__input').forEach((i) => {
+      i.checked = false;
     });
+    const searchInput = document.getElementById('kartaSearch') as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    apply();
+  });
+
+  // Initial paint: build the (unfiltered) grid + counts, then reveal whichever
+  // tab is the default (Карта when a key + pins are available, else
+  // „Производители") — lazily creating the map only if that's the one shown.
+  apply();
+  setActiveTab(activeTab);
 }
 
 init();
