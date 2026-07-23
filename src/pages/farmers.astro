@@ -102,16 +102,6 @@ const structuredData = farmers.length
             <h1 style="margin-top:8px"><CopySlot slot="farmers.head.title" copy={sf.copy} /></h1>
             <p><CopySlot slot="farmers.head.text" copy={sf.copy} /></p>
           </div>
-          {farmers.length > 0 && (
-            <div class="km-tabs" id="kartaTabs" role="tablist" aria-label="Изглед">
-              <button type="button" class="km-tab" data-km-tab="farmers" role="tab" aria-selected="false">
-                Производители
-              </button>
-              <button type="button" class="km-tab" data-km-tab="map" role="tab" aria-selected="false" hidden={!mapAvailable}>
-                Карта
-              </button>
-            </div>
-          )}
         </div>
 
         {farmers.length === 0 ? (
@@ -160,9 +150,20 @@ const structuredData = farmers.length
             </details>
 
             <div class="km-main">
-              <!-- Real, server-rendered FarmerCard markup — the client script
-                   (scripts/farmer-map.ts) only shows/hides each `[data-farmer-id]`
-                   wrapper per the active filter; it never rebuilds these cards. -->
+              <!-- Роден Дар layout: map on top (when available), the real
+                   server-rendered FarmerCard grid always visible below — both
+                   driven by the same filters. The detail panel overlays the
+                   MAP only, hence the relative wrapper. -->
+              <div class="km-map-wrap" hidden id="farmerMapWrap">
+                <div id="farmerMap" class="km-map" aria-label="Карта с местоположението на фермерите"></div>
+                <aside id="kartaPanel" class="km-panel" hidden aria-label="Профил на производителя">
+                  <button type="button" class="km-panel__close" id="kartaPanelClose" aria-label="Затвори">&times;</button>
+                  <div id="kartaPanelBody" class="km-panel__body"></div>
+                </aside>
+              </div>
+              <!-- The client script (scripts/farmer-map.ts) only shows/hides
+                   each `[data-farmer-id]` wrapper per the active filter; it
+                   never rebuilds these cards. -->
               <div id="farmerGrid" class="grid grid--3 grid--farmers km-grid">
                 {farmers.map((f) => (
                   <div class="km-card-entry" data-farmer-id={f.id}>
@@ -170,13 +171,7 @@ const structuredData = farmers.length
                   </div>
                 ))}
               </div>
-              <div id="farmerMap" class="km-map" hidden aria-label="Карта с местоположението на фермерите"></div>
               <p id="kartaEmpty" class="km-empty" hidden>Няма намерени производители за този филтър.</p>
-
-              <aside id="kartaPanel" class="km-panel" hidden aria-label="Профил на производителя">
-                <button type="button" class="km-panel__close" id="kartaPanelClose" aria-label="Затвори">&times;</button>
-                <div id="kartaPanelBody" class="km-panel__body"></div>
-              </aside>
             </div>
           </div>
         )}
@@ -213,7 +208,7 @@ const structuredData = farmers.length
        outranks the UA stylesheet's `[hidden] { display:none }` — pin these so
        the tab toggle actually hides the inactive view. */
     .km-grid[hidden],
-    .km-map[hidden],
+    .km-map-wrap[hidden],
     .km-panel[hidden],
     .km-empty[hidden] {
       display: none !important;
@@ -226,28 +221,6 @@ const structuredData = farmers.length
       flex-wrap: wrap;
       gap: 18px;
     }
-
-    /* Two-tab pill toggle. */
-    .km-tabs {
-      display: inline-flex;
-      flex: none;
-      padding: 4px;
-      gap: 4px;
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-    }
-    .km-tab {
-      padding: 9px 20px;
-      border-radius: 999px;
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--ink-soft);
-      transition: background-color .18s, color .18s;
-    }
-    .km-tab:hover { color: var(--ink); }
-    .km-tab.is-active { background: var(--primary); color: #fff; }
-    .km-tab[hidden] { display: none; }
 
     .km-layout {
       display: grid;
@@ -323,13 +296,15 @@ const structuredData = farmers.length
     }
     .km-reset[hidden] { display: none; }
 
-    /* ---------- Main column (map / grid) ---------- */
-    .km-main { position: relative; min-height: 600px; }
+    /* ---------- Main column (map above, grid below) ---------- */
+    .km-main { min-height: 400px; }
+
+    .km-map-wrap { position: relative; margin-bottom: 22px; }
+    .km-map-wrap[hidden] { display: none !important; }
 
     .km-map {
       width: 100%;
-      height: 100%;
-      min-height: 600px;
+      height: 480px;
       border-radius: var(--radius, 18px);
       overflow: hidden;
       border: 1px solid var(--line, #e2dac8);

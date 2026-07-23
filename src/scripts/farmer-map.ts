@@ -131,9 +131,7 @@ function init(): void {
   const catNameById = new Map(catsData.map((c) => [c.id, c.name]));
   const farmersById = new Map(farmersData.map((f) => [f.id, f]));
 
-  const tabsWrap = document.getElementById('kartaTabs');
-  const farmersTabBtn = tabsWrap?.querySelector<HTMLButtonElement>('[data-km-tab="farmers"]') ?? null;
-  const mapTabBtn = tabsWrap?.querySelector<HTMLButtonElement>('[data-km-tab="map"]') ?? null;
+  const mapWrap = document.getElementById('farmerMapWrap');
   const mapEl = document.getElementById('farmerMap');
   const gridEl = document.getElementById('farmerGrid');
   // Server-rendered <FarmerCard> wrappers, keyed by farmer id — apply()
@@ -167,7 +165,6 @@ function init(): void {
   syncFiltersOpen();
   desktopMq.addEventListener('change', syncFiltersOpen);
 
-  let activeTab: 'farmers' | 'map' = mapAvailable ? 'map' : 'farmers';
   let mapInited = false;
   let map: any = null;
   const markers = new Map<string, any>(); // farmer id -> google.maps.Marker
@@ -289,31 +286,21 @@ function init(): void {
         updateMarkers(new Set(lastMatched.map((f) => f.id)));
       })
       .catch(() => {
-        // Bad key / API off / offline → the map tab is unusable; drop back to
-        // the card grid (the always-available view) and hide the tab so the
-        // shopper isn't stuck looking at an empty box.
+        // Bad key / API off / offline → hide the map strip entirely; the
+        // always-visible card grid below is the page's base state.
         mapAvailable = false;
-        mapEl.hidden = true;
-        mapTabBtn?.setAttribute('hidden', '');
-        if (activeTab === 'map') setActiveTab('farmers');
+        if (mapWrap) mapWrap.hidden = true;
+        closePanel();
       });
   }
 
-  function setActiveTab(tab: 'farmers' | 'map'): void {
-    if (tab === 'map' && !mapAvailable) tab = 'farmers';
-    activeTab = tab;
-    farmersTabBtn?.classList.toggle('is-active', tab === 'farmers');
-    farmersTabBtn?.setAttribute('aria-selected', String(tab === 'farmers'));
-    mapTabBtn?.classList.toggle('is-active', tab === 'map');
-    mapTabBtn?.setAttribute('aria-selected', String(tab === 'map'));
-    if (gridEl) gridEl.hidden = tab !== 'farmers';
-    if (mapEl) mapEl.hidden = tab !== 'map';
-    closePanel();
-    if (tab === 'map') ensureMap();
+  // Роден Дар layout: the map (when available) sits above the always-visible
+  // card grid — no tabs, one combined view driven by the same filters.
+  function showMapIfAvailable(): void {
+    if (!mapAvailable || !mapWrap) return;
+    mapWrap.hidden = false;
+    ensureMap();
   }
-
-  farmersTabBtn?.addEventListener('click', () => setActiveTab('farmers'));
-  mapTabBtn?.addEventListener('click', () => setActiveTab('map'));
 
   function apply(): void {
     const matched = matchFarmers(farmersData, productsData, { q: state.q, cats: state.cats });
@@ -358,11 +345,9 @@ function init(): void {
   });
 
   // Initial paint: apply the (unfiltered) card visibility + counts, then
-  // reveal whichever tab is the default (Карта when a key + pins are
-  // available, else „Производители") — lazily creating the map only if
-  // that's the one shown.
+  // reveal the map strip above the grid when a key + geocoded pins exist.
   apply();
-  setActiveTab(activeTab);
+  showMapIfAvailable();
 }
 
 init();
